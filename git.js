@@ -3,16 +3,18 @@ const { MAX_BUFFER, isIgnoredFile, escapePipe } = require('./utils');
 
 /**
  * Executes git log and returns raw output.
+ * Supports optional --since and --until filters.
  */
-function fetchRawGitLog(repoPath) {
-  return execSync(
-    'git log --no-merges --date=iso --pretty=format:"===COMMIT===%ad|||%s" --numstat',
-    {
-      encoding: 'utf-8',
-      maxBuffer: MAX_BUFFER,
-      cwd: repoPath
-    }
-  );
+function fetchRawGitLog(repoPath, since, until) {
+  let cmd = 'git log --no-merges --date=iso --pretty=format:"===COMMIT===%ad|||%s" --numstat';
+  if (since) cmd += ` --since="${since}"`;
+  if (until) cmd += ` --until="${until}"`;
+
+  return execSync(cmd, {
+    encoding: 'utf-8',
+    maxBuffer: MAX_BUFFER,
+    cwd: repoPath,
+  });
 }
 
 /**
