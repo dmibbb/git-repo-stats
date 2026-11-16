@@ -20,6 +20,7 @@ function groupCommitsByDate(commits) {
 
         groupedByDate[date].commits.push({
             subject: commit.subject,
+            time: commit.time,
             files: commit.files,
             trackedFiles: commit.trackedFiles,
             ignoredFiles: commit.ignoredFiles,

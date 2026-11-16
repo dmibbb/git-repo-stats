@@ -213,3 +213,18 @@ em {
   color: var(--fg-muted);
   font-size: 0.9rem;
 }
+
+/* === Generated timestamp === */
+.generated-at {
+    font-size: 0.85rem;
+    color: var(--fg-muted);
+    margin: 0 0 1.5rem;
+    font-style: italic;
+}
+
+/* === Commit time in table === */
+.commit-time {
+    font-size: 0.85em;
+    color: var(--fg-muted);
+    font-weight: 400;
+}

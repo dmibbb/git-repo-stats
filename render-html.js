@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { MAX_FILES_PER_COMMIT, formatNumber, renderBar, escapeHtml, WEEKDAY_NAMES } = require('./utils');
+const { MAX_FILES_PER_COMMIT, formatNumber, escapeHtml, WEEKDAY_NAMES } = require('./utils');
 
 /**
  * Reads CSS file from misc/repo-stats.css.
@@ -33,6 +33,7 @@ function renderFileLinkHTML(filename) {
  */
 function wrapInHTMLTemplate(content, title) {
     const css = loadCSS();
+    const generatedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -45,6 +46,7 @@ ${css}
 </style>
 </head>
 <body>
+<p class="generated-at">Generated: ${generatedAt}</p>
 ${content}
 </body>
 </html>`;
@@ -111,8 +113,9 @@ function renderDaySectionHTML(date, dayData) {
     let html = `<h3>${date}: ${commitsCount} commits (+${fmt(dayData.totalInsertions)} / -${fmt(dayData.totalDeletions)}) in ${uniqueFilesCount} unique files</h3>\n`;
     html += '<table>\n<thead><tr><th>Commit</th><th>Changed files</th><th>Delta</th></tr></thead>\n<tbody>\n';
 
-    dayData.commits.forEach(commit => {
-        html += `<tr><td>${escapeHtml(commit.subject)}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles)}</td><td>${renderDeltaCellHTML(commit)}</td></tr>\n`;
+    dayData.commits.forEach((commit) => {
+        const timeHtml = commit.time ? `<br><span class="commit-time">Committed: ${commit.time} GMT +3</span>` : '';
+        html += `<tr><td>${escapeHtml(commit.subject)}${timeHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles)}</td><td>${renderDeltaCellHTML(commit)}</td></tr>\n`;
     });
 
     html += '</tbody>\n</table>\n';
