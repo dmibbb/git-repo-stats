@@ -180,6 +180,9 @@ function calculateOverallStats(groupedByDate) {
         ? ((activeDays / totalCalendarDays) * 100).toFixed(0)
         : '0';
 
+    const now = new Date();
+    const repoAge = Math.round((now - startDate) / (1000 * 60 * 60 * 24));
+
     const totalCommits = Object.values(groupedByDate).reduce((sum, d) => sum + d.commits.length, 0);
     const totalInsertions = Object.values(groupedByDate).reduce((sum, d) => sum + d.totalInsertions, 0);
     const totalDeletions = Object.values(groupedByDate).reduce((sum, d) => sum + d.totalDeletions, 0);
@@ -189,7 +192,8 @@ function calculateOverallStats(groupedByDate) {
     const avgPerCommitDel = totalCommits ? (totalDeletions / totalCommits).toFixed(1) : '0.0';
 
     const totalFilesInCommits = Object.values(groupedByDate).reduce(
-        (sum, d) => sum + d.commits.reduce((s, c) => s + c.trackedFiles.length, 0), 0
+        (sum, d) => sum + d.commits.reduce((s, c) => s + c.trackedFiles.length, 0),
+        0,
     );
     const avgFilesPerCommit = totalCommits ? (totalFilesInCommits / totalCommits).toFixed(1) : '0.0';
 
@@ -224,19 +228,33 @@ function calculateOverallStats(groupedByDate) {
     const longestGapInfo = calculateLongestGap(allDates);
 
     return {
-        firstDate, lastDate, totalCalendarDays, activeDays, activityPercent,
-        totalCommits, totalInsertions, totalDeletions, netChange,
-        avgPerCommitIns, avgPerCommitDel, avgFilesPerCommit,
-        avgPerActiveDayIns, avgPerActiveDayDel, avgCommitsPerActiveDay,
-        recordCommitsDate, recordCommitsCount,
-        recordCodeDate, recordCodeIns, recordCodeDel,
+        firstDate,
+        lastDate,
+        totalCalendarDays,
+        activeDays,
+        activityPercent,
+        totalCommits,
+        totalInsertions,
+        totalDeletions,
+        netChange,
+        avgPerCommitIns,
+        avgPerCommitDel,
+        avgFilesPerCommit,
+        avgPerActiveDayIns,
+        avgPerActiveDayDel,
+        avgCommitsPerActiveDay,
+        recordCommitsDate,
+        recordCommitsCount,
+        recordCodeDate,
+        recordCodeIns,
+        recordCodeDel,
         maxStreakLength: maxStreakInfo.length,
         maxStreakStart: maxStreakInfo.start,
         maxStreakEnd: maxStreakInfo.end,
         longestGapLength: longestGapInfo.length,
         longestGapStart: longestGapInfo.start,
         longestGapEnd: longestGapInfo.end,
-        repoAge: totalCalendarDays
+        repoAge, // ← Исправлено: теперь считается от firstDate до today
     };
 }
 

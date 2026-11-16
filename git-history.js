@@ -1,8 +1,31 @@
 /**
- * How to run:
- *     node git-history.js                    # current git repo
- *     node git-history.js /path/to/repo      # other git repo
+ * ============================================================================
+ * 📊 Git Repository Statistics & Changelog Generator
+ * ============================================================================
+ * Zero-dependency Node.js CLI utility that analyzes git commit history and
+ * generates a comprehensive Markdown changelog (`CHANGELOG.md`) alongside a
+ * styled, dark-mode-ready HTML dashboard (`repo-stats.html`).
+ * 
+ * Author: Димасик (dmibbb)
+ * Version: 20261116
+ *
+ * Features:
+ * - High-level repository overview (age, active days, streaks, gaps, records)
+ * - Code churn metrics (+insertions / -deletions), tech stack & hotspots
+ * - Weekday and monthly activity histograms (ASCII in MD, CSS bars in HTML)
+ * - Smart filtering of lock files, build artifacts, and minified assets
+ * - Daily grouped commit tables with clickable file links
+ *
+ * Usage:
+ *   node git-history.js                  # Analyze current working directory
+ *   node git-history.js /path/to/repo    # Analyze a specific git repository
+ *
+ * Outputs (saved in target repository root):
+ *   - CHANGELOG.md
+ *   - repo-stats.html
+ * ============================================================================
  */
+
 const fs = require('fs');
 const path = require('path');
 

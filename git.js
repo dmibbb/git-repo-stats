@@ -21,7 +21,8 @@ function fetchRawGitLog(repoPath) {
 function parseCommitEntry(entry) {
   const lines = entry.trim().split('\n');
   const [dateRaw, ...subjectParts] = lines[0].split('|||');
-  const date = dateRaw.split(' ')[0];
+  const date = dateRaw.split(' ')[0]; // YYYY-MM-DD
+  const time = dateRaw.split(' ')[1] || ''; // HH:MM:SS +ZZZZ
   const subject = subjectParts.join('|||').trim();
 
   const files = [];
@@ -67,9 +68,17 @@ function parseCommitEntry(entry) {
   const hasOnlyIgnored = files.length > 0 && trackedFiles.length === 0;
 
   return {
-    date, subject, files, trackedFiles, ignoredFiles,
-    insertions, deletions, binaryCount, textCount,
-    hasOnlyIgnored
+    date,
+    time,
+    subject,
+    files,
+    trackedFiles,
+    ignoredFiles,
+    insertions,
+    deletions,
+    binaryCount,
+    textCount,
+    hasOnlyIgnored,
   };
 }
 

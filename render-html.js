@@ -20,8 +20,12 @@ function loadCSS() {
  * Renders an HTML link to a file: <a href="path">name</a>
  */
 function renderFileLinkHTML(filename) {
+    if (filename.includes(' => ')) {
+        return `<code>${escapeHtml(filename)}</code>`;
+    }
+
     const encoded = encodeURI(filename);
-    return `<a href="${encoded}">${filename}</a>`;
+    return `<a href="${encoded}">${escapeHtml(filename)}</a>`;
 }
 
 /**
@@ -163,7 +167,7 @@ function renderTechStackLineHTML(stack) {
 }
 
 /**
- * Renders histogram of commits per weekday.
+ * Renders histogram of commits per weekday with CSS bars.
  */
 function renderWeekdayHistogramHTML(weekdayCounts) {
     const total = Object.values(weekdayCounts).reduce((s, c) => s + c, 0);
@@ -171,34 +175,45 @@ function renderWeekdayHistogramHTML(weekdayCounts) {
 
     const maxCount = Math.max(...Object.values(weekdayCounts));
 
-    let html = `<li>📊 <strong>Activity by day of week:</strong>\n  <ul>\n`;
+    let html = `<li>📊 <strong>Activity by day of week:</strong>\n  <ul class="histogram-list">\n`;
     for (const day of WEEKDAY_NAMES) {
         const count = weekdayCounts[day] || 0;
         const percent = ((count / total) * 100).toFixed(0);
-        const bar = renderBar(count, maxCount);
+        const barWidth = maxCount > 0 ? ((count / maxCount) * 100).toFixed(1) : 0;
+        const isPeak = count === maxCount && maxCount > 0;
 
-        if (count === maxCount && maxCount > 0) {
-            html += `    <li><strong>${day}: <code>${bar}</code> ${percent}% (${count})</strong></li>\n`;
-        } else {
-            html += `    <li>${day}: <code>${bar}</code> ${percent}% (${count})</li>\n`;
-        }
+        html += `    <li class="bar-row${isPeak ? ' bar-row--peak' : ''}">\n`;
+        html += `      <span class="bar-label">${day}</span>\n`;
+        html += `      <div class="bar-container">\n`;
+        html += `        <div class="bar" style="width: ${barWidth}%"></div>\n`;
+        html += `      </div>\n`;
+        html += `      <span class="bar-value">${percent}% (${count})</span>\n`;
+        html += `    </li>\n`;
     }
     html += `  </ul>\n</li>\n`;
     return html;
 }
 
 /**
- * Renders histogram of commits per month.
+ * Renders histogram of commits per month with CSS bars.
  */
 function renderMonthHistogramHTML(monthCounts) {
     if (!monthCounts || monthCounts.length === 0) return '';
 
-    const maxCount = Math.max(...monthCounts.map(m => m[1]));
+    const maxCount = Math.max(...monthCounts.map((m) => m[1]));
 
-    let html = `<li>📅 <strong>Activity by month:</strong>\n  <ul>\n`;
+    let html = `<li>📅 <strong>Activity by month:</strong>\n  <ul class="histogram-list">\n`;
     for (const [month, count] of monthCounts) {
-        const bar = renderBar(count, maxCount);
-        html += `    <li>${escapeHtml(month)}: <code>${bar}</code> ${count}</li>\n`;
+        const barWidth = maxCount > 0 ? ((count / maxCount) * 100).toFixed(1) : 0;
+        const isPeak = count === maxCount && maxCount > 0; // 🎯 Добавили проверку пика
+
+        html += `    <li class="bar-row${isPeak ? ' bar-row--peak' : ''}">\n`; // 🎯 Добавили класс
+        html += `      <span class="bar-label">${month}</span>\n`;
+        html += `      <div class="bar-container">\n`;
+        html += `        <div class="bar" style="width: ${barWidth}%"></div>\n`;
+        html += `      </div>\n`;
+        html += `      <span class="bar-value">${count}</span>\n`;
+        html += `    </li>\n`;
     }
     html += `  </ul>\n</li>\n`;
     return html;

@@ -4,6 +4,10 @@ const { escapePipe, MAX_FILES_PER_COMMIT, formatNumber, renderBar, WEEKDAY_NAMES
  * Renders a Markdown link to a file: [name](url-encoded-path).
  */
 function renderFileLink(filename) {
+    if (filename.includes(' => ')) {
+        return `\`${escapePipe(filename)}\``;
+    }
+
     const escaped = escapePipe(filename);
     const encoded = encodeURI(filename);
     return `[${escaped}](${encoded})`;
