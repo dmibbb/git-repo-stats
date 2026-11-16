@@ -1,4 +1,4 @@
-const { escapePipe, parseDate, toMondayFirstIndex, WEEKDAY_NAMES, MONTH_NAMES, TOP_FILES_COUNT, TOP_EXTENSIONS_COUNT, getExtension } = require('./utils');
+const { parseDate, toMondayFirstIndex, WEEKDAY_NAMES, MONTH_NAMES, TOP_FILES_COUNT, TOP_EXTENSIONS_COUNT, getExtension } = require('./utils');
 
 /**
  * Groups commits by date and calculates per-day aggregates.
@@ -19,7 +19,7 @@ function groupCommitsByDate(commits) {
         }
 
         groupedByDate[date].commits.push({
-            subject: escapePipe(commit.subject),
+            subject: commit.subject,
             files: commit.files,
             trackedFiles: commit.trackedFiles,
             ignoredFiles: commit.ignoredFiles,

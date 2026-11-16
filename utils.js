@@ -52,6 +52,18 @@ function escapePipe(str) {
 }
 
 /**
+ * Escapes HTML special characters to prevent markup breaking / XSS.
+ */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
  * Parses a 'YYYY-MM-DD' string into a UTC Date object.
  * Using UTC avoids timezone/DST issues during arithmetic.
  */
@@ -105,6 +117,7 @@ module.exports = {
   getRepoName,
   formatNumber,
   escapePipe,
+  escapeHtml,
   parseDate,
   isIgnoredFile,
   getExtension,

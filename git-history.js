@@ -57,7 +57,7 @@ function main() {
         htmlContent += renderChangelogHTML(groupedByDate);
         const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`);
 
-        const htmlPath = path.join(absoluteRepoPath, 'CHANGELOG.html');
+        const htmlPath = path.join(absoluteRepoPath, 'repo-stats.html');
         fs.writeFileSync(htmlPath, fullHTML, 'utf-8');
 
         console.log('✅ Done! Data saved to:');

@@ -1,4 +1,20 @@
-const { MAX_FILES_PER_COMMIT, formatNumber, renderBar, WEEKDAY_NAMES } = require('./utils');
+const fs = require('fs');
+const path = require('path');
+const { MAX_FILES_PER_COMMIT, formatNumber, renderBar, escapeHtml, WEEKDAY_NAMES } = require('./utils');
+
+/**
+ * Reads CSS file from misc/repo-stats.css.
+ * Falls back to empty string if file not found.
+ */
+function loadCSS() {
+    try {
+        const cssPath = path.join(__dirname, 'repo-stats.css');
+        return fs.readFileSync(cssPath, 'utf-8');
+    } catch (e) {
+        console.warn('⚠️ Could not load repo-stats.css, using empty styles.');
+        return '';
+    }
+}
 
 /**
  * Renders an HTML link to a file: <a href="path">name</a>
@@ -9,15 +25,20 @@ function renderFileLinkHTML(filename) {
 }
 
 /**
- * Wraps content in a minimal HTML template (no styles yet).
+ * Wraps content in an HTML document with styles from repo-stats.css.
  */
 function wrapInHTMLTemplate(content, title) {
+    const css = loadCSS();
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(title)}</title>
+<style>
+${css}
+</style>
 </head>
 <body>
 ${content}
@@ -26,7 +47,7 @@ ${content}
 }
 
 /**
- * HTML version of renderFilesCell.
+ * Renders the "Changed files" cell.
  */
 function renderFilesCellHTML(files, ignoredFiles) {
     if (files.length === 0) return '<em>no changes</em>';
@@ -42,12 +63,10 @@ function renderFilesCellHTML(files, ignoredFiles) {
 
     const visible = files.slice(0, MAX_FILES_PER_COMMIT);
     const hidden = files.slice(MAX_FILES_PER_COMMIT);
-
-    const hiddenHasIgnored = hidden.some(f => ignoredFiles.has(f));
-    const summarySuffix = hiddenHasIgnored ? '*' : '';
+    const summarySuffix = hidden.some(f => ignoredFiles.has(f)) ? '*' : '';
 
     let result = visible.map(renderFile).join('<br>');
-    result += `<br><details><summary><em>Show ${hidden.length} more files${summarySuffix}</em></summary><br><br>`;
+    result += `<details><summary><em>Show ${hidden.length} more files${summarySuffix}</em></summary>`;
     result += hidden.map(renderFile).join('<br>');
     result += `</details>`;
 
@@ -55,7 +74,7 @@ function renderFilesCellHTML(files, ignoredFiles) {
 }
 
 /**
- * HTML version of renderDeltaCell.
+ * Renders the "Delta" cell.
  */
 function renderDeltaCellHTML(commit) {
     let deltaStr;
@@ -78,7 +97,7 @@ function renderDeltaCellHTML(commit) {
 }
 
 /**
- * HTML version of renderDaySection.
+ * Renders one day section.
  */
 function renderDaySectionHTML(date, dayData) {
     const fmt = formatNumber;
@@ -86,12 +105,10 @@ function renderDaySectionHTML(date, dayData) {
     const uniqueFilesCount = dayData.uniqueFiles.size;
 
     let html = `<h3>${date}: ${commitsCount} commits (+${fmt(dayData.totalInsertions)} / -${fmt(dayData.totalDeletions)}) in ${uniqueFilesCount} unique files</h3>\n`;
-    html += '<table>\n';
-    html += '<thead><tr><th>Commit</th><th>Changed files</th><th>Delta</th></tr></thead>\n';
-    html += '<tbody>\n';
+    html += '<table>\n<thead><tr><th>Commit</th><th>Changed files</th><th>Delta</th></tr></thead>\n<tbody>\n';
 
     dayData.commits.forEach(commit => {
-        html += `<tr><td>${commit.subject}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles)}</td><td>${renderDeltaCellHTML(commit)}</td></tr>\n`;
+        html += `<tr><td>${escapeHtml(commit.subject)}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles)}</td><td>${renderDeltaCellHTML(commit)}</td></tr>\n`;
     });
 
     html += '</tbody>\n</table>\n';
@@ -99,7 +116,7 @@ function renderDaySectionHTML(date, dayData) {
 }
 
 /**
- * HTML version of renderMaxStreakLine.
+ * Renders "Max streak" line.
  */
 function renderMaxStreakLineHTML(stats) {
     const { maxStreakLength, maxStreakStart, maxStreakEnd } = stats;
@@ -113,7 +130,7 @@ function renderMaxStreakLineHTML(stats) {
 }
 
 /**
- * HTML version of renderLongestGapLine.
+ * Renders "Longest gap" line.
  */
 function renderLongestGapLineHTML(stats) {
     const { longestGapLength, longestGapStart, longestGapEnd } = stats;
@@ -123,32 +140,30 @@ function renderLongestGapLineHTML(stats) {
 }
 
 /**
- * HTML version of renderLargestCommitLine.
+ * Renders "Largest commit" line.
  */
 function renderLargestCommitLineHTML(largest, fmt) {
     if (!largest) return '';
-    return `<li>💪 <strong>Largest commit:</strong> ${largest.date} — <code>${largest.subject}</code> (<strong>+${fmt(largest.insertions)} / -${fmt(largest.deletions)}</strong> lines)</li>\n`;
+    return `<li>💪 <strong>Largest commit:</strong> ${largest.date} — <code>${escapeHtml(largest.subject)}</code> (<strong>+${fmt(largest.insertions)} / -${fmt(largest.deletions)}</strong> lines)</li>\n`;
 }
 
 /**
- * HTML version of renderTechStackLine.
+ * Renders tech stack block.
  */
 function renderTechStackLineHTML(stack) {
     if (!stack || stack.length === 0) return '';
 
-    let html = `<li>🧰 <strong>Tech stack (by commits):</strong>
-  <ul>\n`;
+    let html = `<li>🧰 <strong>Tech stack (by commits):</strong>\n  <ul>\n`;
     stack.forEach(item => {
-        const extDisplay = item.ext === 'no-ext' ? '&lt;no-ext&gt;' : `.${item.ext}`;
-        html += `    <li><code>${extDisplay}</code> — <strong>${item.percent}%</strong> (${item.count} file-touches)</li>\n`;
+        const extDisplay = item.ext === 'no-ext' ? '<no-ext>' : `.${item.ext}`;
+        html += `    <li><code>${escapeHtml(extDisplay)}</code> — <strong>${item.percent}%</strong> (${item.count} file-touches)</li>\n`;
     });
-    html += `  </ul>
-</li>\n`;
+    html += `  </ul>\n</li>\n`;
     return html;
 }
 
 /**
- * HTML version of renderWeekdayHistogram.
+ * Renders histogram of commits per weekday.
  */
 function renderWeekdayHistogramHTML(weekdayCounts) {
     const total = Object.values(weekdayCounts).reduce((s, c) => s + c, 0);
@@ -156,53 +171,48 @@ function renderWeekdayHistogramHTML(weekdayCounts) {
 
     const maxCount = Math.max(...Object.values(weekdayCounts));
 
-    let html = `<li>📊 <strong>Activity by day of week:</strong>
-  <ul>\n`;
+    let html = `<li>📊 <strong>Activity by day of week:</strong>\n  <ul>\n`;
     for (const day of WEEKDAY_NAMES) {
         const count = weekdayCounts[day] || 0;
         const percent = ((count / total) * 100).toFixed(0);
         const bar = renderBar(count, maxCount);
 
         if (count === maxCount && maxCount > 0) {
-            html += `    <li><strong>${day}: <code>${bar}</code> ${percent}% (${count})</strong> 😩</li>\n`;
+            html += `    <li><strong>${day}: <code>${bar}</code> ${percent}% (${count})</strong></li>\n`;
         } else {
             html += `    <li>${day}: <code>${bar}</code> ${percent}% (${count})</li>\n`;
         }
     }
-    html += `  </ul>
-</li>\n`;
+    html += `  </ul>\n</li>\n`;
     return html;
 }
 
 /**
- * HTML version of renderMonthHistogram.
+ * Renders histogram of commits per month.
  */
 function renderMonthHistogramHTML(monthCounts) {
-    if (monthCounts.length === 0) return '';
+    if (!monthCounts || monthCounts.length === 0) return '';
 
     const maxCount = Math.max(...monthCounts.map(m => m[1]));
 
-    let html = `<li>📅 <strong>Activity by month:</strong>
-  <ul>\n`;
+    let html = `<li>📅 <strong>Activity by month:</strong>\n  <ul>\n`;
     for (const [month, count] of monthCounts) {
         const bar = renderBar(count, maxCount);
-        html += `    <li>${month}: <code>${bar}</code> ${count}</li>\n`;
+        html += `    <li>${escapeHtml(month)}: <code>${bar}</code> ${count}</li>\n`;
     }
-    html += `  </ul>
-</li>\n`;
+    html += `  </ul>\n</li>\n`;
     return html;
 }
 
 /**
- * HTML version of renderOverview.
+ * Renders the overview statistics block.
  */
 function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts) {
     const fmt = formatNumber;
     const netSign = stats.netChange >= 0 ? '+' : '';
 
-    let html = `<h1>👨‍💻 Repository Statistics: ${repoName}</h1>\n`;
-    html += '<h2>📊 Overview</h2>\n';
-    html += '<ul>\n';
+    let html = `<h1>👨‍💻 Repository Statistics: ${escapeHtml(repoName)}</h1>\n`;
+    html += '<h2>📊 Overview</h2>\n<ul>\n';
     html += `<li>🎂 <strong>Repo age:</strong> <strong>${stats.repoAge} days</strong> (since ${stats.firstDate})</li>\n`;
     html += `<li>📅 <strong>Period:</strong> ${stats.firstDate} — ${stats.lastDate} (active days: <strong>${stats.activeDays}</strong> out of ${stats.totalCalendarDays} — ${stats.activityPercent}%)</li>\n`;
     html += `<li>📦 <strong>Total commits:</strong> ${fmt(stats.totalCommits)} (avg <strong>${stats.avgCommitsPerActiveDay}</strong> commits per active day)</li>\n`;
@@ -218,13 +228,11 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
     html += renderMonthHistogramHTML(monthCounts);
 
     if (topFiles.length > 0) {
-        html += `<li>📂 <strong>Most frequent changed files:</strong>
-  <ul>\n`;
+        html += `<li>📂 <strong>Most frequent changed files:</strong>\n  <ul>\n`;
         topFiles.forEach(f => {
-            html += `    <li><code>${f.file}</code> (changed in <strong>${f.count}</strong> commits)</li>\n`;
+            html += `    <li><code>${escapeHtml(f.file)}</code> (changed in <strong>${f.count}</strong> commits)</li>\n`;
         });
-        html += `  </ul>
-</li>\n`;
+        html += `  </ul>\n</li>\n`;
     }
 
     html += renderTechStackLineHTML(techStack);
@@ -233,7 +241,7 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
 }
 
 /**
- * HTML version of renderChangelog.
+ * Renders the full changelog section.
  */
 function renderChangelogHTML(groupedByDate) {
     let html = '<h2>Changelog Details</h2>\n';

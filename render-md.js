@@ -74,7 +74,7 @@ function renderDaySection(date, dayData) {
     md += '| :--- | :--- | :---: |\n';
 
     dayData.commits.forEach(commit => {
-        md += `| ${commit.subject} | ${renderFilesCell(commit.files, commit.ignoredFiles)} | ${renderDeltaCell(commit)} |\n`;
+        md += `| ${escapePipe(commit.subject)} | ${renderFilesCell(commit.files, commit.ignoredFiles)} | ${renderDeltaCell(commit)} |\n`;
     });
 
     return md + '\n';
@@ -109,7 +109,7 @@ function renderLongestGapLine(stats) {
  */
 function renderLargestCommitLine(largest, fmt) {
     if (!largest) return '';
-    return `* 💪 **Largest commit:** ${largest.date} — \`${largest.subject}\` (**+${fmt(largest.insertions)} / -${fmt(largest.deletions)}** lines)\n`;
+    return `* 💪 **Largest commit:** ${largest.date} — \`${escapePipe(largest.subject)}\` (**+${fmt(largest.insertions)} / -${fmt(largest.deletions)}** lines)\n`;
 }
 
 /**
