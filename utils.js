@@ -1,4 +1,5 @@
 const path = require('path');
+const { execSync } = require('child_process');
 
 // === Configuration ===
 const MAX_FILES_PER_COMMIT = 10;
@@ -25,7 +26,6 @@ const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
  * Gets the repository name from the root folder path.
  */
 function getRepoName(repoPath) {
-  const { execSync } = require('child_process');
   try {
     const topLevel = execSync('git rev-parse --show-toplevel', {
       encoding: 'utf-8',

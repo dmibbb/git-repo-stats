@@ -40,7 +40,6 @@ function groupCommitsByDate(commits) {
 
 /**
  * Calculates the longest streak of consecutive active days.
- * Returns { length, start, end } where start/end are date strings.
  */
 function calculateMaxStreak(dates) {
     if (dates.length === 0) return { length: 0, start: '', end: '' };
@@ -141,7 +140,7 @@ function calculateActivityByMonth(groupedByDate) {
 }
 
 /**
- * Finds the commit with the highest total churn (insertions + deletions).
+ * Finds the commit with the highest total churn.
  */
 function findLargestCommit(groupedByDate) {
     let largest = null;

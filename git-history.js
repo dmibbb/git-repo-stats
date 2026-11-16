@@ -1,9 +1,8 @@
 /**
  * How to run:
- * node git-history.js                    # current git repo
- * node git-history.js /path/to/repo      # other git repo
+ *     node git-history.js                    # current git repo
+ *     node git-history.js /path/to/repo      # other git repo
  */
-
 const fs = require('fs');
 const path = require('path');
 
@@ -47,14 +46,14 @@ function main() {
         const monthCounts = calculateActivityByMonth(groupedByDate);
 
         // === Generate Markdown ===
-        let md = renderOverview(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts, groupedByDate);
+        let md = renderOverview(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts);
         md += renderChangelog(groupedByDate);
 
         const mdPath = path.join(absoluteRepoPath, 'CHANGELOG.md');
         fs.writeFileSync(mdPath, md, 'utf-8');
 
         // === Generate HTML ===
-        let htmlContent = renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts);
+        let htmlContent = renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts);
         htmlContent += renderChangelogHTML(groupedByDate);
         const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`);
 

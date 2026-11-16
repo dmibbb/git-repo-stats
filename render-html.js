@@ -1,4 +1,4 @@
-const { escapePipe, MAX_FILES_PER_COMMIT, formatNumber, renderBar, WEEKDAY_NAMES } = require('./utils');
+const { MAX_FILES_PER_COMMIT, formatNumber, renderBar, WEEKDAY_NAMES } = require('./utils');
 
 /**
  * Renders an HTML link to a file: <a href="path">name</a>
@@ -113,6 +113,16 @@ function renderMaxStreakLineHTML(stats) {
 }
 
 /**
+ * HTML version of renderLongestGapLine.
+ */
+function renderLongestGapLineHTML(stats) {
+    const { longestGapLength, longestGapStart, longestGapEnd } = stats;
+    if (longestGapLength === 0) return '';
+
+    return `<li>😴 <strong>Longest gap:</strong> <strong>${longestGapLength}</strong> day(s) (${longestGapStart} — ${longestGapEnd})</li>\n`;
+}
+
+/**
  * HTML version of renderLargestCommitLine.
  */
 function renderLargestCommitLineHTML(largest, fmt) {
@@ -165,15 +175,35 @@ function renderWeekdayHistogramHTML(weekdayCounts) {
 }
 
 /**
+ * HTML version of renderMonthHistogram.
+ */
+function renderMonthHistogramHTML(monthCounts) {
+    if (monthCounts.length === 0) return '';
+
+    const maxCount = Math.max(...monthCounts.map(m => m[1]));
+
+    let html = `<li>📅 <strong>Activity by month:</strong>
+  <ul>\n`;
+    for (const [month, count] of monthCounts) {
+        const bar = renderBar(count, maxCount);
+        html += `    <li>${month}: <code>${bar}</code> ${count}</li>\n`;
+    }
+    html += `  </ul>
+</li>\n`;
+    return html;
+}
+
+/**
  * HTML version of renderOverview.
  */
-function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts) {
+function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts) {
     const fmt = formatNumber;
     const netSign = stats.netChange >= 0 ? '+' : '';
 
     let html = `<h1>👨‍💻 Repository Statistics: ${repoName}</h1>\n`;
     html += '<h2>📊 Overview</h2>\n';
     html += '<ul>\n';
+    html += `<li>🎂 <strong>Repo age:</strong> <strong>${stats.repoAge} days</strong> (since ${stats.firstDate})</li>\n`;
     html += `<li>📅 <strong>Period:</strong> ${stats.firstDate} — ${stats.lastDate} (active days: <strong>${stats.activeDays}</strong> out of ${stats.totalCalendarDays} — ${stats.activityPercent}%)</li>\n`;
     html += `<li>📦 <strong>Total commits:</strong> ${fmt(stats.totalCommits)} (avg <strong>${stats.avgCommitsPerActiveDay}</strong> commits per active day)</li>\n`;
     html += `<li>📏 <strong>Volume of changes:</strong> +${fmt(stats.totalInsertions)} / -${fmt(stats.totalDeletions)} lines (net change: <strong>${netSign}${fmt(stats.netChange)}</strong> lines)</li>\n`;
@@ -182,8 +212,10 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
     html += `<li>🏆 <strong>Record by commits:</strong> ${stats.recordCommitsDate} (<strong>${stats.recordCommitsCount}</strong> commits)</li>\n`;
     html += `<li>🔨 <strong>Record by code churn:</strong> ${stats.recordCodeDate} (<strong>+${fmt(stats.recordCodeIns)} / -${fmt(stats.recordCodeDel)}</strong> lines)</li>\n`;
     html += renderMaxStreakLineHTML(stats);
+    html += renderLongestGapLineHTML(stats);
     html += renderLargestCommitLineHTML(largestCommit, fmt);
     html += renderWeekdayHistogramHTML(weekdayCounts);
+    html += renderMonthHistogramHTML(monthCounts);
 
     if (topFiles.length > 0) {
         html += `<li>📂 <strong>Most frequent changed files:</strong>

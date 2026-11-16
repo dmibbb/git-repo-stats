@@ -169,7 +169,7 @@ function renderMonthHistogram(monthCounts) {
 /**
  * Renders the overview statistics block.
  */
-function renderOverview(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts, groupedByDate) {
+function renderOverview(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts) {
     const fmt = formatNumber;
     const netSign = stats.netChange >= 0 ? '+' : '';
 
