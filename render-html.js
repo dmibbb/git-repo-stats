@@ -33,42 +33,56 @@ function renderFileLinkHTML(filename) {
  */
 function wrapInHTMLTemplate(content, title, generatedAt) {
     const css = loadCSS();
-    const searchScript = `
+    const scripts = `
 <script>
 (function() {
+    // === Search ===
     const searchInput = document.querySelector('.search-input');
-    if (!searchInput) return;
-
-    const rows = document.querySelectorAll('.commit-row');
-    const days = document.querySelectorAll('.changelog-day');
-    const counter = document.querySelector('.search-counter');
-
-    searchInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase().trim();
-        let visibleCount = 0;
-
-        // Filter rows
-        rows.forEach(row => {
-            const match = !query || row.textContent.toLowerCase().includes(query);
-            row.classList.toggle('hidden', !match);
-            if (match) visibleCount++;
-        });
-
-        // Hide days with no visible rows
-        days.forEach(day => {
-            const hasVisible = day.querySelector('.commit-row:not(.hidden)');
-            day.classList.toggle('hidden', !hasVisible && query);
-        });
-
-        // Update counter
-        if (counter) {
-            if (query) {
-                counter.textContent = visibleCount + ' result' + (visibleCount !== 1 ? 's' : '');
-            } else {
-                counter.textContent = '';
+    if (searchInput) {
+        const rows = document.querySelectorAll('.commit-row');
+        const days = document.querySelectorAll('.changelog-day');
+        const counter = document.querySelector('.search-counter');
+        
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const match = !query || row.textContent.toLowerCase().includes(query);
+                row.classList.toggle('hidden', !match);
+                if (match) visibleCount++;
+            });
+            
+            days.forEach(day => {
+                const hasVisible = day.querySelector('.commit-row:not(.hidden)');
+                day.classList.toggle('hidden', !hasVisible && query);
+                if (query && hasVisible) {
+                    day.setAttribute('open', '');
+                }
+            });
+            
+            if (counter) {
+                counter.textContent = query ? visibleCount + ' result' + (visibleCount !== 1 ? 's' : '') : '';
             }
-        }
-    });
+        });
+    }
+    
+    // === Collapse/Expand ===
+    const collapseBtn = document.querySelector('[data-action="collapse-all"]');
+    const expandBtn = document.querySelector('[data-action="expand-all"]');
+    const allDays = document.querySelectorAll('.changelog-day');
+    
+    if (collapseBtn) {
+        collapseBtn.addEventListener('click', () => {
+            allDays.forEach(day => day.removeAttribute('open'));
+        });
+    }
+    
+    if (expandBtn) {
+        expandBtn.addEventListener('click', () => {
+            allDays.forEach(day => day.setAttribute('open', ''));
+        });
+    }
 })();
 </script>`;
 
@@ -89,7 +103,7 @@ ${content}
   Generated: ${generatedAt} · Repository Statistics
 </footer>
 </div>
-${searchScript}
+${scripts}
 </body>
 </html>`;
 }
@@ -163,8 +177,8 @@ function renderDaySectionHTML(date, dayData) {
     const commitsCount = dayData.commits.length;
     const uniqueFilesCount = dayData.uniqueFiles.size;
 
-    let html = `<div class="changelog-day">`;
-    html += `<h3>${date}: ${commitsCount} commits (+${fmt(dayData.totalInsertions)} / -${fmt(dayData.totalDeletions)}) in ${uniqueFilesCount} unique files</h3>\n`;
+    let html = `<details class="changelog-day" open>\n`;
+    html += `<summary class="day-summary"><h3>${date}: ${commitsCount} commits (+${fmt(dayData.totalInsertions)} / -${fmt(dayData.totalDeletions)}) in ${uniqueFilesCount} unique files</h3></summary>\n`;
     html += '<table class="changelog-table">\n<thead><tr><th>Commit</th><th>Changed files</th><th>Delta</th></tr></thead>\n<tbody>\n';
 
     dayData.commits.forEach((commit) => {
@@ -172,7 +186,7 @@ function renderDaySectionHTML(date, dayData) {
         html += `<tr class="commit-row"><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
     });
 
-    html += '</tbody>\n</table>\n</div>\n';
+    html += '</tbody>\n</table>\n</details>\n';
     return html;
 }
 
@@ -436,6 +450,8 @@ function renderSearchBarHTML() {
     let html = '<div class="search-bar">\n';
     html += '<input type="text" class="search-input" placeholder="🔍 Search commits, files, authors...">\n';
     html += '<span class="search-counter"></span>\n';
+    html += '<button class="btn btn-collapse" data-action="collapse-all">📂 Collapse All</button>\n';
+    html += '<button class="btn btn-expand" data-action="expand-all">📖 Expand All</button>\n';
     html += '</div>\n';
     return html;
 }

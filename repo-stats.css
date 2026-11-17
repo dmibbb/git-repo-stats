@@ -749,3 +749,71 @@ body {
 .changelog-day.hidden {
   display: none;
 }
+
+/* === Collapsible days === */
+.changelog-day {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  background: var(--bg);
+}
+
+.changelog-day[open] {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.day-summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0;
+}
+
+.day-summary::-webkit-details-marker {
+  display: none;
+}
+
+.day-summary::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: 0.5rem;
+  font-size: 0.7em;
+  transition: transform 0.2s;
+  color: var(--fg-muted);
+}
+
+.changelog-day[open] > .day-summary::before {
+  transform: rotate(90deg);
+}
+
+.day-summary h3 {
+  display: inline;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.day-summary:hover h3 {
+  color: var(--accent);
+}
+
+.changelog-day > table {
+  border-top: 1px solid var(--border);
+  margin: 0;
+  border-radius: 0 0 6px 6px;
+}
+
+/* === Collapse/Expand buttons === */
+.btn-collapse,
+.btn-expand {
+  white-space: nowrap;
+}
+
+.btn-collapse:hover,
+.btn-expand:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
