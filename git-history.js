@@ -213,9 +213,11 @@ function main() {
                 techStack,
                 weekdayCounts,
                 monthCounts,
+                groupedByDate,
             );
             htmlContent += renderChangelogHTML(groupedByDate);
-            const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`);
+            const generatedAt = new Date().toLocaleString('sv-SE');
+            const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`, generatedAt);
             const htmlPath = path.join(outputDir, 'repo-stats.html');
             fs.writeFileSync(htmlPath, fullHTML, 'utf-8');
             console.log(`✅ HTML saved: ${htmlPath}`);
