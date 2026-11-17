@@ -33,7 +33,7 @@ function renderFileLinkHTML(filename) {
  */
 function wrapInHTMLTemplate(content, title) {
     const css = loadCSS();
-    const generatedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const generatedAt = new Date().toLocaleString('sv-SE');
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -114,7 +114,7 @@ function renderDaySectionHTML(date, dayData) {
     html += '<table>\n<thead><tr><th>Commit</th><th>Changed files</th><th>Delta</th></tr></thead>\n<tbody>\n';
 
     dayData.commits.forEach((commit) => {
-        const timeHtml = commit.time ? `<br><span class="commit-time">Committed: ${commit.time} GMT +3</span>` : '';
+        const timeHtml = commit.time ? `<br><span class="commit-time">Committed: ${commit.time.slice(0, 8)}</span>` : '';
         html += `<tr><td>${escapeHtml(commit.subject)}${timeHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles)}</td><td>${renderDeltaCellHTML(commit)}</td></tr>\n`;
     });
 

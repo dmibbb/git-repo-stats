@@ -1,4 +1,4 @@
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const { MAX_BUFFER, isIgnoredFile, escapePipe } = require('./utils');
 
 /**
@@ -6,11 +6,18 @@ const { MAX_BUFFER, isIgnoredFile, escapePipe } = require('./utils');
  * Supports optional --since and --until filters.
  */
 function fetchRawGitLog(repoPath, since, until) {
-  let cmd = 'git log --no-merges --date=iso --pretty=format:"===COMMIT===%ad|||%s" --numstat';
-  if (since) cmd += ` --since="${since}"`;
-  if (until) cmd += ` --until="${until}"`;
+  const args = [
+    'log',
+    '--no-merges',
+    '--date=iso',
+    '--pretty=format:===COMMIT===%ad|||%s',
+    '--numstat',
+  ];
 
-  return execSync(cmd, {
+  if (since) args.push(`--since=${since}`);
+  if (until) args.push(`--until=${until}`);
+
+  return execFileSync('git', args, {
     encoding: 'utf-8',
     maxBuffer: MAX_BUFFER,
     cwd: repoPath,

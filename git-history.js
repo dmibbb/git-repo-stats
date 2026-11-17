@@ -38,7 +38,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { getRepoName, printHelp } = require('./utils');
-const { fetchRawGitLog, parseRawLog } = require('./git');
+const { fetchRawGitLog, parseRawLog } = require('./git-client');
 const {
     groupCommitsByDate,
     calculateOverallStats,
