@@ -176,6 +176,18 @@ em {
   .grid-4, .grid-2 { grid-template-columns: 1fr; }
 }
 
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-heatmap-contrib { grid-template-columns: 4fr 1fr; }
+
+@media (max-width: 1100px) {
+  .grid-heatmap-contrib { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 700px) {
+  .grid-3 { grid-template-columns: 1fr; }
+}
+
 /* === Cards === */
 .card {
   background: var(--bg);
@@ -636,7 +648,8 @@ em {
   font-weight: 500;
 }
 
-.commit-time {
+.commit-time,
+.commit-author {
   display: block;
   font-size: 0.8em;
   color: var(--fg-muted);
@@ -693,4 +706,33 @@ em {
   color: var(--fg-subtle);
   font-size: 0.8rem;
   font-style: italic;
+}
+
+/* === Contributors List === */
+.contrib-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.contrib-item:last-child {
+  border-bottom: none;
+}
+
+.contrib-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.contrib-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
 }

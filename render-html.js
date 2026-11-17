@@ -223,7 +223,8 @@ function renderDaySectionHTML(date, dayData) {
 
     dayData.commits.forEach((commit) => {
         const timeHtml = commit.time ? `<span class="commit-time">Committed: ${commit.time.slice(0, 8)}</span>` : '';
-        html += `<tr class="commit-row"><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
+        const authorHtml = commit.author ? `<span class="commit-author">Author: ${commit.author}</span>` : '';
+        html += `<tr class="commit-row"><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}${authorHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
     });
 
     html += '</tbody>\n</table>\n</details>\n';
@@ -353,10 +354,10 @@ function renderTopFilesCard(topFiles) {
 /**
  * Renders the tech stack card.
  */
-function renderTechStackCard(stack) {
+function renderTechStackCard(stack, title = '🧰 Tech stack (by file touches)') {
     if (!stack || stack.length === 0) return '';
 
-    let html = `<div class="card"><div class="card-header"><span class="card-title">🧰 Tech stack (by file touches)</span></div>\n`;
+    let html = `<div class="card"><div class="card-header"><span class="card-title">${title}</span></div>\n`;
     stack.forEach((item) => {
         const extDisplay = item.ext === 'no-ext' ? '<no-ext>' : `.${item.ext}`;
         html += `<div class="tech-bar-row">
@@ -487,6 +488,31 @@ function renderHeatmapHTML(groupedByDate) {
 }
 
 /**
+ * Renders the contributors breakdown card.
+ */
+function renderContributorsCard(contributors) {
+    if (!contributors || contributors.length === 0) return '';
+
+    const fmt = formatNumber;
+    let html = `<div class="card"><div class="card-header"><span class="card-title">👥 Contributors</span></div><ul class="details-list" style="display:block">\n`;
+    contributors.forEach((c) => {
+        html += `<li class="contrib-item">
+          <div class="contrib-top">
+            <span>${escapeHtml(c.name)}</span>
+            <span class="count">${c.percent}%</span>
+          </div>
+          <div class="contrib-meta">
+            <span>${pluralize(c.commits, 'commit')}</span>
+            <span><span class="file-ins">+${fmt(c.insertions)}</span> / <span class="file-del">-${fmt(c.deletions)}</span></span>
+          </div>
+        </li>\n`;
+    });
+    html += `</ul></div>`;
+
+    return html;
+}
+
+/**
  * Renders search bar for changelog (visual only, no functionality).
  */
 function renderSearchBarHTML() {
@@ -502,7 +528,7 @@ function renderSearchBarHTML() {
 /**
  * Renders the full dashboard overview.
  */
-function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats) {
+function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors) {
     const fmt = formatNumber;
     let html = '';
 
@@ -514,25 +540,25 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
 
     // Row 1: Main KPIs
     html += `<div class="grid grid-4">`;
-    html += renderKPICard('📦', 'Total commits', fmt(stats.totalCommits), `avg ${stats.avgCommitsPerActiveDay} / active day`);
-    html += renderKPICard('📐', 'Avg per commit', `+${stats.avgPerCommitIns} / -${stats.avgPerCommitDel}`, `${stats.avgFilesPerCommit} files per commit`);
-    html += renderKPICard('🏆', 'Record by commits', `${stats.recordCommitsCount}`, `on ${stats.recordCommitsDate}`);
-    html += renderKPICard('🔨', 'Record by churn', `<span class="positive">+${fmt(stats.recordCodeIns)}</span> / <span class="negative">-${fmt(stats.recordCodeDel)}</span>`, `on ${stats.recordCodeDate}`);
-    html += `</div>`;
+    html += renderKPICard(
+        '📐',
+        'Avg per commit',
+        `+${stats.avgPerCommitIns} / -${stats.avgPerCommitDel}`,
+        `${pluralize(Number(stats.avgFilesPerCommit), 'file')} per commit`
+    );
+    html += renderKPICard(
+        '📈',
+        'Avg per active day',
+        `+${fmt(stats.avgPerActiveDayIns)} / -${fmt(stats.avgPerActiveDayDel)}`,
+        `avg ${stats.avgCommitsPerActiveDay} commits / day`
+    );
+    html += renderKPICard(
+        '🎂',
+        'Repo age',
+        pluralize(stats.repoAge, 'day'),
+        `since ${stats.firstDate}`
+    );
 
-    // Row 2: Secondary metrics
-    html += `<div class="grid grid-4">`;
-    html += renderKPICard('📈', 'Avg per active day', `+${fmt(stats.avgPerActiveDayIns)} / -${fmt(stats.avgPerActiveDayDel)}`, 'lines per day');
-    html += renderKPICard('📅', 'Active days', `${stats.activeDays} / ${stats.totalCalendarDays}`, `${stats.activityPercent}% activity · Period: ${stats.firstDate} — ${stats.lastDate}`);
-    html += renderKPICard('📊', 'Activity by month', pluralize(monthCounts.length, 'month'), monthCounts.map(m => `${m[0].split('-')[1]}: ${m[1]}`).join(' · '));
-    html += renderKPICard('💪', 'Largest commit', `<span class="positive">+${fmt(largestCommit?.insertions || 0)}</span> / <span class="negative">-${fmt(largestCommit?.deletions || 0)}</span>`, largestCommit ? `${escapeHtml(largestCommit.subject)}<br>${largestCommit.date}` : '');
-    html += `</div>`;
-
-    // Row 3: Streaks & Age
-    html += `<div class="grid grid-4">`;
-    html += renderKPICard('🔥', 'Max streak', pluralize(stats.maxStreakLength, 'day'), `${stats.maxStreakStart} — ${stats.maxStreakEnd}`);
-    html += renderKPICard('😴', 'Longest gap', pluralize(stats.longestGapLength, 'day'), `${stats.longestGapStart} — ${stats.longestGapEnd}`);
-    html += renderKPICard('🎂', 'Repo age', pluralize(stats.repoAge, 'day'), `since ${stats.firstDate}`);
     const peakTimeIcon = timeOfDayStats?.peak ? timeOfDayStats.peak.icon : '🕐';
     const peakTimeValue = timeOfDayStats?.peak
         ? `${timeOfDayStats.peak.label} (${timeOfDayStats.peak.percent}%)`
@@ -543,6 +569,34 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
     html += renderKPICard(peakTimeIcon, 'Activity by time of day', peakTimeValue, peakTimeSub);
     html += `</div>`;
 
+    // Row 2: Records & Streaks
+    html += `<div class="grid grid-4">`;
+    html += renderKPICard(
+        '🏆',
+        'Record by commits',
+        pluralize(stats.recordCommitsCount, 'commit'),
+        `on ${stats.recordCommitsDate}`
+    );
+    html += renderKPICard(
+        '🔨',
+        'Record by churn',
+        `<span class="positive">+${fmt(stats.recordCodeIns)}</span> / <span class="negative">-${fmt(stats.recordCodeDel)}</span>`,
+        `on ${stats.recordCodeDate}`
+    );
+    html += renderKPICard(
+        '💪',
+        'Largest commit',
+        `<span class="positive">+${fmt(largestCommit?.insertions || 0)}</span> / <span class="negative">-${fmt(largestCommit?.deletions || 0)}</span>`,
+        largestCommit ? `${escapeHtml(largestCommit.subject)}<br>${largestCommit.date}` : ''
+    );
+    html += renderKPICard(
+        '🔥',
+        'Streaks & Gaps',
+        `Max: ${stats.maxStreakLength}d · Cur: ${stats.currentStreak}d`,
+        `Longest gap: ${pluralize(stats.longestGapLength, 'day')}`
+    );
+    html += `</div>`;
+
     // Activity Patterns
     html += `<div class="section-title">📊 Activity Patterns</div>`;
     html += `<div class="grid grid-2">`;
@@ -550,13 +604,17 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
     html += renderMonthHistogramHTML(monthCounts);
     html += `</div>`;
 
-    // Heatmap-365
+    // Heatmap-365 (80%) + Contributors (20%)
+    html += `<div class="grid grid-heatmap-contrib">`;
     html += renderHeatmapHTML(groupedByDate);
+    html += renderContributorsCard(contributors);
+    html += `</div>`;
 
-    // Details
-    html += `<div class="grid grid-2">`;
+    // Details: 3 columns
+    html += `<div class="grid grid-3">`;
     html += renderTopFilesCard(topFiles);
-    html += renderTechStackCard(techStack);
+    html += renderTechStackCard(techStack, '🧰 Tech stack (by file touches)');
+    html += renderTechStackCard(techStackByLines, '📏 Tech stack (by lines changed)');
     html += `</div>`;
 
     return html;

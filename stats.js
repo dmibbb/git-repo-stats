@@ -21,6 +21,7 @@ function groupCommitsByDate(commits) {
         groupedByDate[date].commits.push({
             subject: commit.subject,
             time: commit.time,
+            author: commit.author,
             files: commit.files,
             fileDeltas: commit.fileDeltas,
             trackedFiles: commit.trackedFiles,
@@ -79,6 +80,40 @@ function calculateMaxStreak(dates) {
     }
 
     return { length: maxStreak, start: bestStart, end: bestEnd };
+}
+
+/**
+ * Calculates the current active streak of consecutive days ending today or yesterday (in UTC).
+ */
+function calculateCurrentStreak(dates) {
+    if (dates.length === 0) return 0;
+
+    const dateSet = new Set(dates);
+    const now = new Date();
+    const cursor = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+    const formatUTC = (d) => {
+        const y = d.getUTCFullYear();
+        const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(d.getUTCDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    };
+
+    // If no commits today, checking from yesterday
+    if (!dateSet.has(formatUTC(cursor))) {
+        cursor.setUTCDate(cursor.getUTCDate() - 1);
+        if (!dateSet.has(formatUTC(cursor))) {
+            return 0;
+        }
+    }
+
+    let streak = 0;
+    while (dateSet.has(formatUTC(cursor))) {
+        streak++;
+        cursor.setUTCDate(cursor.getUTCDate() - 1);
+    }
+
+    return streak;
 }
 
 /**
@@ -272,6 +307,7 @@ function calculateOverallStats(groupedByDate) {
     }
 
     const maxStreakInfo = calculateMaxStreak(allDates);
+    const currentStreak = calculateCurrentStreak(allDates);
     const longestGapInfo = calculateLongestGap(allDates);
 
     return {
@@ -301,8 +337,76 @@ function calculateOverallStats(groupedByDate) {
         longestGapLength: longestGapInfo.length,
         longestGapStart: longestGapInfo.start,
         longestGapEnd: longestGapInfo.end,
-        repoAge, // ← Исправлено: теперь считается от firstDate до today
+        currentStreak,
+        repoAge,
     };
+}
+
+/**
+ * Calculates contributors breakdown (commits count, percent, and lines churn).
+ */
+function calculateContributors(groupedByDate) {
+    const authorsMap = new Map();
+    let totalCommits = 0;
+
+    for (const data of Object.values(groupedByDate)) {
+        for (const commit of data.commits) {
+            const name = commit.author || 'Unknown';
+            if (!authorsMap.has(name)) {
+                authorsMap.set(name, { name, commits: 0, insertions: 0, deletions: 0 });
+            }
+            const entry = authorsMap.get(name);
+            entry.commits++;
+            entry.insertions += commit.insertions;
+            entry.deletions += commit.deletions;
+            totalCommits++;
+        }
+    }
+
+    if (totalCommits === 0) return [];
+
+    return Array.from(authorsMap.values())
+        .map(a => ({
+            ...a,
+            percent: ((a.commits / totalCommits) * 100).toFixed(1)
+        }))
+        .sort((a, b) => b.commits - a.commits);
+}
+
+/**
+ * Calculates tech stack distribution by volume of changed lines (insertions + deletions).
+ */
+function calculateTechStackByLines(groupedByDate) {
+    const extChurn = new Map();
+    let totalChurn = 0;
+
+    for (const data of Object.values(groupedByDate)) {
+        for (const commit of data.commits) {
+            for (const [file, delta] of commit.fileDeltas.entries()) {
+                if (delta.binary) continue;
+                const normFile = require('./utils').normalizeGitPath(file);
+                if (require('./utils').isIgnoredFile(normFile)) continue;
+
+                const churn = (delta.ins || 0) + (delta.del || 0);
+                if (churn === 0) continue;
+
+                const ext = getExtension(normFile);
+                extChurn.set(ext, (extChurn.get(ext) || 0) + churn);
+                totalChurn += churn;
+            }
+        }
+    }
+
+    if (totalChurn === 0) return [];
+
+    return Array.from(extChurn.entries())
+        .map(([ext, churn]) => ({
+            ext,
+            churn,
+            percent: ((churn / totalChurn) * 100).toFixed(1)
+        }))
+        .sort((a, b) => b.churn - a.churn)
+        .slice(0, TOP_EXTENSIONS_COUNT);
 }
 
 /**
@@ -359,6 +463,7 @@ function calculateTechStack(groupedByDate) {
 module.exports = {
     groupCommitsByDate,
     calculateMaxStreak,
+    calculateCurrentStreak,
     calculateLongestGap,
     calculateActivityByWeekday,
     calculateActivityByMonth,
@@ -366,5 +471,7 @@ module.exports = {
     calculateOverallStats,
     findTopFrequentFiles,
     calculateTechStack,
-    calculateActivityByTimeOfDay
+    calculateActivityByTimeOfDay,
+    calculateContributors,
+    calculateTechStackByLines
 };

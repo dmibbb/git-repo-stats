@@ -47,7 +47,9 @@ const {
     calculateTechStack,
     calculateActivityByWeekday,
     calculateActivityByMonth,
-    calculateActivityByTimeOfDay
+    calculateActivityByTimeOfDay,
+    calculateTechStackByLines,
+    calculateContributors
 } = require('./stats');
 const { renderOverview, renderChangelog } = require('./render-md');
 const { renderOverviewHTML, renderChangelogHTML, wrapInHTMLTemplate } = require('./render-html');
@@ -191,6 +193,8 @@ function main() {
         const topFiles = findTopFrequentFiles(groupedByDate);
         const largestCommit = findLargestCommit(groupedByDate);
         const techStack = calculateTechStack(groupedByDate);
+        const techStackByLines = calculateTechStackByLines(groupedByDate);
+        const contributors = calculateContributors(groupedByDate);
         const weekdayCounts = calculateActivityByWeekday(groupedByDate);
         const monthCounts = calculateActivityByMonth(groupedByDate);
         const timeOfDayStats = calculateActivityByTimeOfDay(groupedByDate);
@@ -230,6 +234,8 @@ function main() {
                 monthCounts,
                 groupedByDate,
                 timeOfDayStats,
+                techStackByLines,
+                contributors
             );
             htmlContent += renderChangelogHTML(groupedByDate);
             const generatedAt = new Date().toLocaleString('sv-SE');

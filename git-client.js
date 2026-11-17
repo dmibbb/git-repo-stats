@@ -12,7 +12,7 @@ function fetchRawGitLog(repoPath, since, until) {
     'log',
     '--no-merges',
     '--date=iso',
-    '--pretty=format:===COMMIT===%ad|||%s',
+    '--pretty=format:===COMMIT===%ad|||%an|||%s',
     '--numstat',
   ];
 
@@ -31,9 +31,10 @@ function fetchRawGitLog(repoPath, since, until) {
  */
 function parseCommitEntry(entry) {
   const lines = entry.trim().split('\n');
-  const [dateRaw, ...subjectParts] = lines[0].split('|||');
+  const [dateRaw, authorRaw, ...subjectParts] = lines[0].split('|||');
   const date = dateRaw.split(' ')[0]; // YYYY-MM-DD
   const time = dateRaw.split(' ')[1] || ''; // HH:MM:SS +ZZZZ
+  const author = (authorRaw || 'Unknown').trim();
   const subject = subjectParts.join('|||').trim();
   const files = [];
   const fileDeltas = new Map();
@@ -93,6 +94,7 @@ function parseCommitEntry(entry) {
   return {
     date,
     time,
+    author,
     subject,
     files,
     fileDeltas,
