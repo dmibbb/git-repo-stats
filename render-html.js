@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { MAX_FILES_PER_COMMIT, formatNumber, escapeHtml, WEEKDAY_NAMES, MONTH_NAMES } = require('./utils');
+const { MAX_FILES_PER_COMMIT, formatNumber, escapeHtml, WEEKDAY_NAMES, MONTH_NAMES, pluralize } = require('./utils');
+
 
 /**
  * Reads CSS file from misc/repo-stats.css.
@@ -40,11 +41,6 @@ function wrapInHTMLTemplate(content, title, generatedAt) {
     const html = document.documentElement;
     const themeBtn = document.querySelector('.theme-toggle');
     if (themeBtn) {
-        const saved = localStorage.getItem('repo-stats-theme');
-        if (saved === 'light' || saved === 'dark') {
-            html.classList.add('theme-' + saved);
-        }
-
         themeBtn.addEventListener('click', function() {
             const isDark = html.classList.contains('theme-dark');
             const isLight = html.classList.contains('theme-light');
@@ -204,9 +200,9 @@ function renderDeltaCellHTML(commit) {
     }
 
     if (!commit.hasOnlyIgnored && (commit.binaryCount > 0 || commit.textCount > 0)) {
-        deltaStr += `<br><br><span style="font-size: 0.8em">${commit.textCount} text files`;
+        deltaStr += `<br><br><span style="font-size: 0.8em">${pluralize(commit.textCount, 'text file')}`;
         if (commit.binaryCount > 0) {
-            deltaStr += `<br>${commit.binaryCount} binary files`;
+            deltaStr += `<br>${pluralize(commit.binaryCount, 'binary file')}`;
         }
         deltaStr += `</span>`;
     }
@@ -222,7 +218,7 @@ function renderDaySectionHTML(date, dayData) {
     const uniqueFilesCount = dayData.uniqueFiles.size;
 
     let html = `<details class="changelog-day" open>\n`;
-    html += `<summary class="day-summary"><h3>${date}: ${commitsCount} commits (+${fmt(dayData.totalInsertions)} / -${fmt(dayData.totalDeletions)}) in ${uniqueFilesCount} unique files</h3></summary>\n`;
+    html += `<summary class="day-summary"><h3>${date}: ${pluralize(commitsCount, 'commit')} (+${fmt(dayData.totalInsertions)} / -${fmt(dayData.totalDeletions)}) in ${pluralize(uniqueFilesCount, 'unique file')}</h3></summary>\n`;
     html += '<table class="changelog-table">\n<thead><tr><th>Commit</th><th>Changed files</th><th>Delta</th></tr></thead>\n<tbody>\n';
 
     dayData.commits.forEach((commit) => {
@@ -347,7 +343,7 @@ function renderTopFilesCard(topFiles) {
 
     let html = `<div class="card"><div class="card-header"><span class="card-title">📂 Most frequent changed files</span></div><ul class="details-list">\n`;
     topFiles.forEach((f) => {
-        html += `<li><span class="file-name">${escapeHtml(f.file)}</span><span class="count">${f.count} commits</span></li>\n`;
+        html += `<li><span class="file-name">${escapeHtml(f.file)}</span><span class="count">${pluralize(f.count, 'commit')}</span></li>\n`;
     });
     html += `</ul></div>`;
 
@@ -381,35 +377,35 @@ function renderTechStackCard(stack) {
 function renderHeatmapHTML(groupedByDate) {
     if (!groupedByDate || Object.keys(groupedByDate).length === 0) return '';
 
-    // --- 1. Getting the range: Mon - 52 Weeks till today ---
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // --- 1. Getting the range: Mon - 52 Weeks till today (in UTC) ---
+    const now = new Date();
+    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
     const startDate = new Date(today);
-    startDate.setDate(startDate.getDate() - 364); // ~52 weeks ago
+    startDate.setUTCDate(startDate.getUTCDate() - 364); // ~52 weeks ago
 
-    // СShift back to Mon (getDay(): 0=Sun, 1=Mon, ..., 6=Sat)
-    const daysToMonday = (startDate.getDay() + 6) % 7;
-    startDate.setDate(startDate.getDate() - daysToMonday);
+    // Shift back to Mon (getUTCDay(): 0=Sun, 1=Mon, ..., 6=Sat)
+    const daysToMonday = (startDate.getUTCDay() + 6) % 7;
+    startDate.setUTCDate(startDate.getUTCDate() - daysToMonday);
 
     // --- 2. Generate days array ---
-    const formatDateLocal = (d) => {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
+    const formatDateUTC = (d) => {
+        const y = d.getUTCFullYear();
+        const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(d.getUTCDate()).padStart(2, '0');
         return `${y}-${m}-${day}`;
     };
 
     const days = [];
     const cursor = new Date(startDate);
     while (cursor <= today) {
-        const dateStr = formatDateLocal(cursor);
+        const dateStr = formatDateUTC(cursor);
         const commitsCount = groupedByDate[dateStr]?.commits.length || 0;
         days.push({ date: new Date(cursor), dateStr, commitsCount });
-        cursor.setDate(cursor.getDate() + 1);
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
 
-    // Group by weeks (columns)
+    // --- 3. Group by weeks (columns) ---
     const weeks = [];
     let currentWeek = [];
     days.forEach((day) => {
@@ -422,7 +418,7 @@ function renderHeatmapHTML(groupedByDate) {
     if (currentWeek.length > 0) weeks.push(currentWeek);
 
     // --- 4. Determine month labels for each week ---
-    const monthLabels = weeks.map(week => MONTH_NAMES[week[0].date.getMonth()]);
+    const monthLabels = weeks.map(week => MONTH_NAMES[week[0].date.getUTCMonth()]);
 
     // --- 5. Helper for cells ---
     const getLevel = (count) => {
@@ -528,15 +524,15 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
     html += `<div class="grid grid-4">`;
     html += renderKPICard('📈', 'Avg per active day', `+${fmt(stats.avgPerActiveDayIns)} / -${fmt(stats.avgPerActiveDayDel)}`, 'lines per day');
     html += renderKPICard('📅', 'Active days', `${stats.activeDays} / ${stats.totalCalendarDays}`, `${stats.activityPercent}% activity · Period: ${stats.firstDate} — ${stats.lastDate}`);
-    html += renderKPICard('📊', 'Activity by month', `${monthCounts.length} months`, monthCounts.map(m => `${m[0].split('-')[1]}: ${m[1]}`).join(' · '));
+    html += renderKPICard('📊', 'Activity by month', pluralize(monthCounts.length, 'month'), monthCounts.map(m => `${m[0].split('-')[1]}: ${m[1]}`).join(' · '));
     html += renderKPICard('💪', 'Largest commit', `<span class="positive">+${fmt(largestCommit?.insertions || 0)}</span> / <span class="negative">-${fmt(largestCommit?.deletions || 0)}</span>`, largestCommit ? `${escapeHtml(largestCommit.subject)}<br>${largestCommit.date}` : '');
     html += `</div>`;
 
     // Row 3: Streaks & Age
     html += `<div class="grid grid-4">`;
-    html += renderKPICard('🔥', 'Max streak', `${stats.maxStreakLength} days`, `${stats.maxStreakStart} — ${stats.maxStreakEnd}`);
-    html += renderKPICard('😴', 'Longest gap', `${stats.longestGapLength} days`, `${stats.longestGapStart} — ${stats.longestGapEnd}`);
-    html += renderKPICard('🎂', 'Repo age', `${stats.repoAge} days`, `since ${stats.firstDate}`);
+    html += renderKPICard('🔥', 'Max streak', pluralize(stats.maxStreakLength, 'day'), `${stats.maxStreakStart} — ${stats.maxStreakEnd}`);
+    html += renderKPICard('😴', 'Longest gap', pluralize(stats.longestGapLength, 'day'), `${stats.longestGapStart} — ${stats.longestGapEnd}`);
+    html += renderKPICard('🎂', 'Repo age', pluralize(stats.repoAge, 'day'), `since ${stats.firstDate}`);
     html += renderKPICard('🕐', 'Activity by time of day', '<em style="font-size:0.9rem">Coming soon</em>', '');
     html += `</div>`;
 

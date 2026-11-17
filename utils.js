@@ -2,6 +2,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 // === Configuration ===
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const MAX_FILES_PER_COMMIT = 10;
 const MAX_BUFFER = 1024 * 1024 * 50; // 50MB
 const TOP_FILES_COUNT = 3;
@@ -45,6 +46,15 @@ function formatNumber(n) {
 }
 
 /**
+ * Formats a count with singular or plural noun:
+ * pluralize(1, 'commit') -> '1 commit'
+ * pluralize(5, 'commit') -> '5 commits'
+ */
+function pluralize(count, singular, plural = `${singular}s`) {
+  return `${formatNumber(count)} ${count === 1 ? singular : plural}`;
+}
+
+/**
  * Escapes the pipe character for Markdown tables.
  */
 function escapePipe(str) {
@@ -70,6 +80,13 @@ function escapeHtml(str) {
 function parseDate(str) {
   const [y, m, d] = str.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d));
+}
+
+/**
+ * Calculates the difference in full days between two Date objects.
+ */
+function diffDays(dateA, dateB) {
+  return Math.round((dateB - dateA) / MS_PER_DAY);
 }
 
 /**
@@ -179,5 +196,7 @@ module.exports = {
   toMondayFirstIndex,
   renderBar,
   printHelp,
-  normalizeGitPath
+  normalizeGitPath,
+  pluralize,
+  diffDays
 };

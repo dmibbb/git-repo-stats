@@ -9,7 +9,7 @@
  * styled, dark-mode-ready HTML dashboard (`repo-stats.html`).
  * 
  * Author: Димасик (dmibbb)
- * Version: 20261117
+ * Version: 20261118
  *
  * Features:
  * - High-level repository overview (age, active days, streaks, gaps, records)
@@ -52,8 +52,8 @@ const { renderOverview, renderChangelog } = require('./render-md');
 const { renderOverviewHTML, renderChangelogHTML, wrapInHTMLTemplate } = require('./render-html');
 
 /**
- * Parses CLI arguments (supports --flag=value format).
- * Returns { since, until, html, md, out }
+ * Parses CLI arguments (supports --flag=value format and positional repo path).
+ * Returns { since, until, html, md, out, help, repoPath }
  */
 function parseArgs(argv) {
     const args = {
@@ -63,6 +63,7 @@ function parseArgs(argv) {
         md: false,
         out: null,
         help: false,
+        repoPath: null,
     };
 
     for (const arg of argv) {
@@ -71,28 +72,39 @@ function parseArgs(argv) {
             continue;
         }
 
-        if (!arg.startsWith('--')) continue;
-        const [key, ...valueParts] = arg.slice(2).split('=');
-        const value = valueParts.join('=') || null;
+        if (arg.startsWith('--')) {
+            const [key, ...valueParts] = arg.slice(2).split('=');
+            const value = valueParts.join('=') || null;
 
-        switch (key) {
-            case 'since':
-                args.since = value;
-                break;
-            case 'until':
-                args.until = value;
-                break;
-            case 'html':
-                args.html = true;
-                break;
-            case 'md':
-                args.md = true;
-                break;
-            case 'out':
-                args.out = value;
-                break;
-            default:
-                console.warn(`⚠️ Unknown flag: --${key}`);
+            switch (key) {
+                case 'since':
+                    args.since = value;
+                    break;
+                case 'until':
+                    args.until = value;
+                    break;
+                case 'html':
+                    args.html = true;
+                    break;
+                case 'md':
+                    args.md = true;
+                    break;
+                case 'out':
+                    args.out = value;
+                    break;
+                default:
+                    console.warn(`⚠️  Unknown flag: --${key}`);
+            }
+            continue;
+        }
+
+        if (arg.startsWith('-')) {
+            console.warn(`⚠️  Unknown short flag: ${arg}`);
+            continue;
+        }
+
+        if (!args.repoPath) {
+            args.repoPath = arg;
         }
     }
 
@@ -131,16 +143,17 @@ function main() {
         }
 
         const mode = getGenerationMode(args);
-        const repoPathArg = process.argv.slice(2).find((a) => !a.startsWith('--')) || process.cwd();
-        const absoluteRepoPath = path.resolve(repoPathArg);
+        const absoluteRepoPath = path.resolve(args.repoPath || process.cwd());
 
         // === Validate repo path ===
-        if (!fs.existsSync(absoluteRepoPath)) {
+        let stat;
+        try {
+            stat = fs.statSync(absoluteRepoPath);
+        } catch {
             console.error(`❌ Path does not exist: ${absoluteRepoPath}`);
             return;
         }
 
-        const stat = fs.statSync(absoluteRepoPath);
         if (!stat.isDirectory()) {
             console.error(`❌ Path is not a directory: ${absoluteRepoPath}`);
             return;

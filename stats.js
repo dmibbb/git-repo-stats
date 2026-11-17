@@ -1,4 +1,4 @@
-const { parseDate, toMondayFirstIndex, WEEKDAY_NAMES, MONTH_NAMES, TOP_FILES_COUNT, TOP_EXTENSIONS_COUNT, getExtension } = require('./utils');
+const { parseDate, diffDays, toMondayFirstIndex, WEEKDAY_NAMES, MONTH_NAMES, TOP_FILES_COUNT, TOP_EXTENSIONS_COUNT, getExtension } = require('./utils');
 
 /**
  * Groups commits by date and calculates per-day aggregates.
@@ -57,9 +57,9 @@ function calculateMaxStreak(dates) {
     for (let i = 1; i < sorted.length; i++) {
         const prev = parseDate(sorted[i - 1]);
         const curr = parseDate(sorted[i]);
-        const diffDays = Math.round((curr - prev) / (1000 * 60 * 60 * 24));
+        const diff = diffDays(prev, curr);
 
-        if (diffDays === 1) {
+        if (diff === 1) {
             currentStreak++;
         } else {
             if (currentStreak > maxStreak) {
@@ -95,7 +95,7 @@ function calculateLongestGap(dates) {
     for (let i = 1; i < sorted.length; i++) {
         const prev = parseDate(sorted[i - 1]);
         const curr = parseDate(sorted[i]);
-        const gapDays = Math.round((curr - prev) / (1000 * 60 * 60 * 24));
+        const gapDays = diffDays(prev, curr);
 
         if (gapDays > maxGap) {
             maxGap = gapDays;
@@ -176,14 +176,15 @@ function calculateOverallStats(groupedByDate) {
 
     const startDate = parseDate(firstDate);
     const endDate = parseDate(lastDate);
-    const totalCalendarDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+    const totalCalendarDays = diffDays(startDate, endDate) + 1;
     const activeDays = allDates.length;
     const activityPercent = totalCalendarDays
         ? ((activeDays / totalCalendarDays) * 100).toFixed(0)
         : '0';
 
     const now = new Date();
-    const repoAge = Math.round((now - startDate) / (1000 * 60 * 60 * 24));
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const repoAge = diffDays(startDate, todayUTC);
 
     const totalCommits = Object.values(groupedByDate).reduce((sum, d) => sum + d.commits.length, 0);
     const totalInsertions = Object.values(groupedByDate).reduce((sum, d) => sum + d.totalInsertions, 0);
