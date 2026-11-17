@@ -11,6 +11,7 @@
   --accent-light: #4493f8;
   --added: #2da44e;
   --added-light: #3fb950;
+  --removed: #cf222e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -26,6 +27,7 @@
     --accent-light: #58a6ff;
     --added: #3fb950;
     --added-light: #56d364;
+    --removed: #f85149;
   }
 }
 
@@ -231,9 +233,18 @@ em {
 
 /* === Per-file delta === */
 .file-delta {
-  color: var(--fg-muted);
   font-size: 0.85em;
   font-weight: 400;
+}
+
+.file-ins {
+  color: color-mix(in srgb, var(--added) 80%, var(--fg-muted));
+  font-weight: 500;
+}
+
+.file-del {
+  color: color-mix(in srgb, var(--removed) 80%, var(--fg-muted));
+  font-weight: 500;
 }
 
 /* === Dashboard Layout === */
@@ -722,4 +733,19 @@ body {
   height: 12px;
   border-radius: 2px;
   border: 1px solid var(--border);
+}
+
+/* === Search counter === */
+.search-counter {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 5rem;
+  font-weight: 500;
+}
+
+/* === Hidden state for search === */
+.commit-row.hidden,
+.changelog-day.hidden {
+  display: none;
 }

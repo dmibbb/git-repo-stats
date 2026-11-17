@@ -33,6 +33,45 @@ function renderFileLinkHTML(filename) {
  */
 function wrapInHTMLTemplate(content, title, generatedAt) {
     const css = loadCSS();
+    const searchScript = `
+<script>
+(function() {
+    const searchInput = document.querySelector('.search-input');
+    if (!searchInput) return;
+
+    const rows = document.querySelectorAll('.commit-row');
+    const days = document.querySelectorAll('.changelog-day');
+    const counter = document.querySelector('.search-counter');
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        // Filter rows
+        rows.forEach(row => {
+            const match = !query || row.textContent.toLowerCase().includes(query);
+            row.classList.toggle('hidden', !match);
+            if (match) visibleCount++;
+        });
+
+        // Hide days with no visible rows
+        days.forEach(day => {
+            const hasVisible = day.querySelector('.commit-row:not(.hidden)');
+            day.classList.toggle('hidden', !hasVisible && query);
+        });
+
+        // Update counter
+        if (counter) {
+            if (query) {
+                counter.textContent = visibleCount + ' result' + (visibleCount !== 1 ? 's' : '');
+            } else {
+                counter.textContent = '';
+            }
+        }
+    });
+})();
+</script>`;
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,6 +89,7 @@ ${content}
   Generated: ${generatedAt} · Repository Statistics
 </footer>
 </div>
+${searchScript}
 </body>
 </html>`;
 }
@@ -68,7 +108,7 @@ function renderFilesCellHTML(files, ignoredFiles, fileDeltas) {
             if (delta.binary) {
                 deltaHtml = ' <span class="file-delta">(binary)</span>';
             } else {
-                deltaHtml = ` <span class="file-delta">(+${formatNumber(delta.ins)}/-${formatNumber(delta.del)})</span>`;
+                deltaHtml = ` <span class="file-delta">(<span class="file-ins">+${formatNumber(delta.ins)}</span>/<span class="file-del">-${formatNumber(delta.del)}</span>)</span>`;
             }
         }
         const ignored = ignoredFiles.has(f) ? '*' : '';
@@ -129,7 +169,7 @@ function renderDaySectionHTML(date, dayData) {
 
     dayData.commits.forEach((commit) => {
         const timeHtml = commit.time ? `<span class="commit-time">Committed: ${commit.time.slice(0, 8)}</span>` : '';
-        html += `<tr><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
+        html += `<tr class="commit-row"><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
     });
 
     html += '</tbody>\n</table>\n</div>\n';
@@ -395,7 +435,7 @@ function renderHeatmapHTML(groupedByDate) {
 function renderSearchBarHTML() {
     let html = '<div class="search-bar">\n';
     html += '<input type="text" class="search-input" placeholder="🔍 Search commits, files, authors...">\n';
-    html += '<button class="btn">Filter</button>\n';
+    html += '<span class="search-counter"></span>\n';
     html += '</div>\n';
     return html;
 }
