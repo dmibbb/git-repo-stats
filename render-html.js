@@ -502,7 +502,7 @@ function renderSearchBarHTML() {
 /**
  * Renders the full dashboard overview.
  */
-function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts, groupedByDate) {
+function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats) {
     const fmt = formatNumber;
     let html = '';
 
@@ -533,7 +533,14 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
     html += renderKPICard('🔥', 'Max streak', pluralize(stats.maxStreakLength, 'day'), `${stats.maxStreakStart} — ${stats.maxStreakEnd}`);
     html += renderKPICard('😴', 'Longest gap', pluralize(stats.longestGapLength, 'day'), `${stats.longestGapStart} — ${stats.longestGapEnd}`);
     html += renderKPICard('🎂', 'Repo age', pluralize(stats.repoAge, 'day'), `since ${stats.firstDate}`);
-    html += renderKPICard('🕐', 'Activity by time of day', '<em style="font-size:0.9rem">Coming soon</em>', '');
+    const peakTimeIcon = timeOfDayStats?.peak ? timeOfDayStats.peak.icon : '🕐';
+    const peakTimeValue = timeOfDayStats?.peak
+        ? `${timeOfDayStats.peak.label} (${timeOfDayStats.peak.percent}%)`
+        : 'N/A';
+    const peakTimeSub = timeOfDayStats?.periods
+        ? timeOfDayStats.periods.map(p => `${p.icon} ${p.percent}%`).join(' · ')
+        : '';
+    html += renderKPICard(peakTimeIcon, 'Activity by time of day', peakTimeValue, peakTimeSub);
     html += `</div>`;
 
     // Activity Patterns

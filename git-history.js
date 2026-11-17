@@ -46,7 +46,8 @@ const {
     findLargestCommit,
     calculateTechStack,
     calculateActivityByWeekday,
-    calculateActivityByMonth
+    calculateActivityByMonth,
+    calculateActivityByTimeOfDay
 } = require('./stats');
 const { renderOverview, renderChangelog } = require('./render-md');
 const { renderOverviewHTML, renderChangelogHTML, wrapInHTMLTemplate } = require('./render-html');
@@ -192,6 +193,7 @@ function main() {
         const techStack = calculateTechStack(groupedByDate);
         const weekdayCounts = calculateActivityByWeekday(groupedByDate);
         const monthCounts = calculateActivityByMonth(groupedByDate);
+        const timeOfDayStats = calculateActivityByTimeOfDay(groupedByDate);
 
         // === Resolve output directory ===
         const outputDir = resolveOutputDir(args.out, absoluteRepoPath);
@@ -227,6 +229,7 @@ function main() {
                 weekdayCounts,
                 monthCounts,
                 groupedByDate,
+                timeOfDayStats,
             );
             htmlContent += renderChangelogHTML(groupedByDate);
             const generatedAt = new Date().toLocaleString('sv-SE');

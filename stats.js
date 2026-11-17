@@ -142,6 +142,50 @@ function calculateActivityByMonth(groupedByDate) {
 }
 
 /**
+ * Counts commits per time-of-day period:
+ * Night (00:00–05:59), Morning (06:00–11:59), Day (12:00–17:59), Evening (18:00–23:59).
+ */
+function calculateActivityByTimeOfDay(groupedByDate) {
+    const periods = [
+        { key: 'night', label: 'Night', icon: '🌙', range: '00:00–05:59', count: 0 },
+        { key: 'morning', label: 'Morning', icon: '🌅', range: '06:00–11:59', count: 0 },
+        { key: 'day', label: 'Day', icon: '☀️', range: '12:00–17:59', count: 0 },
+        { key: 'evening', label: 'Evening', icon: '🌆', range: '18:00–23:59', count: 0 }
+    ];
+
+    let total = 0;
+
+    for (const data of Object.values(groupedByDate)) {
+        for (const commit of data.commits) {
+            if (!commit.time) continue;
+            const hour = parseInt(commit.time.split(':')[0], 10);
+            if (isNaN(hour)) continue;
+
+            total++;
+            if (hour < 6) periods[0].count++;
+            else if (hour < 12) periods[1].count++;
+            else if (hour < 18) periods[2].count++;
+            else periods[3].count++;
+        }
+    }
+
+    if (total === 0) return null;
+
+    const withPercent = periods.map(p => ({
+        ...p,
+        percent: ((p.count / total) * 100).toFixed(0)
+    }));
+
+    const peak = [...withPercent].sort((a, b) => b.count - a.count)[0];
+
+    return {
+        periods: withPercent,
+        peak,
+        total
+    };
+}
+
+/**
  * Finds the commit with the highest total churn.
  */
 function findLargestCommit(groupedByDate) {
@@ -321,5 +365,6 @@ module.exports = {
     findLargestCommit,
     calculateOverallStats,
     findTopFrequentFiles,
-    calculateTechStack
+    calculateTechStack,
+    calculateActivityByTimeOfDay
 };
