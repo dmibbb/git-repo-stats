@@ -817,3 +817,51 @@ body {
   color: white;
   border-color: var(--accent);
 }
+
+/* === Manual Theme Overrides === */
+html.theme-light {
+  --bg: #ffffff;
+  --bg-soft: #f6f8fa;
+  --bg-header: #24292f;
+  --fg-header: #ffffff;
+  --fg: #1f2328;
+  --fg-muted: #656d76;
+  --fg-subtle: #8b949e;
+  --border: #d1d9e0;
+  --accent: #0969da;
+  --accent-light: #4493f8;
+  --added: #2da44e;
+  --added-light: #3fb950;
+  --removed: #cf222e;
+}
+
+html.theme-dark {
+  --bg: #0d1117;
+  --bg-soft: #161b22;
+  --bg-header: #c9d1d9;
+  --fg-header: #0d1117;
+  --fg: #e6edf3;
+  --fg-muted: #9198a1;
+  --fg-subtle: #6e7681;
+  --border: #30363d;
+  --accent: #4493f8;
+  --accent-light: #58a6ff;
+  --added: #3fb950;
+  --added-light: #56d364;
+  --removed: #f85149;
+}
+
+/* === Header Actions (for theme button) === */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 500;
+  white-space: nowrap;
+}

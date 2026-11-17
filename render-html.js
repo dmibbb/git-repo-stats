@@ -36,7 +36,45 @@ function wrapInHTMLTemplate(content, title, generatedAt) {
     const scripts = `
 <script>
 (function() {
-    // === Search ===
+    // === Theme Toggle ===
+    const html = document.documentElement;
+    const themeBtn = document.querySelector('.theme-toggle');
+    if (themeBtn) {
+        const saved = localStorage.getItem('repo-stats-theme');
+        if (saved === 'light' || saved === 'dark') {
+            html.classList.add('theme-' + saved);
+        }
+
+        themeBtn.addEventListener('click', function() {
+            const isDark = html.classList.contains('theme-dark');
+            const isLight = html.classList.contains('theme-light');
+
+            html.classList.remove('theme-light', 'theme-dark');
+
+            if (isDark) {
+                // Dark --> Light
+                html.classList.add('theme-light');
+                localStorage.setItem('repo-stats-theme', 'light');
+                themeBtn.textContent = '🌙 Dark';
+            } else if (isLight) {
+                // Light --> System
+                localStorage.removeItem('repo-stats-theme');
+                themeBtn.textContent = '🌓 Theme';
+            } else {
+                // System --> Dark
+                html.classList.add('theme-dark');
+                localStorage.setItem('repo-stats-theme', 'dark');
+                themeBtn.textContent = '☀️ Light';
+            }
+        });
+
+        // Initial theme setting
+        if (html.classList.contains('theme-dark')) themeBtn.textContent = '☀️ Light';
+        else if (html.classList.contains('theme-light')) themeBtn.textContent = '🌙 Dark';
+        else themeBtn.textContent = '🌓 Theme';
+    }
+
+    // === Search Filter ===
     const searchInput = document.querySelector('.search-input');
     if (searchInput) {
         const rows = document.querySelectorAll('.commit-row');
@@ -92,6 +130,12 @@ function wrapInHTMLTemplate(content, title, generatedAt) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(title)}</title>
+<script>
+  (function() {
+    var t = localStorage.getItem('repo-stats-theme');
+    if (t === 'light' || t === 'dark') document.documentElement.classList.add('theme-' + t);
+  })();
+</script>
 <style>
 ${css}
 </style>
@@ -209,8 +253,11 @@ function renderKPICard(icon, title, value, sub) {
  */
 function renderHeader(repoName, stats) {
     return `<div class="dashboard-header">
-    <h1>👨‍💻 Repository Statistics: ${escapeHtml(repoName)}</h1>
-    <div class="header-meta">📅 ${stats.firstDate} — ${stats.lastDate}</div>
+    <h1>👨‍💻 Git Repository Statistics: ${escapeHtml(repoName)}</h1>
+    <div class="header-actions">
+      <div class="header-meta">📅 ${stats.firstDate} — ${stats.lastDate}</div>
+      <button class="btn theme-toggle" aria-label="Toggle theme">🌓 Theme</button>
+    </div>
   </div>`;
 }
 
@@ -313,7 +360,7 @@ function renderTopFilesCard(topFiles) {
 function renderTechStackCard(stack) {
     if (!stack || stack.length === 0) return '';
 
-    let html = `<div class="card"><div class="card-header"><span class="card-title">🧰 Tech stack (by commits)</span></div>\n`;
+    let html = `<div class="card"><div class="card-header"><span class="card-title">🧰 Tech stack (by file touches)</span></div>\n`;
     stack.forEach((item) => {
         const extDisplay = item.ext === 'no-ext' ? '<no-ext>' : `.${item.ext}`;
         html += `<div class="tech-bar-row">
