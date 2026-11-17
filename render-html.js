@@ -55,12 +55,22 @@ ${content}
 /**
  * Renders the "Changed files" cell.
  */
-function renderFilesCellHTML(files, ignoredFiles) {
+function renderFilesCellHTML(files, ignoredFiles, fileDeltas) {
     if (files.length === 0) return '<em>no changes</em>';
 
     const renderFile = (f) => {
         const link = renderFileLinkHTML(f);
-        return ignoredFiles.has(f) ? `${link}*` : link;
+        const delta = fileDeltas?.get(f);
+        let deltaHtml = '';
+        if (delta) {
+            if (delta.binary) {
+                deltaHtml = ' <span class="file-delta">(binary)</span>';
+            } else {
+                deltaHtml = ` <span class="file-delta">(+${formatNumber(delta.ins)}/-${formatNumber(delta.del)})</span>`;
+            }
+        }
+        const ignored = ignoredFiles.has(f) ? '*' : '';
+        return `${link}${deltaHtml}${ignored}`;
     };
 
     if (files.length <= MAX_FILES_PER_COMMIT) {
@@ -69,7 +79,7 @@ function renderFilesCellHTML(files, ignoredFiles) {
 
     const visible = files.slice(0, MAX_FILES_PER_COMMIT);
     const hidden = files.slice(MAX_FILES_PER_COMMIT);
-    const summarySuffix = hidden.some(f => ignoredFiles.has(f)) ? '*' : '';
+    const summarySuffix = hidden.some((f) => ignoredFiles.has(f)) ? '*' : '';
 
     let result = visible.map(renderFile).join('<br>');
     result += `<details><summary><em>Show ${hidden.length} more files${summarySuffix}</em></summary>`;
@@ -94,9 +104,9 @@ function renderDeltaCellHTML(commit) {
     }
 
     if (!commit.hasOnlyIgnored && (commit.binaryCount > 0 || commit.textCount > 0)) {
-        deltaStr += `<br><br>TXT: ${commit.textCount}`;
+        deltaStr += `<br><br>${commit.textCount} text files`;
         if (commit.binaryCount > 0) {
-            deltaStr += `<br>Binary: ${commit.binaryCount}`;
+            deltaStr += `<br>${commit.binaryCount} binary files`;
         }
     }
     return deltaStr;
@@ -115,7 +125,11 @@ function renderDaySectionHTML(date, dayData) {
 
     dayData.commits.forEach((commit) => {
         const timeHtml = commit.time ? `<br><span class="commit-time">Committed: ${commit.time.slice(0, 8)}</span>` : '';
-        html += `<tr><td>${escapeHtml(commit.subject)}${timeHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles)}</td><td>${renderDeltaCellHTML(commit)}</td></tr>\n`;
+        html += `<tr><td>${escapeHtml(commit.subject)}${timeHtml}</td><td>${renderFilesCellHTML(
+            commit.files,
+            commit.ignoredFiles,
+            commit.fileDeltas,
+        )}</td><td>${renderDeltaCellHTML(commit)}</td></tr>\n`;
     });
 
     html += '</tbody>\n</table>\n';

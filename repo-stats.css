@@ -228,3 +228,10 @@ em {
     color: var(--fg-muted);
     font-weight: 400;
 }
+
+/* === Per-file delta === */
+.file-delta {
+  color: var(--fg-muted);
+  font-size: 0.85em;
+  font-weight: 400;
+}

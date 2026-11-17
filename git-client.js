@@ -33,8 +33,8 @@ function parseCommitEntry(entry) {
   const date = dateRaw.split(' ')[0]; // YYYY-MM-DD
   const time = dateRaw.split(' ')[1] || ''; // HH:MM:SS +ZZZZ
   const subject = subjectParts.join('|||').trim();
-
   const files = [];
+  const fileDeltas = new Map();
   const trackedFiles = [];
   const ignoredFiles = new Set();
   let insertions = 0;
@@ -51,6 +51,16 @@ function parseCommitEntry(entry) {
       const [ins, del, file] = parts;
 
       files.push(file);
+
+      if (ins === '-' && del === '-') {
+        fileDeltas.set(file, { ins: null, del: null, binary: true });
+      } else {
+        fileDeltas.set(file, {
+          ins: parseInt(ins, 10),
+          del: parseInt(del, 10),
+          binary: false,
+        });
+      }
 
       if (isIgnoredFile(file)) {
         ignoredFiles.add(file);
@@ -81,6 +91,7 @@ function parseCommitEntry(entry) {
     time,
     subject,
     files,
+    fileDeltas,
     trackedFiles,
     ignoredFiles,
     insertions,

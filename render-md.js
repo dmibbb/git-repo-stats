@@ -16,12 +16,22 @@ function renderFileLink(filename) {
 /**
  * Renders the "Changed files" cell for a commit row.
  */
-function renderFilesCell(files, ignoredFiles) {
+function renderFilesCell(files, ignoredFiles, fileDeltas) {
     if (files.length === 0) return '_no changes_';
 
     const renderFile = (f) => {
         const link = renderFileLink(f);
-        return ignoredFiles.has(f) ? `${link}*` : link;
+        const delta = fileDeltas?.get(f);
+        let deltaStr = '';
+        if (delta) {
+            if (delta.binary) {
+                deltaStr = ' _(binary)_';
+            } else {
+                deltaStr = ` (+${formatNumber(delta.ins)}/-${formatNumber(delta.del)})`;
+            }
+        }
+        const ignored = ignoredFiles.has(f) ? '*' : '';
+        return `${link}${deltaStr}${ignored}`;
     };
 
     if (files.length <= MAX_FILES_PER_COMMIT) {
@@ -30,8 +40,7 @@ function renderFilesCell(files, ignoredFiles) {
 
     const visible = files.slice(0, MAX_FILES_PER_COMMIT);
     const hidden = files.slice(MAX_FILES_PER_COMMIT);
-
-    const hiddenHasIgnored = hidden.some(f => ignoredFiles.has(f));
+    const hiddenHasIgnored = hidden.some((f) => ignoredFiles.has(f));
     const summarySuffix = hiddenHasIgnored ? '*' : '';
 
     let result = visible.map(renderFile).join('<br>');
@@ -57,9 +66,9 @@ function renderDeltaCell(commit) {
     }
 
     if (!commit.hasOnlyIgnored && (commit.binaryCount > 0 || commit.textCount > 0)) {
-        deltaStr += `<br><br>TXT: ${commit.textCount}`;
+        deltaStr += `<br><br>${commit.textCount} text files`;
         if (commit.binaryCount > 0) {
-            deltaStr += `<br>Binary: ${commit.binaryCount}`;
+            deltaStr += `<br>${commit.binaryCount} binary files`;
         }
     }
     return deltaStr;
@@ -78,7 +87,11 @@ function renderDaySection(date, dayData) {
     md += '| :--- | :--- | :---: |\n';
 
     dayData.commits.forEach(commit => {
-        md += `| ${escapePipe(commit.subject)} | ${renderFilesCell(commit.files, commit.ignoredFiles)} | ${renderDeltaCell(commit)} |\n`;
+        md += `| ${escapePipe(commit.subject)} | ${renderFilesCell(
+            commit.files,
+            commit.ignoredFiles,
+            commit.fileDeltas
+        )} | ${renderDeltaCell(commit)} |\n`;
     });
 
     return md + '\n';

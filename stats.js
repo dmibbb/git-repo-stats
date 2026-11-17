@@ -22,6 +22,7 @@ function groupCommitsByDate(commits) {
             subject: commit.subject,
             time: commit.time,
             files: commit.files,
+            fileDeltas: commit.fileDeltas,
             trackedFiles: commit.trackedFiles,
             ignoredFiles: commit.ignoredFiles,
             insertions: commit.insertions,
