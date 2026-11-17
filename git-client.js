@@ -1,5 +1,5 @@
 const { execFileSync } = require('child_process');
-const { MAX_BUFFER, isIgnoredFile, escapePipe } = require('./utils');
+const { MAX_BUFFER, isIgnoredFile, normalizeGitPath } = require('./utils');
 
 /**
  * Executes git log and returns raw output.
@@ -7,6 +7,8 @@ const { MAX_BUFFER, isIgnoredFile, escapePipe } = require('./utils');
  */
 function fetchRawGitLog(repoPath, since, until) {
   const args = [
+    '-c',
+    'core.quotepath=false',
     'log',
     '--no-merges',
     '--date=iso',
@@ -37,6 +39,7 @@ function parseCommitEntry(entry) {
   const fileDeltas = new Map();
   const trackedFiles = [];
   const ignoredFiles = new Set();
+
   let insertions = 0;
   let deletions = 0;
   let binaryCount = 0;
@@ -49,6 +52,7 @@ function parseCommitEntry(entry) {
     const parts = line.split('\t');
     if (parts.length === 3) {
       const [ins, del, file] = parts;
+      const normalizedFile = normalizeGitPath(file);
 
       files.push(file);
 
@@ -62,12 +66,12 @@ function parseCommitEntry(entry) {
         });
       }
 
-      if (isIgnoredFile(file)) {
+      if (isIgnoredFile(normalizedFile)) {
         ignoredFiles.add(file);
         continue;
       }
 
-      trackedFiles.push(file);
+      trackedFiles.push(normalizedFile);
 
       if (ins === '-' && del === '-') {
         binaryCount++;

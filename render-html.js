@@ -139,13 +139,13 @@ function renderDaySectionHTML(date, dayData) {
 /**
  * Renders a single KPI card.
  */
-function renderKPICard(icon, title, value, sub, valueClass = '') {
+function renderKPICard(icon, title, value, sub) {
     return `<div class="card">
     <div class="card-header">
       <span class="card-title">${icon} ${title}</span>
       <span class="card-icon">${icon}</span>
     </div>
-    <div class="kpi-value ${valueClass}">${value}</div>
+    <div class="kpi-value">${value}</div>
     <div class="kpi-sub">${sub}</div>
   </div>`;
 }

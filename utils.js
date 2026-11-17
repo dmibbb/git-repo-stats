@@ -136,6 +136,30 @@ Examples:
 `);
 }
 
+/**
+ * Normalizes Git rename paths for statistics.
+ * Converts "src/{old.js => new.js}" or "{src => lib}/index.js" to "src/new.js" or "lib/index.js".
+ * Leaves simple paths untouched.
+ */
+function normalizeGitPath(filename) {
+  if (!filename.includes(' => ')) return filename;
+
+  // Case 1: With braces (directory or partial name change)
+  // Matches: prefix + {old + " => " + new} + suffix
+  // Example: "src/{a.js => b.js}" -> "src/" + "b.js" + "" = "src/b.js"
+  const braceMatch = filename.match(/^(.*)\{(.*)\s*=>\s*(.*)\}(.*)$/);
+  if (braceMatch) {
+    const prefix = braceMatch[1];
+    const newName = braceMatch[3];
+    const suffix = braceMatch[4];
+    return prefix + newName + suffix;
+  }
+
+  // Case 2: Without braces (simple rename). E.g., "old.js => new.js"
+  const parts = filename.split(' => ');
+  return parts[1];
+}
+
 module.exports = {
   MAX_FILES_PER_COMMIT,
   MAX_BUFFER,
@@ -154,5 +178,6 @@ module.exports = {
   getExtension,
   toMondayFirstIndex,
   renderBar,
-  printHelp
+  printHelp,
+  normalizeGitPath
 };
