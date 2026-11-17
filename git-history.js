@@ -9,7 +9,7 @@
  * styled, dark-mode-ready HTML dashboard (`repo-stats.html`).
  * 
  * Author: Димасик (dmibbb)
- * Version: 20261116
+ * Version: 20261117
  *
  * Features:
  * - High-level repository overview (age, active days, streaks, gaps, records)
@@ -223,7 +223,7 @@ function main() {
             console.log(`✅ HTML saved: ${htmlPath}`);
         }
 
-        console.log('🎉 Done!');
+        console.log(`🎉 Done! (${new Date().toLocaleString('sv-SE')})`);
     } catch (error) {
         console.error('❌ Error occurred while running git-history.js');
         console.error('Error type:', error.constructor.name);
