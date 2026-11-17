@@ -165,7 +165,7 @@ function renderFilesCellHTML(files, ignoredFiles, fileDeltas) {
                 deltaHtml = ` <span class="file-delta">(<span class="file-ins">+${formatNumber(delta.ins)}</span>/<span class="file-del">-${formatNumber(delta.del)}</span>)</span>`;
             }
         }
-        const ignored = ignoredFiles.has(f) ? '*' : '';
+        const ignored = ignoredFiles.has(f) ? ' <span class="file-delta"><em>(ignored)</em></span>' : '';
         return `${link}${deltaHtml}${ignored}`;
     };
 
@@ -175,7 +175,7 @@ function renderFilesCellHTML(files, ignoredFiles, fileDeltas) {
 
     const visible = files.slice(0, MAX_FILES_PER_COMMIT);
     const hidden = files.slice(MAX_FILES_PER_COMMIT);
-    const summarySuffix = hidden.some((f) => ignoredFiles.has(f)) ? '*' : '';
+    const summarySuffix = hidden.some((f) => ignoredFiles.has(f)) ? ' (contains ignored)' : '';
 
     let result = visible.map(renderFile).join('<br>');
     result += `<details><summary><em>Show ${hidden.length} more files${summarySuffix}</em></summary>`;
@@ -236,7 +236,7 @@ function renderDaySectionHTML(date, dayData) {
 function renderKPICard(icon, title, value, sub) {
     return `<div class="card">
     <div class="card-header">
-      <span class="card-title">${icon} ${title}</span>
+      <span class="card-title">${title}</span>
       <span class="card-icon">${icon}</span>
     </div>
     <div class="kpi-value">${value}</div>
