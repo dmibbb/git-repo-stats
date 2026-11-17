@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
  * ============================================================================
  * 📊 Git Repository Statistics & Changelog Generator
@@ -35,7 +37,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const { getRepoName } = require('./utils');
+const { getRepoName, printHelp } = require('./utils');
 const { fetchRawGitLog, parseRawLog } = require('./git');
 const {
     groupCommitsByDate,
@@ -60,9 +62,15 @@ function parseArgs(argv) {
         html: false,
         md: false,
         out: null,
+        help: false,
     };
 
     for (const arg of argv) {
+        if (arg === '-h' || arg === '--help') {
+            args.help = true;
+            continue;
+        }
+
         if (!arg.startsWith('--')) continue;
         const [key, ...valueParts] = arg.slice(2).split('=');
         const value = valueParts.join('=') || null;
@@ -117,6 +125,11 @@ function main() {
     try {
         // === Parse CLI args ===
         const args = parseArgs(process.argv.slice(2));
+        if (args.help) {
+            printHelp();
+            return;
+        }
+
         const mode = getGenerationMode(args);
         const repoPathArg = process.argv.slice(2).find((a) => !a.startsWith('--')) || process.cwd();
         const absoluteRepoPath = path.resolve(repoPathArg);

@@ -105,6 +105,37 @@ function renderBar(value, maxValue, width = HISTOGRAM_WIDTH) {
   return '█'.repeat(filled) + '░'.repeat(width - filled);
 }
 
+/**
+ * Prints CLI help message and exits.
+ */
+function printHelp() {
+  console.log(`
+📊 Git Repository Statistics & Changelog Generator (repo-stats)
+
+repo-stats is a npm link to "node git-history.js"
+
+Usage:
+  repo-stats [path] [options]
+
+Arguments:
+  path                 Path to the git repository (default: current directory)
+
+Options:
+  --html               Generate HTML dashboard (repo-stats.html) [default]
+  --md                 Generate Markdown report (repo-stats.md)
+  --since=YYYY-MM-DD   Filter commits starting from this date
+  --until=YYYY-MM-DD   Filter commits up to this date
+  --out=DIR            Custom output directory for generated reports
+  -h, --help           Show this help message and exit
+
+Examples:
+  repo-stats
+  repo-stats --md --html
+  repo-stats --since=2026-01-01 --until=2026-12-31
+  repo-stats C:\\Projects\\my-app --out=reports
+`);
+}
+
 module.exports = {
   MAX_FILES_PER_COMMIT,
   MAX_BUFFER,
@@ -122,5 +153,6 @@ module.exports = {
   isIgnoredFile,
   getExtension,
   toMondayFirstIndex,
-  renderBar
+  renderBar,
+  printHelp
 };
