@@ -129,6 +129,28 @@ function wrapInHTMLTemplate(content, title, generatedAt) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
+
+    // === Heatmap Cell Click ===
+    const heatmapGrid = document.querySelector('.heatmap-grid');
+    if (heatmapGrid) {
+        heatmapGrid.addEventListener('click', function(e) {
+            const cell = e.target.closest('.heatmap-cell[data-date]');
+            if (!cell) return;
+
+            const date = cell.getAttribute('data-date');
+            const targetDay = document.getElementById('day-' + date);
+            if (!targetDay) return;
+
+            // Reset active search filter if the target day is currently hidden
+            if (targetDay.classList.contains('hidden') && searchInput) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+            }
+
+            targetDay.setAttribute('open', '');
+            targetDay.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
 })();
 </script>`;
 
@@ -230,7 +252,7 @@ function renderDaySectionHTML(date, dayData) {
     const commitsCount = dayData.commits.length;
     const uniqueFilesCount = dayData.uniqueFiles.size;
 
-    let html = `<details class="changelog-day" open>\n`;
+    let html = `<details id="day-${date}" class="changelog-day" open>\n`;
     html += `<summary class="day-summary"><h3>${date}: ${pluralize(commitsCount, 'commit')} (+${fmt(dayData.totalInsertions)} / -${fmt(dayData.totalDeletions)}) in ${pluralize(uniqueFilesCount, 'unique file')}</h3></summary>\n`;
     html += '<table class="changelog-table">\n<thead><tr><th>Commit</th><th>Changed files</th><th>Delta</th></tr></thead>\n<tbody>\n';
 
@@ -473,10 +495,12 @@ function renderHeatmapHTML(groupedByDate) {
     weeks.forEach((week, weekIndex) => {
         week.forEach((day, dayIndex) => {
             const level = getLevel(day.commitsCount);
-            const title = day.commitsCount === 0
+            const isActive = day.commitsCount > 0;
+            const title = !isActive
                 ? `No commits on ${day.dateStr}`
-                : `${day.commitsCount} commit${day.commitsCount === 1 ? '' : 's'} on ${day.dateStr}`;
-            html += `<div class="heatmap-cell ${level}" style="grid-column: ${weekIndex + 2}; grid-row: ${dayIndex + 1}" title="${title}"></div>\n`;
+                : `${pluralize(day.commitsCount, 'commit')} on ${day.dateStr} (click to view)`;
+            const activeAttrs = isActive ? ` data-date="${day.dateStr}" data-active="true"` : '';
+            html += `<div class="heatmap-cell ${level}"${activeAttrs} style="grid-column: ${weekIndex + 2}; grid-row: ${dayIndex + 1}" title="${title}"></div>\n`;
         });
     });
 

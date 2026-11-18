@@ -477,6 +477,7 @@ em {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding: 4px;
 }
 
 .heatmap-months {
