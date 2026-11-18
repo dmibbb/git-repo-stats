@@ -302,14 +302,15 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
 /**
  * Renders a single KPI card.
  */
-function renderKPICard(icon, title, value, sub) {
+function renderKPICard(icon, title, value, sub, subTitle = '') {
+    const titleAttr = subTitle ? ` title="${escapeHtml(subTitle)}"` : '';
     return `<div class="card">
     <div class="card-header">
       <span class="card-title">${title}</span>
       <span class="card-icon">${icon}</span>
     </div>
     <div class="kpi-value">${value}</div>
-    <div class="kpi-sub">${sub}</div>
+    <div class="kpi-sub"${titleAttr}>${sub}</div>
   </div>`;
 }
 
@@ -659,7 +660,8 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
         '💪',
         'Largest commit',
         `<span class="positive">+${fmt(largestCommit?.insertions || 0)}</span> / <span class="negative">-${fmt(largestCommit?.deletions || 0)}</span>`,
-        largestCommit ? `${escapeHtml(largestCommit.subject)}<br>${largestCommit.date}` : ''
+        largestCommit ? `${escapeHtml(largestCommit.subject)}<br>${largestCommit.date}` : '',
+        largestCommit ? `${largestCommit.subject} (${largestCommit.date})` : ''
     );
     html += renderKPICard(
         '🔥',
