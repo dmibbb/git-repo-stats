@@ -117,6 +117,18 @@ function wrapInHTMLTemplate(content, title, generatedAt) {
             allDays.forEach(day => day.setAttribute('open', ''));
         });
     }
+
+    // === Back to Top ===
+    const backToTopBtn = document.querySelector('.back-to-top');
+    if (backToTopBtn) {
+        window.addEventListener('scroll', function() {
+            backToTopBtn.classList.toggle('visible', window.scrollY > 400);
+        }, { passive: true });
+
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
 })();
 </script>`;
 
@@ -143,6 +155,7 @@ ${content}
   Generated: ${generatedAt} · Repository Statistics
 </footer>
 </div>
+<button class="back-to-top" aria-label="Back to top" title="Back to top">↑</button>
 ${scripts}
 </body>
 </html>`;
