@@ -13,6 +13,7 @@ function fetchRawGitLog(repoPath, since, until) {
     '--no-merges',
     '--date=iso',
     '--pretty=format:===COMMIT===%ad|||%an|||%s',
+    '--raw',
     '--numstat',
   ];
 
@@ -38,8 +39,14 @@ function parseCommitEntry(entry) {
   const subject = subjectParts.join('|||').trim();
   const files = [];
   const fileDeltas = new Map();
+  const fileStatuses = new Map(); // normalizedPath -> 'A' | 'M' | 'D' | 'R'
   const trackedFiles = [];
   const ignoredFiles = new Set();
+  const fileStats = {
+    added: { txt: 0, bin: 0 },
+    modified: { txt: 0, bin: 0 },
+    deleted: { txt: 0, bin: 0 },
+  };
 
   let insertions = 0;
   let deletions = 0;
@@ -50,20 +57,35 @@ function parseCommitEntry(entry) {
     const line = lines[i].trim();
     if (!line) continue;
 
+    // 1. Parse --raw lines (start with ':')
+    // Format: :100644 100644 hash1 hash2 A\tpath/to/file
+    // Or rename: :100644 100644 hash1 hash2 R100\told/path\tnew/path
+    if (line.startsWith(':')) {
+      const tabParts = line.split('\t');
+      const meta = tabParts[0].split(' ');
+      const statusChar = meta[meta.length - 1]; // e.g., 'A', 'M', 'D', 'R100'
+      const targetPath = tabParts[tabParts.length - 1];
+      fileStatuses.set(targetPath, statusChar);
+      continue;
+    }
+
+    // 2. Parse --numstat lines
     const parts = line.split('\t');
     if (parts.length === 3) {
       const [ins, del, file] = parts;
       const normalizedFile = normalizeGitPath(file);
+      const status = fileStatuses.get(normalizedFile) || 'M';
 
       files.push(file);
 
       if (ins === '-' && del === '-') {
-        fileDeltas.set(file, { ins: null, del: null, binary: true });
+        fileDeltas.set(file, { ins: null, del: null, binary: true, status });
       } else {
         fileDeltas.set(file, {
           ins: parseInt(ins, 10),
           del: parseInt(del, 10),
           binary: false,
+          status,
         });
       }
 
@@ -74,8 +96,16 @@ function parseCommitEntry(entry) {
 
       trackedFiles.push(normalizedFile);
 
-      if (ins === '-' && del === '-') {
+      const isBinary = ins === '-' && del === '-';
+      const bucket = status === 'A'
+        ? fileStats.added
+        : status === 'D'
+          ? fileStats.deleted
+          : fileStats.modified;
+
+      if (isBinary) {
         binaryCount++;
+        bucket.bin++;
       } else {
         const insNum = parseInt(ins, 10);
         const delNum = parseInt(del, 10);
@@ -84,6 +114,7 @@ function parseCommitEntry(entry) {
           insertions += insNum;
           deletions += delNum;
           textCount++;
+          bucket.txt++;
         }
       }
     }
@@ -104,6 +135,7 @@ function parseCommitEntry(entry) {
     deletions,
     binaryCount,
     textCount,
+    fileStats,
     hasOnlyIgnored,
   };
 }

@@ -83,7 +83,7 @@ function renderDaySection(date, dayData) {
     const uniqueFilesCount = dayData.uniqueFiles.size;
 
     let md = `### ${date}: ${commitsCount} commits (+${fmt(dayData.totalInsertions)} / -${fmt(dayData.totalDeletions)}) in ${uniqueFilesCount} unique files\n\n`;
-    md += '| Commit | Changed files | Delta |\n';
+    md += '| Commit | Changed Files | Delta |\n';
     md += '| :--- | :--- | :---: |\n';
 
     dayData.commits.forEach(commit => {

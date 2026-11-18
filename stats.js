@@ -41,6 +41,7 @@ function groupCommitsByDate(commits) {
             deletions: commit.deletions,
             binaryCount: commit.binaryCount,
             textCount: commit.textCount,
+            fileStats: commit.fileStats,
             hasOnlyIgnored: commit.hasOnlyIgnored
         });
 

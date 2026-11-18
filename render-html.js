@@ -90,15 +90,26 @@ function renderFilesCellHTML(files, ignoredFiles, fileDeltas) {
         const link = renderFileLinkHTML(f);
         const delta = fileDeltas?.get(f);
         let deltaHtml = '';
+        let statusHtml = '';
+
         if (delta) {
             if (delta.binary) {
                 deltaHtml = ' <span class="file-delta">(binary)</span>';
             } else {
                 deltaHtml = ` <span class="file-delta">(<span class="file-ins">+${formatNumber(delta.ins)}</span>/<span class="file-del">-${formatNumber(delta.del)}</span>)</span>`;
             }
+
+            if (delta.status === 'A') {
+                statusHtml = ' <span class="file-status file-status--added">(added)</span>';
+            } else if (delta.status === 'D') {
+                statusHtml = ' <span class="file-status file-status--deleted">(deleted)</span>';
+            } else if (delta.status === 'R') {
+                statusHtml = ' <span class="file-status file-status--renamed">(renamed)</span>';
+            }
         }
+
         const ignored = ignoredFiles.has(f) ? ' <span class="file-delta"><em>(ignored)</em></span>' : '';
-        return `${link}${deltaHtml}${ignored}`;
+        return `${link}${deltaHtml}${statusHtml}${ignored}`;
     };
 
     if (files.length <= MAX_FILES_PER_COMMIT) {
@@ -118,27 +129,48 @@ function renderFilesCellHTML(files, ignoredFiles, fileDeltas) {
 }
 
 /**
+ * Formats file type counts for a status bucket:
+ * { txt: 2, bin: 1 } -> '2 txt + 1 bin'
+ * { txt: 0, bin: 3 } -> '3 bin'
+ * { txt: 0, bin: 0 } -> ''
+ */
+function formatStatBreakdown(bucket) {
+    if (!bucket) return '';
+    const parts = [];
+    if (bucket.txt > 0) parts.push(`${formatNumber(bucket.txt)} txt`);
+    if (bucket.bin > 0) parts.push(`${formatNumber(bucket.bin)} bin`);
+    return parts.join(' + ');
+}
+
+/**
  * Renders the "Delta" cell.
  */
 function renderDeltaCellHTML(commit) {
-    let deltaStr;
+    let deltaMain;
 
     if (commit.hasOnlyIgnored) {
-        deltaStr = '<em>ignored files only</em>';
+        deltaMain = '<em>ignored files only</em>';
     } else if (commit.insertions === 0 && commit.deletions === 0 && commit.binaryCount > 0) {
-        deltaStr = '<em>binaries only</em>';
+        deltaMain = '<em>binaries only</em>';
     } else {
-        deltaStr = `<span class="positive">+${commit.insertions}</span> / <span class="negative">-${commit.deletions}</span>`;
+        deltaMain = `<span class="positive">+${formatNumber(commit.insertions)}</span> / <span class="negative">-${formatNumber(commit.deletions)}</span>`;
     }
 
-    if (!commit.hasOnlyIgnored && (commit.binaryCount > 0 || commit.textCount > 0)) {
-        deltaStr += `<br><br><span style="font-size: 0.8em">${pluralize(commit.textCount, 'text file')}`;
-        if (commit.binaryCount > 0) {
-            deltaStr += `<br>${pluralize(commit.binaryCount, 'binary file')}`;
+    let html = `<div class="delta-main">${deltaMain}</div>`;
+
+    if (!commit.hasOnlyIgnored && commit.fileStats) {
+        const rows = [
+            { label: 'Added', text: formatStatBreakdown(commit.fileStats.added) },
+            { label: 'Modified', text: formatStatBreakdown(commit.fileStats.modified) },
+            { label: 'Deleted', text: formatStatBreakdown(commit.fileStats.deleted) },
+        ].filter(r => r.text);
+
+        if (rows.length > 0) {
+            html += `<div class="delta-breakdown">${rows.map(r => `<strong>${r.label}:</strong> <em>${r.text}</em>`).join('<br>')}</div>`;
         }
-        deltaStr += `</span>`;
     }
-    return deltaStr;
+
+    return html;
 }
 
 /**
@@ -152,7 +184,7 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
 
     let html = `<details id="day-${date}" class="changelog-day"${openAttr}>\n`;
     html += `<summary class="day-summary"><h3>${date}: ${pluralize(commitsCount, 'commit')} (+${fmt(dayData.totalInsertions)} / -${fmt(dayData.totalDeletions)}) in ${pluralize(uniqueFilesCount, 'unique file')}</h3></summary>\n`;
-    html += '<table class="changelog-table">\n<thead><tr><th>Commit</th><th>Changed files</th><th>Delta</th></tr></thead>\n<tbody>\n';
+    html += '<table class="changelog-table">\n<thead><tr><th>Commit</th><th>Changed Files</th><th>Delta</th></tr></thead>\n<tbody>\n';
 
     dayData.commits.forEach((commit) => {
         const timeHtml = commit.time ? `<span class="commit-time">Committed: ${commit.time.slice(0, 8)}</span>` : '';
