@@ -37,7 +37,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const { getRepoName, printHelp, openInBrowser } = require('./utils');
+const { getRepoName, printHelp, openInBrowser, logStep, formatNumber } = require('./utils');
 const { fetchRawGitLog, parseRawLog } = require('./git-client');
 const {
     groupCommitsByDate,
@@ -177,10 +177,10 @@ function main() {
             return;
         }
 
-        console.log(`📂 Processing repository: ${absoluteRepoPath}`);
+        logStep(`📂 Processing repository: ${absoluteRepoPath}`);
         if (args.since || args.until) {
             const range = [args.since, args.until].filter(Boolean).join(' — ');
-            console.log(`📅 Filtering by period: ${range}`);
+            logStep(`📅 Filtering by period: ${range}`);
         }
 
         const repoName = getRepoName(absoluteRepoPath);
@@ -188,9 +188,11 @@ function main() {
         const commits = parseRawLog(rawLog);
 
         if (commits.length === 0) {
-            console.log('⚠️ No commits found in this repository.');
+            logStep('⚠️ No commits found in this repository.');
             return;
         }
+
+        logStep(`🔍 Parsed ${formatNumber(commits.length)} commits from git log`);
 
         const groupedByDate = groupCommitsByDate(commits);
         const stats = calculateOverallStats(groupedByDate);
@@ -202,6 +204,8 @@ function main() {
         const weekdayCounts = calculateActivityByWeekday(groupedByDate);
         const monthCounts = calculateActivityByMonth(groupedByDate);
         const timeOfDayStats = calculateActivityByTimeOfDay(groupedByDate);
+
+        logStep(`📊 Calculated repository statistics`);
 
         // === Resolve output directory ===
         const outputDir = resolveOutputDir(args.out, absoluteRepoPath);
@@ -223,7 +227,7 @@ function main() {
             md += renderChangelog(groupedByDate);
             const mdPath = path.join(outputDir, 'repo-stats.md');
             fs.writeFileSync(mdPath, md, 'utf-8');
-            console.log(`✅ Markdown saved: ${mdPath}`);
+            logStep(`✅ Markdown saved: ${mdPath}`);
         }
 
         // === Generate HTML ===
@@ -246,15 +250,15 @@ function main() {
             const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`, generatedAt);
             const htmlPath = path.join(outputDir, 'repo-stats.html');
             fs.writeFileSync(htmlPath, fullHTML, 'utf-8');
-            console.log(`✅ HTML saved: ${htmlPath}`);
+            logStep(`✅ HTML saved: ${htmlPath}`);
 
             if (args.open) {
                 openInBrowser(htmlPath);
-                console.log('🌐 Opened in default browser');
+                logStep('🌐 Opened in default browser');
             }
         }
 
-        console.log(`🎉 Done! (${new Date().toLocaleString('sv-SE')})`);
+        logStep('🎉 Done!');
     } catch (error) {
         console.error('❌ Error occurred while running git-history.js');
         console.error('Error type:', error.constructor.name);

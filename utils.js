@@ -193,6 +193,20 @@ function openInBrowser(filePath) {
   }
 }
 
+let lastStepTime = Date.now();
+
+/**
+ * Logs a message prefixed with current local time [HH:MM:SS] and elapsed step time.
+ */
+function logStep(message) {
+  const now = new Date();
+  const time = now.toTimeString().slice(0, 8); // HH:MM:SS
+  const elapsed = Date.now() - lastStepTime;
+  lastStepTime = Date.now();
+  const deltaStr = elapsed > 0 ? `${elapsed}ms` : '0ms';
+  console.log(`[${time}]\t${message} (took ${deltaStr})`);
+}
+
 module.exports = {
   MAX_FILES_PER_COMMIT,
   MAX_BUFFER,
@@ -216,5 +230,6 @@ module.exports = {
   normalizeGitPath,
   pluralize,
   diffDays,
-  openInBrowser
+  openInBrowser,
+  logStep
 };
