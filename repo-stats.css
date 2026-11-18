@@ -659,6 +659,8 @@ em {
   margin-bottom: 1rem;
   background: var(--bg);
   scroll-margin-top: 4.5rem;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 250px;
 }
 
 .changelog-day[open] {

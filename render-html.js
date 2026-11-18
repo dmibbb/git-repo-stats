@@ -72,53 +72,65 @@ function wrapInHTMLTemplate(content, title, generatedAt) {
     // === Search Filter ===
     const searchInput = document.querySelector('.search-input');
     const clearBtn = document.querySelector('.search-clear');
+    const rows = document.querySelectorAll('.commit-row');
+    const days = document.querySelectorAll('.changelog-day');
+    const counter = document.querySelector('.search-counter');
+    let debounceTimer = null;
+
+    function applyFilter(rawVal) {
+        if (clearBtn) {
+            clearBtn.classList.toggle('visible', rawVal.length > 0);
+        }
+
+        const query = rawVal.toLowerCase().trim();
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const match = !query || row.textContent.toLowerCase().includes(query);
+            row.classList.toggle('hidden', !match);
+            if (match) visibleCount++;
+        });
+
+        days.forEach(day => {
+            const hasVisible = day.querySelector('.commit-row:not(.hidden)');
+            day.classList.toggle('hidden', !hasVisible && query);
+            if (query && hasVisible) {
+                day.setAttribute('open', '');
+            }
+        });
+
+        if (counter) {
+            counter.textContent = query ? visibleCount + ' result' + (visibleCount !== 1 ? 's' : '') : '';
+        }
+    }
+
+    function resetSearch(shouldFocus) {
+        if (!searchInput) return;
+        clearTimeout(debounceTimer);
+        searchInput.value = '';
+        applyFilter('');
+        if (shouldFocus) searchInput.focus();
+    }
 
     if (searchInput) {
-        const rows = document.querySelectorAll('.commit-row');
-        const days = document.querySelectorAll('.changelog-day');
-        const counter = document.querySelector('.search-counter');
-
-        const clearSearch = () => {
-            searchInput.value = '';
-            searchInput.dispatchEvent(new Event('input'));
-            searchInput.focus();
-        };
-
         searchInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase().trim();
-            let visibleCount = 0;
-
+            const rawVal = this.value;
             if (clearBtn) {
-                clearBtn.classList.toggle('visible', this.value.length > 0);
+                clearBtn.classList.toggle('visible', rawVal.length > 0);
             }
 
-            rows.forEach(row => {
-                const match = !query || row.textContent.toLowerCase().includes(query);
-                row.classList.toggle('hidden', !match);
-                if (match) visibleCount++;
-            });
-
-            days.forEach(day => {
-                const hasVisible = day.querySelector('.commit-row:not(.hidden)');
-                day.classList.toggle('hidden', !hasVisible && query);
-                if (query && hasVisible) {
-                    day.setAttribute('open', '');
-                }
-            });
-
-            if (counter) {
-                counter.textContent = query ? visibleCount + ' result' + (visibleCount !== 1 ? 's' : '') : '';
-            }
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => applyFilter(rawVal), 150);
         });
 
         searchInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && this.value.length > 0) {
-                clearSearch();
+                resetSearch(true);
             }
         });
 
         if (clearBtn) {
-            clearBtn.addEventListener('click', clearSearch);
+            clearBtn.addEventListener('click', () => resetSearch(true));
         }
     }
     
@@ -162,10 +174,9 @@ function wrapInHTMLTemplate(content, title, generatedAt) {
             const targetDay = document.getElementById('day-' + date);
             if (!targetDay) return;
 
-            // Reset active search filter if the target day is currently hidden
-            if (targetDay.classList.contains('hidden') && searchInput) {
-                searchInput.value = '';
-                searchInput.dispatchEvent(new Event('input'));
+            // Immediately reset active search filter if target day is hidden
+            if (targetDay.classList.contains('hidden')) {
+                resetSearch(false);
             }
 
             targetDay.setAttribute('open', '');
