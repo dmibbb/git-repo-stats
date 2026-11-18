@@ -37,7 +37,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const { getRepoName, printHelp } = require('./utils');
+const { getRepoName, printHelp, openInBrowser } = require('./utils');
 const { fetchRawGitLog, parseRawLog } = require('./git-client');
 const {
     groupCommitsByDate,
@@ -66,6 +66,7 @@ function parseArgs(argv) {
         md: false,
         out: null,
         help: false,
+        open: false,
         repoPath: null,
     };
 
@@ -94,6 +95,9 @@ function parseArgs(argv) {
                     break;
                 case 'out':
                     args.out = value;
+                    break;
+                case 'open':
+                    args.open = true;
                     break;
                 default:
                     console.warn(`⚠️  Unknown flag: --${key}`);
@@ -243,6 +247,11 @@ function main() {
             const htmlPath = path.join(outputDir, 'repo-stats.html');
             fs.writeFileSync(htmlPath, fullHTML, 'utf-8');
             console.log(`✅ HTML saved: ${htmlPath}`);
+
+            if (args.open) {
+                openInBrowser(htmlPath);
+                console.log('🌐 Opened in default browser');
+            }
         }
 
         console.log(`🎉 Done! (${new Date().toLocaleString('sv-SE')})`);

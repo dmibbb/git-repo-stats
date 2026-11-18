@@ -1,5 +1,5 @@
 const path = require('path');
-const { execSync } = require('child_process');
+const { execSync, execFile } = require('child_process');
 
 // === Configuration ===
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -143,6 +143,7 @@ Options:
   --since=YYYY-MM-DD   Filter commits starting from this date
   --until=YYYY-MM-DD   Filter commits up to this date
   --out=DIR            Custom output directory for generated reports
+  --open               Open generated HTML dashboard in default browser
   -h, --help           Show this help message and exit
 
 Examples:
@@ -177,6 +178,20 @@ function normalizeGitPath(filename) {
   return parts[1];
 }
 
+/**
+ * Opens a file in the system default browser.
+ */
+function openInBrowser(filePath) {
+  const platform = process.platform;
+  if (platform === 'win32') {
+    execFile('cmd', ['/c', 'start', '', filePath]);
+  } else if (platform === 'darwin') {
+    execFile('open', [filePath]);
+  } else {
+    execFile('xdg-open', [filePath]);
+  }
+}
+
 module.exports = {
   MAX_FILES_PER_COMMIT,
   MAX_BUFFER,
@@ -198,5 +213,6 @@ module.exports = {
   printHelp,
   normalizeGitPath,
   pluralize,
-  diffDays
+  diffDays,
+  openInBrowser
 };
