@@ -150,8 +150,28 @@ function parseRawLog(rawLog) {
     .map(parseCommitEntry);
 }
 
+/**
+ * Fetches the date (YYYY-MM-DD) of the very first commit in repository history,
+ * ignoring any --since or --until filters.
+ */
+function fetchFirstCommitDate(repoPath) {
+  try {
+    const out = execFileSync(
+      'git',
+      ['log', '--reverse', '--date=short', '--pretty=format:%ad'],
+      { encoding: 'utf-8', maxBuffer: MAX_BUFFER, cwd: repoPath }
+    ).trim();
+
+    if (!out) return null;
+    return out.split('\n')[0].trim();
+  } catch {
+    return null;
+  }
+}
+
 module.exports = {
   fetchRawGitLog,
   parseCommitEntry,
-  parseRawLog
+  parseRawLog,
+  fetchFirstCommitDate
 };

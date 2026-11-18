@@ -212,46 +212,79 @@ function renderKPICard(icon, title, value, sub, subTitle = '') {
 }
 
 /**
- * Renders the dashboard header.
+ * Renders the centered hero dashboard header with period and generation metadata.
  */
-function renderHeader(repoName, stats) {
-    return `<div class="dashboard-header">
-    <h1>👨‍💻 Git Repository Statistics: ${escapeHtml(repoName)}</h1>
-    <div class="header-actions">
-      <div class="header-meta">📅 ${stats.firstDate} — ${stats.lastDate}</div>
-      <button class="btn theme-toggle" aria-label="Toggle theme">🌓 Theme</button>
+function renderHeader(repoName, stats, generatedAt, args = {}) {
+    const isFiltered = Boolean(args.since || args.until);
+    const periodLabel = isFiltered ? 'Filtered period' : 'Period';
+
+    return `<header class="dashboard-header">
+    <button class="btn theme-toggle" aria-label="Toggle theme">🌓 Theme</button>
+    <h1>${escapeHtml(repoName)}</h1>
+    <div class="header-subtitle">
+      <span>📅 <strong>${periodLabel}:</strong> ${stats.firstDate} — ${stats.lastDate}</span>
+      <span class="meta-sep">·</span>
+      <span>🕒 <strong>Generated:</strong> ${generatedAt}</span>
     </div>
-  </div>`;
+  </header>`;
 }
 
 /**
- * Renders the volume banner.
+ * Renders the top volume banner with 6 key repository metrics.
  */
 function renderVolumeBanner(stats, fmt) {
     const netSign = stats.netChange >= 0 ? '+' : '';
 
     return `<div class="volume-banner">
     <div class="volume-item">
-      <div class="label">📏 Volume of changes</div>
-      <div class="value positive">+${fmt(stats.totalInsertions)}</div>
-    </div>
-    <div class="volume-item">
-      <div class="label">Deletions</div>
-      <div class="value negative">-${fmt(stats.totalDeletions)}</div>
-    </div>
-    <div class="volume-item">
-      <div class="label">Net change</div>
-      <div class="value ${stats.netChange >= 0 ? 'positive' : 'negative'}">${netSign}${fmt(stats.netChange)}</div>
-    </div>
-    <div class="volume-item">
       <div class="label">📦 Total commits</div>
       <div class="value neutral">${fmt(stats.totalCommits)}</div>
     </div>
     <div class="volume-item">
-      <div class="label">📅 Active days</div>
-      <div class="value neutral">${stats.activeDays} <span style="font-size:0.7em;color:var(--fg-muted)">/ ${stats.totalCalendarDays} (${stats.activityPercent}%)</span></div>
+      <div class="label">📈 Insertions</div>
+      <div class="value positive">+${fmt(stats.totalInsertions)}</div>
+    </div>
+    <div class="volume-item">
+      <div class="label">📉 Deletions</div>
+      <div class="value negative">-${fmt(stats.totalDeletions)}</div>
+    </div>
+    <div class="volume-item">
+      <div class="label">⚖️ Net change</div>
+      <div class="value ${stats.netChange >= 0 ? 'positive' : 'negative'}">${netSign}${fmt(stats.netChange)}</div>
+    </div>
+    <div class="volume-item">
+      <div class="label">📐 Avg per commit</div>
+      <div class="value neutral"><span class="positive">+${stats.avgPerCommitIns}</span> / <span class="negative">-${stats.avgPerCommitDel}</span></div>
+    </div>
+    <div class="volume-item">
+      <div class="label">🗂️ Unique files</div>
+      <div class="value neutral">${fmt(stats.totalUniqueFiles)}</div>
     </div>
   </div>`;
+}
+
+/**
+ * Renders time-of-day activity histogram as CSS bars.
+ */
+function renderTimeOfDayHistogramHTML(timeOfDayStats) {
+    if (!timeOfDayStats || !timeOfDayStats.periods || timeOfDayStats.total === 0) return '';
+
+    const maxCount = Math.max(...timeOfDayStats.periods.map(p => p.count));
+
+    let html = `<div class="card"><div class="card-header"><span class="card-title">Activity by time of day</span></div><ul class="histogram-list">\n`;
+    for (const period of timeOfDayStats.periods) {
+        const barWidth = maxCount > 0 ? ((period.count / maxCount) * 100).toFixed(1) : 0;
+        const isPeak = period.count === maxCount && maxCount > 0;
+
+        html += `<li class="bar-row${isPeak ? ' bar-row--peak' : ''}" title="${period.range}">
+      <span class="bar-label bar-label--wide">${period.icon} ${period.label}</span>
+      <div class="bar-container"><div class="bar" style="width: ${barWidth}%"></div></div>
+      <span class="bar-value">${period.percent}% (${period.count})</span>
+    </li>\n`;
+    }
+    html += `</ul></div>`;
+
+    return html;
 }
 
 /**
@@ -280,14 +313,16 @@ function renderWeekdayHistogramHTML(weekdayCounts) {
 }
 
 /**
- * Renders month histogram as CSS bars.
+ * Renders month histogram as CSS bars (switches to 2 columns if > 6 months).
  */
 function renderMonthHistogramHTML(monthCounts) {
     if (!monthCounts || monthCounts.length === 0) return '';
 
     const maxCount = Math.max(...monthCounts.map((m) => m[1]));
+    const isTwoCol = monthCounts.length > 6;
+    const listClass = isTwoCol ? 'histogram-list histogram-list--2col' : 'histogram-list';
 
-    let html = `<div class="card"><div class="card-header"><span class="card-title">Activity by month</span></div><ul class="histogram-list">\n`;
+    let html = `<div class="card"><div class="card-header"><span class="card-title">Activity by month</span></div><ul class="${listClass}">\n`;
     for (const [month, count] of monthCounts) {
         const barWidth = maxCount > 0 ? ((count / maxCount) * 100).toFixed(1) : 0;
         const isPeak = count === maxCount && maxCount > 0;
@@ -456,6 +491,25 @@ function renderHeatmapHTML(groupedByDate) {
 }
 
 /**
+ * Renders the per-commit code churn timeline (diverging bar chart).
+ * Currently renders a placeholder card; will be replaced with an SVG chart.
+ */
+function renderChurnTimelineHTML(groupedByDate) {
+    if (!groupedByDate || Object.keys(groupedByDate).length === 0) return '';
+
+    return `<div class="card card--placeholder" style="margin-bottom: 1.5rem;">
+      <div class="card-header">
+        <span class="card-title">📉 Code Churn Timeline (per commit)</span>
+        <span class="card-icon">🚧</span>
+      </div>
+      <div class="placeholder-body">
+        <div class="placeholder-zero-line"></div>
+        <span class="placeholder-text">Coming soon... (diverging +insertions / -deletions bar chart per commit)</span>
+      </div>
+    </div>`;
+}
+
+/**
  * Renders the contributors breakdown card.
  */
 function renderContributorsCard(contributors) {
@@ -495,51 +549,22 @@ function renderSearchBarHTML() {
     html += '</div>\n';
     return html;
 }
+
 /**
  * Renders the full dashboard overview.
  */
-function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors) {
+function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors, generatedAt, args) {
     const fmt = formatNumber;
     let html = '';
 
     // Header
-    html += renderHeader(repoName, stats);
+    html += renderHeader(repoName, stats, generatedAt, args);
 
     // Volume Banner
     html += renderVolumeBanner(stats, fmt);
 
-    // Row 1: Main KPIs
-    html += `<div class="grid grid-4">`;
-    html += renderKPICard(
-        '📐',
-        'Avg per commit',
-        `+${stats.avgPerCommitIns} / -${stats.avgPerCommitDel}`,
-        `${pluralize(Number(stats.avgFilesPerCommit), 'file')} per commit`
-    );
-    html += renderKPICard(
-        '📈',
-        'Avg per active day',
-        `+${fmt(stats.avgPerActiveDayIns)} / -${fmt(stats.avgPerActiveDayDel)}`,
-        `avg ${stats.avgCommitsPerActiveDay} commits / day`
-    );
-    html += renderKPICard(
-        '🎂',
-        'Repo age',
-        pluralize(stats.repoAge, 'day'),
-        `since ${stats.firstDate}`
-    );
-
-    const peakTimeIcon = timeOfDayStats?.peak ? timeOfDayStats.peak.icon : '🕐';
-    const peakTimeValue = timeOfDayStats?.peak
-        ? `${timeOfDayStats.peak.label} (${timeOfDayStats.peak.percent}%)`
-        : 'N/A';
-    const peakTimeSub = timeOfDayStats?.periods
-        ? timeOfDayStats.periods.map(p => `${p.icon} ${p.percent}%`).join(' · ')
-        : '';
-    html += renderKPICard(peakTimeIcon, 'Activity by time of day', peakTimeValue, peakTimeSub);
-    html += `</div>`;
-
-    // Row 2: Records & Streaks
+    // Section: Records (1 row x 4 cards)
+    html += `<div class="section-title">🏆 Records</div>`;
     html += `<div class="grid grid-4">`;
     html += renderKPICard(
         '🏆',
@@ -561,25 +586,62 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
         largestCommit ? `${largestCommit.subject} (${largestCommit.date})` : ''
     );
     html += renderKPICard(
+        '✨',
+        'More metrics',
+        '<em style="font-size: 1.1rem; font-weight: 500;">Coming soon...</em>',
+        'reserved for future stats'
+    );
+    html += `</div>`;
+
+    // Section: Activity Patterns
+    html += `<div class="section-title">📊 Activity Patterns</div>`;
+
+    // Row: Pace & Rhythm (4 cards)
+    html += `<div class="grid grid-4">`;
+    html += renderKPICard(
+        '🎂',
+        'Repo age',
+        pluralize(stats.repoAge, 'day'),
+        `since ${stats.trueFirstDate}`
+    );
+    html += renderKPICard(
         '🔥',
         'Streaks & Gaps',
         `Max: ${stats.maxStreakLength}d · Cur: ${stats.currentStreak}d`,
         `Longest gap: ${pluralize(stats.longestGapLength, 'day')}`
     );
+    html += renderKPICard(
+        '📅',
+        'Active days',
+        `${stats.activeDays} / ${stats.totalCalendarDays}`,
+        `${stats.activityPercent}% of period days`
+    );
+    html += renderKPICard(
+        '📈',
+        'Avg per active day',
+        `+${fmt(stats.avgPerActiveDayIns)} / -${fmt(stats.avgPerActiveDayDel)}`,
+        `avg ${stats.avgCommitsPerActiveDay} commits / day`
+    );
     html += `</div>`;
 
-    // Activity Patterns
-    html += `<div class="section-title">📊 Activity Patterns</div>`;
-    html += `<div class="grid grid-2">`;
+    // Histograms (3 columns: Time of Day + Weekday + Month)
+    html += `<div class="grid grid-3">`;
+    html += renderTimeOfDayHistogramHTML(timeOfDayStats);
     html += renderWeekdayHistogramHTML(weekdayCounts);
     html += renderMonthHistogramHTML(monthCounts);
     html += `</div>`;
+
+    // Section: Contribution
+    html += `<div class="section-title"> 👨‍👩‍👧‍👦 Contribution</div>`;
 
     // Heatmap-365 (80%) + Contributors (20%)
     html += `<div class="grid grid-heatmap-contrib">`;
     html += renderHeatmapHTML(groupedByDate);
     html += renderContributorsCard(contributors);
     html += `</div>`;
+
+    // Commit Churn Timeline (100% width)
+    html += renderChurnTimelineHTML(groupedByDate);
 
     // Details: 3 columns
     html += `<div class="grid grid-3">`;

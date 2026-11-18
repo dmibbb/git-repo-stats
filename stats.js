@@ -260,7 +260,7 @@ function findLargestCommit(groupedByDate) {
 /**
  * Calculates overall repository statistics.
  */
-function calculateOverallStats(groupedByDate) {
+function calculateOverallStats(groupedByDate, repoFirstDate = null) {
     const allDates = Object.keys(groupedByDate).sort((a, b) => a.localeCompare(b));
     const firstDate = allDates[0];
     const lastDate = allDates[allDates.length - 1];
@@ -273,9 +273,11 @@ function calculateOverallStats(groupedByDate) {
         ? ((activeDays / totalCalendarDays) * 100).toFixed(0)
         : '0';
 
+    const trueFirstDate = repoFirstDate || firstDate;
+    const trueStartDate = parseDate(trueFirstDate);
     const now = new Date();
     const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-    const repoAge = diffDays(startDate, todayUTC);
+    const repoAge = diffDays(trueStartDate, todayUTC);
 
     const totalCommits = Object.values(groupedByDate).reduce((sum, d) => sum + d.commits.length, 0);
     const totalInsertions = Object.values(groupedByDate).reduce((sum, d) => sum + d.totalInsertions, 0);
@@ -322,6 +324,14 @@ function calculateOverallStats(groupedByDate) {
     const currentStreak = calculateCurrentStreak(allDates);
     const longestGapInfo = calculateLongestGap(allDates);
 
+    const allUniqueFiles = new Set();
+    for (const d of Object.values(groupedByDate)) {
+        for (const file of d.uniqueFiles) {
+            allUniqueFiles.add(file);
+        }
+    }
+    const totalUniqueFiles = allUniqueFiles.size;
+
     return {
         firstDate,
         lastDate,
@@ -350,7 +360,9 @@ function calculateOverallStats(groupedByDate) {
         longestGapStart: longestGapInfo.start,
         longestGapEnd: longestGapInfo.end,
         currentStreak,
+        trueFirstDate,
         repoAge,
+        totalUniqueFiles,
     };
 }
 

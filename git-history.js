@@ -38,7 +38,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { getRepoName, printHelp, openInBrowser, logStep, formatNumber } = require('./utils');
-const { fetchRawGitLog, parseRawLog } = require('./git-client');
+const { fetchRawGitLog, parseRawLog, fetchFirstCommitDate } = require('./git-client');
 const {
     groupCommitsByDate,
     calculateOverallStats,
@@ -194,8 +194,9 @@ function main() {
 
         logStep(`🔍 Parsed ${formatNumber(commits.length)} commits from git log`);
 
+        const repoFirstDate = fetchFirstCommitDate(absoluteRepoPath);
         const groupedByDate = groupCommitsByDate(commits);
-        const stats = calculateOverallStats(groupedByDate);
+        const stats = calculateOverallStats(groupedByDate, repoFirstDate);
         const topFiles = findTopFrequentFiles(groupedByDate);
         const largestCommit = findLargestCommit(groupedByDate);
         const techStack = calculateTechStack(groupedByDate);
@@ -232,6 +233,7 @@ function main() {
 
         // === Generate HTML ===
         if (mode.html) {
+            const generatedAt = new Date().toLocaleString('sv-SE');
             let htmlContent = renderOverviewHTML(
                 repoName,
                 stats,
@@ -243,10 +245,11 @@ function main() {
                 groupedByDate,
                 timeOfDayStats,
                 techStackByLines,
-                contributors
+                contributors,
+                generatedAt,
+                args
             );
             htmlContent += renderChangelogHTML(groupedByDate);
-            const generatedAt = new Date().toLocaleString('sv-SE');
             const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`, generatedAt);
             const htmlPath = path.join(outputDir, 'repo-stats.html');
             fs.writeFileSync(htmlPath, fullHTML, 'utf-8');
