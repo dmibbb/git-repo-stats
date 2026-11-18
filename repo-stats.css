@@ -70,9 +70,13 @@ html.theme-dark {
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
-  padding: 1.5rem 1.5rem 3rem;
+  padding: 1.5rem 1.5rem 3.5rem;
   background: var(--bg);
   color: var(--fg);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -166,26 +170,25 @@ em {
 }
 
 .grid-4 { grid-template-columns: repeat(4, 1fr); }
-.grid-2 { grid-template-columns: repeat(2, 1fr); }
-
-@media (max-width: 1000px) {
-  .grid-4 { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 600px) {
-  .grid-4, .grid-2 { grid-template-columns: 1fr; }
-}
-
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
-.grid-heatmap-contrib { grid-template-columns: 4fr 1fr; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-heatmap-contrib { grid-template-columns: minmax(0, 3.2fr) minmax(260px, 1fr); }
 
 @media (max-width: 1100px) {
   .grid-heatmap-contrib { grid-template-columns: 1fr; }
   .grid-3 { grid-template-columns: repeat(2, 1fr); }
 }
 
+@media (max-width: 1000px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 700px) {
   .grid-3 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .grid-4, .grid-2 { grid-template-columns: 1fr; }
 }
 
 /* === Cards === */
@@ -196,6 +199,8 @@ em {
   padding: 1rem 1.2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   transition: box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .card:hover {
@@ -231,7 +236,11 @@ em {
 .kpi-sub {
   font-size: 0.8rem;
   color: var(--fg-subtle);
-  margin-top: 0.2rem;
+  margin-top: 0.25rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .kpi-value .positive { color: var(--added); }
@@ -296,7 +305,7 @@ em {
 .histogram-list {
   list-style: none;
   padding-left: 0;
-  margin: 0.5rem 0;
+  margin: auto 0;
 }
 
 .bar-row {
@@ -307,7 +316,7 @@ em {
 }
 
 .bar-label {
-  min-width: 4.2rem;
+  min-width: 4.5rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
@@ -356,6 +365,7 @@ em {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   padding: 0.5rem 0;
   border-bottom: 1px solid var(--border);
   font-size: 0.9rem;
@@ -373,12 +383,47 @@ em {
   border-radius: 4px;
   padding: 0.15em 0.5em;
   color: var(--accent);
+  overflow-wrap: anywhere;
 }
 
 .count {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* === Contributors List === */
+.contrib-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.2rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.contrib-item:last-child {
+  border-bottom: none;
+}
+
+.contrib-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.contrib-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* === Tech Stack Bars === */
@@ -479,9 +524,14 @@ em {
   border-color: var(--accent);
 }
 
+.heatmap-cell[data-active="true"] {
+  cursor: pointer;
+}
+
 .heatmap-cell.l1 { background: color-mix(in srgb, var(--added) 30%, var(--bg-soft)); }
 .heatmap-cell.l2 { background: color-mix(in srgb, var(--added) 55%, var(--bg-soft)); }
 .heatmap-cell.l3 { background: color-mix(in srgb, var(--added) 80%, var(--bg-soft)); }
+
 .heatmap-cell.l4 { background: var(--added); }
 
 .heatmap-legend {
@@ -554,6 +604,7 @@ em {
 .btn-expand {
   white-space: nowrap;
 }
+
 .btn-collapse:hover,
 .btn-expand:hover {
   background: var(--accent);
@@ -567,6 +618,7 @@ em {
   border-radius: 6px;
   margin-bottom: 1rem;
   background: var(--bg);
+  scroll-margin-top: 1rem;
 }
 
 .changelog-day[open] {
@@ -613,10 +665,26 @@ em {
 
 .changelog-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.9rem;
   border-top: 1px solid var(--border);
   margin: 0;
+}
+
+.changelog-table th:nth-child(1),
+.changelog-table td:nth-child(1) {
+  width: 38%;
+}
+
+.changelog-table th:nth-child(2),
+.changelog-table td:nth-child(2) {
+  width: 47%;
+}
+
+.changelog-table th:nth-child(3),
+.changelog-table td:nth-child(3) {
+  width: 15%;
 }
 
 .changelog-table th,
@@ -625,6 +693,7 @@ em {
   padding: 0.55rem 0.7rem;
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
 
 .changelog-table th {
@@ -691,10 +760,35 @@ em {
 .delta-cell .positive { color: var(--added); }
 .delta-cell .negative { color: var(--removed); }
 
-/* === Hidden state for search === */
+/* === Hidden State for Search === */
 .commit-row.hidden,
 .changelog-day.hidden {
   display: none;
+}
+
+/* === Back to Top Button === */
+.back-to-top {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
 }
 
 /* === Footer === */
@@ -708,31 +802,107 @@ em {
   font-style: italic;
 }
 
-/* === Contributors List === */
-.contrib-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.55rem 0;
-  border-bottom: 1px solid var(--border);
-}
+/* === Print Styles === */
+@media print {
+  /* Force light palette regardless of active theme */
+  :root,
+  html.theme-dark,
+  html.theme-light {
+    --bg: #ffffff;
+    --bg-soft: #f6f8fa;
+    --bg-header: #24292f;
+    --fg-header: #ffffff;
+    --fg: #1f2328;
+    --fg-muted: #57606a;
+    --fg-subtle: #6e7781;
+    --border: #d0d7de;
+    --accent: #0969da;
+    --added: #1a7f37;
+    --removed: #cf222e;
+  }
 
-.contrib-item:last-child {
-  border-bottom: none;
-}
+  /* Preserve background colors for bars and heatmap cells */
+  * {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  }
 
-.contrib-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
+  body {
+    padding: 0;
+    font-size: 12px;
+    background: #ffffff;
+  }
 
-.contrib-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.78rem;
-  color: var(--fg-muted);
-  font-variant-numeric: tabular-nums;
+  .dashboard-container {
+    max-width: 100%;
+  }
+
+  /* Hide interactive controls */
+  .theme-toggle,
+  .search-bar,
+  .back-to-top {
+    display: none !important;
+  }
+
+  /* Compact grid layout for A4 pages */
+  .grid {
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .grid-heatmap-contrib {
+    grid-template-columns: 3.2fr 1fr;
+  }
+
+  .card,
+  .volume-banner {
+    box-shadow: none !important;
+    padding: 0.7rem 0.9rem;
+    break-inside: avoid;
+  }
+
+  .kpi-value {
+    font-size: 1.25rem;
+  }
+
+  /* Expand all collapsed days when printing */
+  details.changelog-day:not([open]) > table {
+    display: table;
+  }
+
+  .day-summary {
+    padding: 0.5rem 0.75rem;
+    break-after: avoid;
+  }
+
+  .day-summary::before {
+    display: none;
+  }
+
+  /* Prevent table rows from splitting across page breaks */
+  .changelog-table {
+    font-size: 0.82rem;
+  }
+
+  .changelog-table tr {
+    break-inside: avoid;
+
+  }
+
+  .changelog-table th {
+    padding: 0.45rem 0.6rem;
+  }
+
+  .changelog-table td {
+    padding: 0.4rem 0.6rem;
+  }
+
+  a {
+    color: var(--fg);
+    text-decoration: none;
+  }
 }
