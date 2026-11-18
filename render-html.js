@@ -17,6 +17,20 @@ function loadCSS() {
 }
 
 /**
+ * Reads client-side JS file from repo-stats-client.js.
+ * Falls back to empty string if file not found.
+ */
+function loadClientJS() {
+    try {
+        const jsPath = path.join(__dirname, 'repo-stats-client.js');
+        return fs.readFileSync(jsPath, 'utf-8');
+    } catch (e) {
+        console.warn('⚠️ Could not load repo-stats-client.js, using empty script.');
+        return '';
+    }
+}
+
+/**
  * Renders an HTML link to a file.
  */
 function renderFileLinkHTML(filename) {
@@ -33,158 +47,7 @@ function renderFileLinkHTML(filename) {
  */
 function wrapInHTMLTemplate(content, title, generatedAt) {
     const css = loadCSS();
-    const scripts = `
-<script>
-(function() {
-    // === Theme Toggle ===
-    const html = document.documentElement;
-    const themeBtn = document.querySelector('.theme-toggle');
-    if (themeBtn) {
-        themeBtn.addEventListener('click', function() {
-            const isDark = html.classList.contains('theme-dark');
-            const isLight = html.classList.contains('theme-light');
-
-            html.classList.remove('theme-light', 'theme-dark');
-
-            if (isDark) {
-                // Dark --> Light
-                html.classList.add('theme-light');
-                localStorage.setItem('repo-stats-theme', 'light');
-                themeBtn.textContent = '🌙 Dark';
-            } else if (isLight) {
-                // Light --> System
-                localStorage.removeItem('repo-stats-theme');
-                themeBtn.textContent = '🌓 Theme';
-            } else {
-                // System --> Dark
-                html.classList.add('theme-dark');
-                localStorage.setItem('repo-stats-theme', 'dark');
-                themeBtn.textContent = '☀️ Light';
-            }
-        });
-
-        // Initial theme setting
-        if (html.classList.contains('theme-dark')) themeBtn.textContent = '☀️ Light';
-        else if (html.classList.contains('theme-light')) themeBtn.textContent = '🌙 Dark';
-        else themeBtn.textContent = '🌓 Theme';
-    }
-
-    // === Search Filter ===
-    const searchInput = document.querySelector('.search-input');
-    const clearBtn = document.querySelector('.search-clear');
-    const rows = document.querySelectorAll('.commit-row');
-    const days = document.querySelectorAll('.changelog-day');
-    const counter = document.querySelector('.search-counter');
-    let debounceTimer = null;
-
-    function applyFilter(rawVal) {
-        if (clearBtn) {
-            clearBtn.classList.toggle('visible', rawVal.length > 0);
-        }
-
-        const query = rawVal.toLowerCase().trim();
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-            const match = !query || row.textContent.toLowerCase().includes(query);
-            row.classList.toggle('hidden', !match);
-            if (match) visibleCount++;
-        });
-
-        days.forEach(day => {
-            const hasVisible = day.querySelector('.commit-row:not(.hidden)');
-            day.classList.toggle('hidden', !hasVisible && query);
-            if (query && hasVisible) {
-                day.setAttribute('open', '');
-            }
-        });
-
-        if (counter) {
-            counter.textContent = query ? visibleCount + ' result' + (visibleCount !== 1 ? 's' : '') : '';
-        }
-    }
-
-    function resetSearch(shouldFocus) {
-        if (!searchInput) return;
-        clearTimeout(debounceTimer);
-        searchInput.value = '';
-        applyFilter('');
-        if (shouldFocus) searchInput.focus();
-    }
-
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const rawVal = this.value;
-            if (clearBtn) {
-                clearBtn.classList.toggle('visible', rawVal.length > 0);
-            }
-
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => applyFilter(rawVal), 150);
-        });
-
-        searchInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && this.value.length > 0) {
-                resetSearch(true);
-            }
-        });
-
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => resetSearch(true));
-        }
-    }
-    
-    // === Collapse/Expand ===
-    const collapseBtn = document.querySelector('[data-action="collapse-all"]');
-    const expandBtn = document.querySelector('[data-action="expand-all"]');
-    const allDays = document.querySelectorAll('.changelog-day');
-    
-    if (collapseBtn) {
-        collapseBtn.addEventListener('click', () => {
-            allDays.forEach(day => day.removeAttribute('open'));
-        });
-    }
-    
-    if (expandBtn) {
-        expandBtn.addEventListener('click', () => {
-            allDays.forEach(day => day.setAttribute('open', ''));
-        });
-    }
-
-    // === Back to Top ===
-    const backToTopBtn = document.querySelector('.back-to-top');
-    if (backToTopBtn) {
-        window.addEventListener('scroll', function() {
-            backToTopBtn.classList.toggle('visible', window.scrollY > 400);
-        }, { passive: true });
-
-        backToTopBtn.addEventListener('click', function() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
-
-    // === Heatmap Cell Click ===
-    const heatmapGrid = document.querySelector('.heatmap-grid');
-    if (heatmapGrid) {
-        heatmapGrid.addEventListener('click', function(e) {
-            const cell = e.target.closest('.heatmap-cell[data-date]');
-            if (!cell) return;
-
-            const date = cell.getAttribute('data-date');
-            const targetDay = document.getElementById('day-' + date);
-            if (!targetDay) return;
-
-            // Immediately reset active search filter if target day is hidden
-            if (targetDay.classList.contains('hidden')) {
-                resetSearch(false);
-            }
-
-            targetDay.setAttribute('open', '');
-            targetDay.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-    }
-})();
-</script>`;
+    const clientJS = loadClientJS();
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -210,7 +73,9 @@ ${content}
 </footer>
 </div>
 <button class="back-to-top" aria-label="Back to top" title="Back to top">↑</button>
-${scripts}
+<script>
+${clientJS}
+</script>
 </body>
 </html>`;
 }
