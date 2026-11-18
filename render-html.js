@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { MAX_FILES_PER_COMMIT, formatNumber, escapeHtml, WEEKDAY_NAMES, MONTH_NAMES, pluralize } = require('./utils');
-
+const { MAX_FILES_PER_COMMIT, OPEN_DAYS_COUNT, formatNumber, escapeHtml, WEEKDAY_NAMES, MONTH_NAMES, pluralize } = require('./utils');
 
 /**
  * Reads CSS file from misc/repo-stats.css.
@@ -269,12 +268,13 @@ function renderDeltaCellHTML(commit) {
 /**
  * Renders one day section as a table.
  */
-function renderDaySectionHTML(date, dayData) {
+function renderDaySectionHTML(date, dayData, isOpen = true) {
     const fmt = formatNumber;
     const commitsCount = dayData.commits.length;
     const uniqueFilesCount = dayData.uniqueFiles.size;
+    const openAttr = isOpen ? ' open' : '';
 
-    let html = `<details id="day-${date}" class="changelog-day" open>\n`;
+    let html = `<details id="day-${date}" class="changelog-day"${openAttr}>\n`;
     html += `<summary class="day-summary"><h3>${date}: ${pluralize(commitsCount, 'commit')} (+${fmt(dayData.totalInsertions)} / -${fmt(dayData.totalDeletions)}) in ${pluralize(uniqueFilesCount, 'unique file')}</h3></summary>\n`;
     html += '<table class="changelog-table">\n<thead><tr><th>Commit</th><th>Changed files</th><th>Delta</th></tr></thead>\n<tbody>\n';
 
@@ -689,8 +689,8 @@ function renderChangelogHTML(groupedByDate) {
     html += renderSearchBarHTML();
 
     const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
-    sortedDates.forEach((date) => {
-        html += renderDaySectionHTML(date, groupedByDate[date]);
+    sortedDates.forEach((date, index) => {
+        html += renderDaySectionHTML(date, groupedByDate[date], index < OPEN_DAYS_COUNT);
     });
 
     return html;

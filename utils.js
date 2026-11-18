@@ -8,6 +8,7 @@ const MAX_BUFFER = 1024 * 1024 * 50; // 50MB
 const TOP_FILES_COUNT = 3;
 const TOP_EXTENSIONS_COUNT = 5;
 const HISTOGRAM_WIDTH = 25;
+const OPEN_DAYS_COUNT = 7;
 
 // Files to exclude from statistics (but still shown in commit tables)
 const IGNORED_PATTERNS = [
@@ -201,6 +202,7 @@ module.exports = {
   IGNORED_PATTERNS,
   WEEKDAY_NAMES,
   MONTH_NAMES,
+  OPEN_DAYS_COUNT,
   getRepoName,
   formatNumber,
   escapePipe,
