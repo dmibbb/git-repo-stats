@@ -1,4 +1,15 @@
-const { parseDate, diffDays, toMondayFirstIndex, WEEKDAY_NAMES, MONTH_NAMES, TOP_FILES_COUNT, TOP_EXTENSIONS_COUNT, getExtension } = require('./utils');
+const {
+    parseDate,
+    diffDays,
+    toMondayFirstIndex,
+    WEEKDAY_NAMES,
+    MONTH_NAMES,
+    TOP_FILES_COUNT,
+    TOP_EXTENSIONS_COUNT,
+    getExtension,
+    normalizeGitPath,
+    isIgnoredFile
+} = require('./utils');
 
 /**
  * Groups commits by date and calculates per-day aggregates.
@@ -384,8 +395,8 @@ function calculateTechStackByLines(groupedByDate) {
         for (const commit of data.commits) {
             for (const [file, delta] of commit.fileDeltas.entries()) {
                 if (delta.binary) continue;
-                const normFile = require('./utils').normalizeGitPath(file);
-                if (require('./utils').isIgnoredFile(normFile)) continue;
+                const normFile = normalizeGitPath(file);
+                if (isIgnoredFile(normFile)) continue;
 
                 const churn = (delta.ins || 0) + (delta.del || 0);
                 if (churn === 0) continue;
