@@ -151,19 +151,23 @@ function parseRawLog(rawLog) {
 }
 
 /**
- * Fetches the date (YYYY-MM-DD) of the very first commit in repository history,
+ * Fetches the first and last commit dates (YYYY-MM-DD) across the entire repository,
  * ignoring any --since or --until filters.
  */
-function fetchFirstCommitDate(repoPath) {
+function fetchRepoDateBounds(repoPath) {
   try {
     const out = execFileSync(
       'git',
-      ['log', '--reverse', '--date=short', '--pretty=format:%ad'],
+      ['log', '--date=short', '--pretty=format:%ad'],
       { encoding: 'utf-8', maxBuffer: MAX_BUFFER, cwd: repoPath }
     ).trim();
 
     if (!out) return null;
-    return out.split('\n')[0].trim();
+    const dates = out.split('\n');
+    return {
+      lastDate: dates[0].trim(),
+      firstDate: dates[dates.length - 1].trim(),
+    };
   } catch {
     return null;
   }
@@ -173,5 +177,5 @@ module.exports = {
   fetchRawGitLog,
   parseCommitEntry,
   parseRawLog,
-  fetchFirstCommitDate
+  fetchRepoDateBounds
 };

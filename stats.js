@@ -280,7 +280,7 @@ function findLargestCommit(groupedByDate) {
 /**
  * Calculates overall repository statistics.
  */
-function calculateOverallStats(groupedByDate, repoFirstDate = null) {
+function calculateOverallStats(groupedByDate, repoBounds = null) {
     const allDates = Object.keys(groupedByDate).sort((a, b) => a.localeCompare(b));
     const firstDate = allDates[0];
     const lastDate = allDates[allDates.length - 1];
@@ -293,7 +293,8 @@ function calculateOverallStats(groupedByDate, repoFirstDate = null) {
         ? ((activeDays / totalCalendarDays) * 100).toFixed(0)
         : '0';
 
-    const trueFirstDate = repoFirstDate || firstDate;
+    const trueFirstDate = repoBounds?.firstDate || firstDate;
+    const trueLastDate = repoBounds?.lastDate || lastDate;
     const trueStartDate = parseDate(trueFirstDate);
     const now = new Date();
     const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
@@ -381,6 +382,7 @@ function calculateOverallStats(groupedByDate, repoFirstDate = null) {
         longestGapEnd: longestGapInfo.end,
         currentStreak,
         trueFirstDate,
+        trueLastDate,
         repoAge,
         totalUniqueFiles,
     };

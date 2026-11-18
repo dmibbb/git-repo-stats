@@ -216,19 +216,38 @@ function renderKPICard(icon, title, value, sub, subTitle = '', targetDate = '', 
 }
 
 /**
- * Renders the centered hero dashboard header with period and generation metadata.
+ * Renders the centered hero dashboard header with full vs filtered period badges.
  */
 function renderHeader(repoName, stats, generatedAt, args = {}) {
     const isFiltered = Boolean(args.since || args.until);
-    const periodLabel = isFiltered ? 'Filtered period' : 'Period';
+    let periodHtml = '';
+
+    if (isFiltered) {
+        const filterParts = [];
+        if (args.since) filterParts.push(`since ${escapeHtml(args.since)}`);
+        if (args.until) filterParts.push(`until ${escapeHtml(args.until)}`);
+        const filterLabel = filterParts.join(', ');
+
+        periodHtml = `
+      <span class="period-badge period-badge--filtered" title="Active commits range: ${stats.firstDate} — ${stats.lastDate}">
+        🟡 Filtered (${filterLabel}): <strong>${stats.firstDate} — ${stats.lastDate}</strong>
+      </span>
+      <span class="meta-sep">|</span>
+      <span>📚 <strong>Full repo:</strong> ${stats.trueFirstDate} — ${stats.trueLastDate}</span>`;
+    } else {
+        periodHtml = `
+      <span class="period-badge period-badge--full">
+        🟢 Full history: <strong>${stats.firstDate} — ${stats.lastDate}</strong>
+      </span>`;
+    }
 
     return `<header class="dashboard-header">
     <button class="btn theme-toggle" aria-label="Toggle theme">🌓 Theme</button>
     <h1>${escapeHtml(repoName)}</h1>
     <div class="header-subtitle">
-      <span>📅 <strong>${periodLabel}:</strong> ${stats.firstDate} — ${stats.lastDate}</span>
-      <span class="meta-sep">·</span>
-      <span>🕒 <strong>Generated:</strong> ${generatedAt}</span>
+      ${periodHtml}
+      <span class="meta-sep">|</span>
+      <span>🧾 <strong>Generated:</strong> ${generatedAt}</span>
     </div>
   </header>`;
 }
@@ -634,22 +653,27 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, widestComm
         pluralize(stats.repoAge, 'day'),
         `since ${stats.trueFirstDate}`
     );
+    const gapSub = stats.longestGapLength > 0
+        ? `Longest gap: ${pluralize(stats.longestGapLength, 'day')} (${stats.longestGapStart} — ${stats.longestGapEnd})`
+        : 'Longest gap: none';
     html += renderKPICard(
         '🔥',
         'Streaks & Gaps',
-        `Max: ${stats.maxStreakLength}d · Cur: ${stats.currentStreak}d`,
-        `Longest gap: ${pluralize(stats.longestGapLength, 'day')}`
+        `Max: ${stats.maxStreakLength}d <span class="meta-sep">|</span> Cur: ${stats.currentStreak}d`,
+        gapSub
     );
+    const isFiltered = Boolean(args?.since || args?.until);
+    const activeDaysSub = `${stats.activityPercent}% of ${isFiltered ? 'filtered' : 'full'} period (${stats.firstDate} — ${stats.lastDate})`;
     html += renderKPICard(
         '📅',
         'Active days',
         `${stats.activeDays} / ${stats.totalCalendarDays}`,
-        `${stats.activityPercent}% of period days`
+        activeDaysSub
     );
     html += renderKPICard(
         '📈',
         'Avg per active day',
-        `+${fmt(stats.avgPerActiveDayIns)} / -${fmt(stats.avgPerActiveDayDel)}`,
+        `<span class="positive">+${fmt(stats.avgPerActiveDayIns)}</span> / <span class="negative">-${fmt(stats.avgPerActiveDayDel)}</span>`,
         `avg ${stats.avgCommitsPerActiveDay} commits / day`
     );
     html += `</div>`;

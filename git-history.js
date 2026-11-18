@@ -38,7 +38,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { getRepoName, printHelp, openInBrowser, logStep, formatNumber } = require('./utils');
-const { fetchRawGitLog, parseRawLog, fetchFirstCommitDate } = require('./git-client');
+const { fetchRawGitLog, parseRawLog, fetchRepoDateBounds } = require('./git-client');
 const {
     groupCommitsByDate,
     calculateOverallStats,
@@ -195,9 +195,9 @@ function main() {
 
         logStep(`🔍 Parsed ${formatNumber(commits.length)} commits from git log`);
 
-        const repoFirstDate = fetchFirstCommitDate(absoluteRepoPath);
+        const repoBounds = fetchRepoDateBounds(absoluteRepoPath);
         const groupedByDate = groupCommitsByDate(commits);
-        const stats = calculateOverallStats(groupedByDate, repoFirstDate);
+        const stats = calculateOverallStats(groupedByDate, repoBounds);
         const topFiles = findTopFrequentFiles(groupedByDate);
         const largestCommit = findLargestCommit(groupedByDate);
         const widestCommit = findWidestCommit(groupedByDate);
