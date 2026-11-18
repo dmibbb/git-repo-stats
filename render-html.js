@@ -223,7 +223,7 @@ function renderDaySectionHTML(date, dayData) {
 
     dayData.commits.forEach((commit) => {
         const timeHtml = commit.time ? `<span class="commit-time">Committed: ${commit.time.slice(0, 8)}</span>` : '';
-        const authorHtml = commit.author ? `<span class="commit-author">Author: ${commit.author}</span>` : '';
+        const authorHtml = commit.author ? `<span class="commit-author">Author: ${escapeHtml(commit.author)}</span>` : '';
         html += `<tr class="commit-row"><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}${authorHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
     });
 
