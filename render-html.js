@@ -199,9 +199,12 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
 /**
  * Renders a single KPI card.
  */
-function renderKPICard(icon, title, value, sub, subTitle = '') {
+function renderKPICard(icon, title, value, sub, subTitle = '', targetDate = '') {
     const titleAttr = subTitle ? ` title="${escapeHtml(subTitle)}"` : '';
-    return `<div class="card">
+    const dateAttr = targetDate ? ` data-date="${escapeHtml(targetDate)}"` : '';
+    const clickableClass = targetDate ? ' card--clickable' : '';
+
+    return `<div class="card${clickableClass}"${dateAttr}>
     <div class="card-header">
       <span class="card-title">${title}</span>
       <span class="card-icon">${icon}</span>
@@ -270,8 +273,11 @@ function renderTimeOfDayHistogramHTML(timeOfDayStats) {
     if (!timeOfDayStats || !timeOfDayStats.periods || timeOfDayStats.total === 0) return '';
 
     const maxCount = Math.max(...timeOfDayStats.periods.map(p => p.count));
+    const peakBadge = timeOfDayStats.peakHour
+        ? `<span class="card-badge" title="Most active hour">⏰ Peak: ${timeOfDayStats.peakHour.range} (${timeOfDayStats.peakHour.count})</span>`
+        : '';
 
-    let html = `<div class="card"><div class="card-header"><span class="card-title">Activity by time of day</span></div><ul class="histogram-list">\n`;
+    let html = `<div class="card"><div class="card-header"><span class="card-title">Activity by time of day</span>${peakBadge}</div><ul class="histogram-list">\n`;
     for (const period of timeOfDayStats.periods) {
         const barWidth = maxCount > 0 ? ((period.count / maxCount) * 100).toFixed(1) : 0;
         const isPeak = period.count === maxCount && maxCount > 0;
@@ -497,9 +503,10 @@ function renderHeatmapHTML(groupedByDate) {
 function renderChurnTimelineHTML(groupedByDate) {
     if (!groupedByDate || Object.keys(groupedByDate).length === 0) return '';
 
-    return `<div class="card card--placeholder" style="margin-bottom: 1.5rem;">
+    return `<div id="sec-timeline" class="section-title">📉 Code Churn Timeline</div>
+    <div class="card card--placeholder" style="margin-bottom: 1.5rem;">
       <div class="card-header">
-        <span class="card-title">📉 Code Churn Timeline (per commit)</span>
+        <span class="card-title">Per-commit insertions & deletions</span>
         <span class="card-icon">🚧</span>
       </div>
       <div class="placeholder-body">
@@ -553,50 +560,70 @@ function renderSearchBarHTML() {
 /**
  * Renders the full dashboard overview.
  */
-function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors, generatedAt, args) {
+function renderOverviewHTML(repoName, stats, topFiles, largestCommit, widestCommit, techStack, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors, generatedAt, args) {
     const fmt = formatNumber;
     let html = '';
 
-    // Header
+    // 1. Header & Subheader
     html += renderHeader(repoName, stats, generatedAt, args);
 
-    // Volume Banner
+    // 2. Volume Banner
     html += renderVolumeBanner(stats, fmt);
 
-    // Section: Records (1 row x 4 cards)
-    html += `<div class="section-title">🏆 Records</div>`;
+    // 3. Section: Files & Tech Stack (3 columns)
+    html += `<div id="sec-tech" class="section-title">🗂️ Files & Tech Stack</div>`;
+    html += `<div class="grid grid-3">`;
+    html += renderTopFilesCard(topFiles);
+    html += renderTechStackCard(techStack, '🧰 Tech stack (by file touches)');
+    html += renderTechStackCard(techStackByLines, '📏 Tech stack (by lines changed)');
+    html += `</div>`;
+
+    // 4. Section: Records (1 row x 4 cards, clickable where date exists)
+    html += `<div id="sec-records" class="section-title">🏆 Records</div>`;
     html += `<div class="grid grid-4">`;
     html += renderKPICard(
         '🏆',
         'Record by commits',
         pluralize(stats.recordCommitsCount, 'commit'),
-        `on ${stats.recordCommitsDate}`
+        `on ${stats.recordCommitsDate}`,
+        `Click to jump to ${stats.recordCommitsDate}`,
+        stats.recordCommitsDate
     );
     html += renderKPICard(
         '🔨',
         'Record by churn',
         `<span class="positive">+${fmt(stats.recordCodeIns)}</span> / <span class="negative">-${fmt(stats.recordCodeDel)}</span>`,
-        `on ${stats.recordCodeDate}`
+        `on ${stats.recordCodeDate}`,
+        `Click to jump to ${stats.recordCodeDate}`,
+        stats.recordCodeDate
     );
     html += renderKPICard(
         '💪',
         'Largest commit',
         `<span class="positive">+${fmt(largestCommit?.insertions || 0)}</span> / <span class="negative">-${fmt(largestCommit?.deletions || 0)}</span>`,
         largestCommit ? `${escapeHtml(largestCommit.subject)}<br>${largestCommit.date}` : '',
-        largestCommit ? `${largestCommit.subject} (${largestCommit.date})` : ''
+        largestCommit ? `${largestCommit.subject} (${largestCommit.date}) — click to view` : '',
+        largestCommit ? largestCommit.date : ''
     );
     html += renderKPICard(
-        '✨',
-        'More metrics',
-        '<em style="font-size: 1.1rem; font-weight: 500;">Coming soon...</em>',
-        'reserved for future stats'
+        '🚚',
+        'Widest commit',
+        widestCommit ? pluralize(widestCommit.filesCount, 'file') : 'N/A',
+        widestCommit ? `${escapeHtml(widestCommit.subject)}<br>${widestCommit.date}` : '',
+        widestCommit ? `${widestCommit.subject} (${widestCommit.date}) — click to view` : '',
+        widestCommit ? widestCommit.date : ''
     );
     html += `</div>`;
 
-    // Section: Activity Patterns
-    html += `<div class="section-title">📊 Activity Patterns</div>`;
+    // 5. Section: Contribution (80% Heatmap + 20% Contributors)
+    html += `<div id="sec-contribution" class="section-title">👨‍👩‍👧‍👦 Contribution</div>`;
+    html += `<div class="grid grid-heatmap-contrib">`;
+    html += renderHeatmapHTML(groupedByDate);
+    html += renderContributorsCard(contributors);
+    html += `</div>`;
 
-    // Row: Pace & Rhythm (4 cards)
+    // 6. Section: Activity Patterns (4 KPI cards + 3 Histograms)
+    html += `<div id="sec-patterns" class="section-title">📊 Activity Patterns</div>`;
     html += `<div class="grid grid-4">`;
     html += renderKPICard(
         '🎂',
@@ -624,31 +651,14 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
     );
     html += `</div>`;
 
-    // Histograms (3 columns: Time of Day + Weekday + Month)
     html += `<div class="grid grid-3">`;
     html += renderTimeOfDayHistogramHTML(timeOfDayStats);
     html += renderWeekdayHistogramHTML(weekdayCounts);
     html += renderMonthHistogramHTML(monthCounts);
     html += `</div>`;
 
-    // Section: Contribution
-    html += `<div class="section-title"> 👨‍👩‍👧‍👦 Contribution</div>`;
-
-    // Heatmap-365 (80%) + Contributors (20%)
-    html += `<div class="grid grid-heatmap-contrib">`;
-    html += renderHeatmapHTML(groupedByDate);
-    html += renderContributorsCard(contributors);
-    html += `</div>`;
-
-    // Commit Churn Timeline (100% width)
+    // 7. Section: Code Churn Timeline (100% width)
     html += renderChurnTimelineHTML(groupedByDate);
-
-    // Details: 3 columns
-    html += `<div class="grid grid-3">`;
-    html += renderTopFilesCard(topFiles);
-    html += renderTechStackCard(techStack, '🧰 Tech stack (by file touches)');
-    html += renderTechStackCard(techStackByLines, '📏 Tech stack (by lines changed)');
-    html += `</div>`;
 
     return html;
 }
@@ -657,7 +667,7 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, techStack,
  * Renders the full changelog section.
  */
 function renderChangelogHTML(groupedByDate) {
-    let html = '<div class="section-title">📝 Changelog Details</div>\n';
+    let html = '<div id="sec-changelog" class="section-title">📝 Changelog Details</div>\n';
     html += renderSearchBarHTML();
 
     const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));

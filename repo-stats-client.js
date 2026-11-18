@@ -146,17 +146,14 @@
     }
 
     /**
-     * Initializes click-to-scroll navigation on active heatmap cells.
+     * Initializes click-to-scroll navigation on heatmap cells and clickable KPI cards.
      */
-    function initHeatmapNavigation(resetSearch) {
-        const heatmapGrid = document.querySelector('.heatmap-grid');
-        if (!heatmapGrid) return;
+    function initDateNavigation(resetSearch) {
+        document.addEventListener('click', function (e) {
+            const trigger = e.target.closest('[data-date]');
+            if (!trigger) return;
 
-        heatmapGrid.addEventListener('click', function (e) {
-            const cell = e.target.closest('.heatmap-cell[data-date]');
-            if (!cell) return;
-
-            const date = cell.getAttribute('data-date');
+            const date = trigger.getAttribute('data-date');
             const targetDay = document.getElementById('day-' + date);
             if (!targetDay) return;
 
@@ -175,5 +172,5 @@
     const resetSearch = initSearch();
     initCollapseControls();
     initBackToTop();
-    initHeatmapNavigation(resetSearch);
+    initDateNavigation(resetSearch);
 })();

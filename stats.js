@@ -199,6 +199,7 @@ function calculateActivityByTimeOfDay(groupedByDate) {
         { key: 'day', label: 'Day', icon: '☀️', range: '12:00–17:59', count: 0 },
         { key: 'evening', label: 'Evening', icon: '🌆', range: '18:00–23:59', count: 0 }
     ];
+    const hourCounts = new Array(24).fill(0);
 
     let total = 0;
 
@@ -206,9 +207,10 @@ function calculateActivityByTimeOfDay(groupedByDate) {
         for (const commit of data.commits) {
             if (!commit.time) continue;
             const hour = parseInt(commit.time.split(':')[0], 10);
-            if (isNaN(hour)) continue;
+            if (isNaN(hour) || hour < 0 || hour > 23) continue;
 
             total++;
+            hourCounts[hour]++;
             if (hour < 6) periods[0].count++;
             else if (hour < 12) periods[1].count++;
             else if (hour < 18) periods[2].count++;
@@ -225,9 +227,27 @@ function calculateActivityByTimeOfDay(groupedByDate) {
 
     const peak = [...withPercent].sort((a, b) => b.count - a.count)[0];
 
+    let bestHour = 0;
+    let bestHourCount = 0;
+    hourCounts.forEach((count, h) => {
+        if (count > bestHourCount) {
+            bestHourCount = count;
+            bestHour = h;
+        }
+    });
+
+    const hh = String(bestHour).padStart(2, '0');
+    const peakHour = {
+        hour: bestHour,
+        range: `${hh}:00–${hh}:59`,
+        count: bestHourCount,
+        percent: ((bestHourCount / total) * 100).toFixed(0)
+    };
+
     return {
         periods: withPercent,
         peak,
+        peakHour,
         total
     };
 }
@@ -484,6 +504,30 @@ function calculateTechStack(groupedByDate) {
         .slice(0, TOP_EXTENSIONS_COUNT);
 }
 
+/**
+ * Finds the single commit that touched the highest number of tracked files.
+ */
+function findWidestCommit(groupedByDate) {
+    let widest = null;
+    let maxFiles = 0;
+
+    for (const [date, data] of Object.entries(groupedByDate)) {
+        for (const commit of data.commits) {
+            const count = new Set(commit.trackedFiles).size;
+            if (count > maxFiles) {
+                maxFiles = count;
+                widest = {
+                    date,
+                    subject: commit.subject,
+                    filesCount: count
+                };
+            }
+        }
+    }
+
+    return widest;
+}
+
 module.exports = {
     groupCommitsByDate,
     calculateMaxStreak,
@@ -497,5 +541,6 @@ module.exports = {
     calculateTechStack,
     calculateActivityByTimeOfDay,
     calculateContributors,
-    calculateTechStackByLines
+    calculateTechStackByLines,
+    findWidestCommit
 };

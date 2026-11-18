@@ -9,7 +9,7 @@
  * styled, dark-mode-ready HTML dashboard (`repo-stats.html`).
  * 
  * Author: Димасик (dmibbb)
- * Version: 20261118
+ * Version: 20261119
  *
  * Features:
  * - High-level repository overview (age, active days, streaks, gaps, records)
@@ -49,7 +49,8 @@ const {
     calculateActivityByMonth,
     calculateActivityByTimeOfDay,
     calculateTechStackByLines,
-    calculateContributors
+    calculateContributors,
+    findWidestCommit
 } = require('./stats');
 const { renderOverview, renderChangelog } = require('./render-md');
 const { renderOverviewHTML, renderChangelogHTML, wrapInHTMLTemplate } = require('./render-html');
@@ -199,6 +200,7 @@ function main() {
         const stats = calculateOverallStats(groupedByDate, repoFirstDate);
         const topFiles = findTopFrequentFiles(groupedByDate);
         const largestCommit = findLargestCommit(groupedByDate);
+        const widestCommit = findWidestCommit(groupedByDate);
         const techStack = calculateTechStack(groupedByDate);
         const techStackByLines = calculateTechStackByLines(groupedByDate);
         const contributors = calculateContributors(groupedByDate);
@@ -239,6 +241,7 @@ function main() {
                 stats,
                 topFiles,
                 largestCommit,
+                widestCommit,
                 techStack,
                 weekdayCounts,
                 monthCounts,
