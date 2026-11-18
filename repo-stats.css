@@ -773,6 +773,10 @@ em {
   contain-intrinsic-size: auto 250px;
 }
 
+html.is-jumping .changelog-day {
+  content-visibility: visible;
+}
+
 .changelog-day[open] {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -875,6 +879,25 @@ em {
   font-size: 0.8em;
   color: var(--fg-muted);
   margin-top: 0.2rem;
+}
+
+.commit-row {
+  scroll-margin-top: 7.5rem;
+}
+
+@keyframes targetFlash {
+  0% {
+    background-color: color-mix(in srgb, var(--accent) 28%, transparent);
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.highlight-flash {
+  animation: targetFlash 1.8s ease-out;
 }
 
 .file-link {

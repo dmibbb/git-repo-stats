@@ -75,12 +75,16 @@
             }
         }
 
-        function resetSearch(shouldFocus) {
+        function filterByQuery(queryText) {
             if (!searchInput) return;
             clearTimeout(debounceTimer);
-            searchInput.value = '';
-            applyFilter('');
-            if (shouldFocus) searchInput.focus();
+            searchInput.value = queryText;
+            applyFilter(queryText);
+        }
+
+        function resetSearch(shouldFocus) {
+            filterByQuery('');
+            if (shouldFocus && searchInput) searchInput.focus();
         }
 
         if (searchInput) {
@@ -105,7 +109,7 @@
             }
         }
 
-        return resetSearch;
+        return { resetSearch, filterByQuery };
     }
 
     /**
@@ -146,31 +150,63 @@
     }
 
     /**
-     * Initializes click-to-scroll navigation on heatmap cells and clickable KPI cards.
+     * Highlights an element temporarily with a CSS pulse animation.
      */
-    function initDateNavigation(resetSearch) {
+    function flashHighlight(el) {
+        if (!el) return;
+        el.classList.remove('highlight-flash');
+        void el.offsetWidth; // Force reflow to restart animation
+        el.classList.add('highlight-flash');
+    }
+
+    /**
+     * Initializes click - to - scroll navigation on heatmap cells and clickable KPI cards.
+     */
+    function initDateNavigation(searchApi) {
         document.addEventListener('click', function (e) {
             const trigger = e.target.closest('[data-date]');
             if (!trigger) return;
 
             const date = trigger.getAttribute('data-date');
+            const commitSubject = trigger.getAttribute('data-commit');
             const targetDay = document.getElementById('day-' + date);
             if (!targetDay) return;
 
-            // Immediately reset active search filter if target day is hidden
-            if (targetDay.classList.contains('hidden') && resetSearch) {
-                resetSearch(false);
+            if (commitSubject && searchApi?.filterByQuery) {
+                // Filter specifically by this commit's subject
+                searchApi.filterByQuery(commitSubject);
+            } else if (searchApi?.resetSearch) {
+                // Always clear active search filter when jumping to a full day
+                searchApi.resetSearch(false);
             }
 
+            document.documentElement.classList.add('is-jumping');
             targetDay.setAttribute('open', '');
-            targetDay.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Force immediate layout calculation with real heights
+            void targetDay.offsetHeight;
+
+            requestAnimationFrame(() => {
+                let scrollTarget = targetDay;
+                if (commitSubject) {
+                    const visibleRow = targetDay.querySelector('.commit-row:not(.hidden)');
+                    if (visibleRow) scrollTarget = visibleRow;
+                }
+
+                scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                flashHighlight(scrollTarget);
+
+                setTimeout(() => {
+                    document.documentElement.classList.remove('is-jumping');
+                }, 800);
+            });
         });
     }
 
     // === Bootstrap ===
     initThemeToggle();
-    const resetSearch = initSearch();
+    const searchApi = initSearch();
     initCollapseControls();
     initBackToTop();
-    initDateNavigation(resetSearch);
+    initDateNavigation(searchApi);
 })();

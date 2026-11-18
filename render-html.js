@@ -199,12 +199,13 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
 /**
  * Renders a single KPI card.
  */
-function renderKPICard(icon, title, value, sub, subTitle = '', targetDate = '') {
+function renderKPICard(icon, title, value, sub, subTitle = '', targetDate = '', targetCommit = '') {
     const titleAttr = subTitle ? ` title="${escapeHtml(subTitle)}"` : '';
     const dateAttr = targetDate ? ` data-date="${escapeHtml(targetDate)}"` : '';
+    const commitAttr = targetCommit ? ` data-commit="${escapeHtml(targetCommit)}"` : '';
     const clickableClass = targetDate ? ' card--clickable' : '';
 
-    return `<div class="card${clickableClass}"${dateAttr}>
+    return `<div class="card${clickableClass}"${dateAttr}${commitAttr}>
     <div class="card-header">
       <span class="card-title">${title}</span>
       <span class="card-icon">${icon}</span>
@@ -602,16 +603,18 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, widestComm
         'Largest commit',
         `<span class="positive">+${fmt(largestCommit?.insertions || 0)}</span> / <span class="negative">-${fmt(largestCommit?.deletions || 0)}</span>`,
         largestCommit ? `${escapeHtml(largestCommit.subject)}<br>${largestCommit.date}` : '',
-        largestCommit ? `${largestCommit.subject} (${largestCommit.date}) — click to view` : '',
-        largestCommit ? largestCommit.date : ''
+        largestCommit ? `${largestCommit.subject} (${largestCommit.date}) — click to filter & view` : '',
+        largestCommit ? largestCommit.date : '',
+        largestCommit ? largestCommit.subject : ''
     );
     html += renderKPICard(
         '🚚',
         'Widest commit',
         widestCommit ? pluralize(widestCommit.filesCount, 'file') : 'N/A',
         widestCommit ? `${escapeHtml(widestCommit.subject)}<br>${widestCommit.date}` : '',
-        widestCommit ? `${widestCommit.subject} (${widestCommit.date}) — click to view` : '',
-        widestCommit ? widestCommit.date : ''
+        widestCommit ? `${widestCommit.subject} (${widestCommit.date}) — click to filter & view` : '',
+        widestCommit ? widestCommit.date : '',
+        widestCommit ? widestCommit.subject : ''
     );
     html += `</div>`;
 
