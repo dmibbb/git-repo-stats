@@ -552,19 +552,32 @@ em {
   border: 1px solid var(--border);
 }
 
-/* === Search Bar & Buttons === */
+/* === Sticky Search Bar & Buttons === */
 .search-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   gap: 0.75rem;
   margin-bottom: 1rem;
+  padding: 0.75rem 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
   align-items: center;
 }
 
-.search-input {
+.search-input-wrapper {
+  position: relative;
   flex: 1;
-  min-width: 200px;
-  padding: 0.6rem 1rem;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.6rem 2.2rem 0.6rem 1rem;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--bg);
@@ -576,6 +589,32 @@ em {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.search-clear {
+  position: absolute;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.search-clear.visible {
+  display: flex;
+}
+
+.search-clear:hover {
+  background: var(--bg-soft);
+  color: var(--fg);
 }
 
 .search-counter {
@@ -619,7 +658,7 @@ em {
   border-radius: 6px;
   margin-bottom: 1rem;
   background: var(--bg);
-  scroll-margin-top: 1rem;
+  scroll-margin-top: 4.5rem;
 }
 
 .changelog-day[open] {

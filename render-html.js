@@ -72,21 +72,33 @@ function wrapInHTMLTemplate(content, title, generatedAt) {
 
     // === Search Filter ===
     const searchInput = document.querySelector('.search-input');
+    const clearBtn = document.querySelector('.search-clear');
+
     if (searchInput) {
         const rows = document.querySelectorAll('.commit-row');
         const days = document.querySelectorAll('.changelog-day');
         const counter = document.querySelector('.search-counter');
-        
+
+        const clearSearch = () => {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        };
+
         searchInput.addEventListener('input', function() {
             const query = this.value.toLowerCase().trim();
             let visibleCount = 0;
-            
+
+            if (clearBtn) {
+                clearBtn.classList.toggle('visible', this.value.length > 0);
+            }
+
             rows.forEach(row => {
                 const match = !query || row.textContent.toLowerCase().includes(query);
                 row.classList.toggle('hidden', !match);
                 if (match) visibleCount++;
             });
-            
+
             days.forEach(day => {
                 const hasVisible = day.querySelector('.commit-row:not(.hidden)');
                 day.classList.toggle('hidden', !hasVisible && query);
@@ -94,11 +106,21 @@ function wrapInHTMLTemplate(content, title, generatedAt) {
                     day.setAttribute('open', '');
                 }
             });
-            
+
             if (counter) {
                 counter.textContent = query ? visibleCount + ' result' + (visibleCount !== 1 ? 's' : '') : '';
             }
         });
+
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && this.value.length > 0) {
+                clearSearch();
+            }
+        });
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', clearSearch);
+        }
     }
     
     // === Collapse/Expand ===
@@ -550,18 +572,20 @@ function renderContributorsCard(contributors) {
 }
 
 /**
- * Renders search bar for changelog (visual only, no functionality).
+ * Renders sticky search bar with clear button and collapse/expand controls.
  */
 function renderSearchBarHTML() {
     let html = '<div class="search-bar">\n';
+    html += '<div class="search-input-wrapper">\n';
     html += '<input type="text" class="search-input" placeholder="🔍 Search commits, files, authors...">\n';
+    html += '<button type="button" class="search-clear" aria-label="Clear search" title="Clear (Esc)">✕</button>\n';
+    html += '</div>\n';
     html += '<span class="search-counter"></span>\n';
     html += '<button class="btn btn-collapse" data-action="collapse-all">📂 Collapse All</button>\n';
     html += '<button class="btn btn-expand" data-action="expand-all">📖 Expand All</button>\n';
     html += '</div>\n';
     return html;
 }
-
 /**
  * Renders the full dashboard overview.
  */
