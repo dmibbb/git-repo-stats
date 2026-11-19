@@ -659,6 +659,17 @@ em {
   text-align: center;
 }
 
+.tech-ext--clickable {
+  cursor: pointer;
+  color: var(--accent);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.tech-ext--clickable:hover {
+  border-color: var(--accent);
+  text-decoration: underline;
+}
+
 .tech-bar-container {
   flex: 1;
   height: 0.7rem;

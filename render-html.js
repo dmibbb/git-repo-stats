@@ -410,9 +410,9 @@ function renderFilesCard(filesData) {
     <div class="card-header">
       <span class="card-title">📂 Files</span>
       <div class="card-tabs" role="tablist">
-        <button type="button" class="card-tab active" data-tab="frequent" title="Most frequently changed files">🔄 Frequent</button>
-        <button type="button" class="card-tab" data-tab="hotspots" title="Files with highest total lines changed">🔥 Hotspots</button>
-        <button type="button" class="card-tab" data-tab="legacy" title="Files untouched for the longest time">🕰️ Legacy</button>
+        <button type="button" class="card-tab active" data-tab="frequent" title="Top 5 most frequently changed files">🔄 Frequent</button>
+        <button type="button" class="card-tab" data-tab="hotspots" title="Top 5 files with highest total lines changed">🔥 Hotspots</button>
+        <button type="button" class="card-tab" data-tab="legacy" title="Top 5 files untouched for the longest time">🕰️ Legacy</button>
       </div>
     </div>
     <div class="tab-panel active" data-panel="frequent">${frequentHtml}</div>
@@ -422,23 +422,54 @@ function renderFilesCard(filesData) {
 }
 
 /**
- * Renders the tech stack card.
+ * Renders a single tech stack bar list.
  */
-function renderTechStackCard(stack, title = '🧰 Tech stack (by file touches)') {
-    if (!stack || stack.length === 0) return '';
+function renderTechStackListHTML(stack) {
+    if (!stack || stack.length === 0) {
+        return '<div style="color: var(--fg-muted); font-size: 0.85rem; padding: 0.5rem 0;">No data</div>';
+    }
 
-    let html = `<div class="card"><div class="card-header"><span class="card-title">${title}</span></div>\n`;
-    stack.forEach((item) => {
-        const extDisplay = item.ext === 'no-ext' ? '<no-ext>' : `.${item.ext}`;
-        html += `<div class="tech-bar-row">
-      <span class="tech-ext">${escapeHtml(extDisplay)}</span>
+    return stack.map((item) => {
+        const isNoExt = item.ext === 'no-ext';
+        const extDisplay = isNoExt ? '<no-ext>' : `.${item.ext}`;
+        const detailTitle = item.churn !== undefined
+            ? `${pluralize(item.churn, 'line')} changed`
+            : `${pluralize(item.count, 'file touch')}`;
+
+        const extAttr = isNoExt
+            ? ''
+            : ` class="tech-ext tech-ext--clickable" data-filter-file="${escapeHtml(extDisplay)}" title="Filter changelog by ${escapeHtml(extDisplay)}"`;
+        const extSpan = isNoExt
+            ? `<span class="tech-ext">${escapeHtml(extDisplay)}</span>`
+            : `<span${extAttr}>${escapeHtml(extDisplay)}</span>`;
+
+        return `<div class="tech-bar-row" title="${detailTitle}">
+      ${extSpan}
       <div class="tech-bar-container"><div class="tech-bar" style="width: ${item.percent}%"></div></div>
       <span class="tech-percent">${item.percent}%</span>
-    </div>\n`;
-    });
-    html += `</div>`;
+    </div>`;
+    }).join('\n');
+}
 
-    return html;
+/**
+ * Renders the combined Tech Stack card with tabs (By Files | By Lines).
+ */
+function renderTabbedTechStackCard(techStackByFiles, techStackByLines) {
+    const hasFiles = techStackByFiles && techStackByFiles.length > 0;
+    const hasLines = techStackByLines && techStackByLines.length > 0;
+    if (!hasFiles && !hasLines) return '';
+
+    return `<div class="card" data-tab-card>
+    <div class="card-header">
+      <span class="card-title">🧰 Tech stack</span>
+      <div class="card-tabs" role="tablist">
+        <button type="button" class="card-tab active" data-tab="by-files" title="Top 5 extensions by number of file touches">📄 By Files</button>
+        <button type="button" class="card-tab" data-tab="by-lines" title="Top 5 extensions by lines changed (insertions + deletions)">📏 By Lines</button>
+      </div>
+    </div>
+    <div class="tab-panel active" data-panel="by-files">${renderTechStackListHTML(techStackByFiles)}</div>
+    <div class="tab-panel" data-panel="by-lines">${renderTechStackListHTML(techStackByLines)}</div>
+  </div>`;
 }
 
 /**
@@ -637,8 +668,16 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
     html += `<div id="sec-tech" class="section-title">🗂️ Files & Tech Stack</div>`;
     html += `<div class="grid grid-3">`;
     html += renderFilesCard(filesData);
-    html += renderTechStackCard(techStack, '🧰 Tech stack (by file touches)');
-    html += renderTechStackCard(techStackByLines, '📏 Tech stack (by lines changed)');
+    html += renderTabbedTechStackCard(techStack, techStackByLines);
+    html += `<div class="card card--placeholder">
+      <div class="card-header">
+        <span class="card-title">🔄 File Lifecycle</span>
+        <span class="card-icon">🚧</span>
+      </div>
+      <div class="placeholder-body">
+        <span class="placeholder-text">Coming soon... (All | Text | Binary)</span>
+      </div>
+    </div>`;
     html += `</div>`;
 
     // 4. Section: Records (1 row x 4 cards, clickable where date exists)
