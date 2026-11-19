@@ -37,8 +37,19 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const { getRepoName, printHelp, openInBrowser, logStep, formatNumber } = require('./utils');
-const { fetchRawGitLog, parseRawLog, fetchRepoDateBounds } = require('./git-client');
+const {
+    getRepoName,
+    printHelp,
+    openInBrowser,
+    logStep,
+    formatNumber,
+    formatGeneratedAt
+} = require('./utils');
+const {
+    fetchRawGitLog,
+    parseRawLog,
+    fetchRepoDateBounds
+} = require('./git-client');
 const {
     groupCommitsByDate,
     calculateOverallStats,
@@ -55,8 +66,14 @@ const {
     findLegacyFiles,
     calculateFileLifecycle
 } = require('./stats');
-const { renderOverview, renderChangelog } = require('./render-md');
-const { renderOverviewHTML, renderChangelogHTML, wrapInHTMLTemplate } = require('./render-html');
+const {
+    renderOverview,
+    renderChangelog
+} = require('./render-md');
+const { renderOverviewHTML,
+    renderChangelogHTML,
+    wrapInHTMLTemplate
+} = require('./render-html');
 
 /**
  * Parses CLI arguments (supports --flag=value format and positional repo path).
@@ -242,7 +259,7 @@ function main() {
 
         // === Generate HTML ===
         if (mode.html) {
-            const generatedAt = new Date().toLocaleString('sv-SE');
+            const generatedAt = formatGeneratedAt();
             let htmlContent = renderOverviewHTML(
                 repoName,
                 stats,

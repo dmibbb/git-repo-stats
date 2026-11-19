@@ -84,6 +84,15 @@ function parseDate(str) {
 }
 
 /**
+ * Returns today's local calendar date normalized to UTC midnight
+ * for consistent day-diff arithmetic without DST shifts.
+ */
+function getTodayLocalDate() {
+  const now = new Date();
+  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+}
+
+/**
  * Calculates the difference in full days between two Date objects.
  */
 function diffDays(dateA, dateB) {
@@ -193,6 +202,24 @@ function openInBrowser(filePath) {
   }
 }
 
+/**
+ * Formats current local date and time with UTC offset:
+ * e.g. "2026-11-19 17:10:22 (UTC+3)"
+ */
+function formatGeneratedAt(date = new Date()) {
+  const localStr = date.toLocaleString('sv-SE');
+  const offsetMin = -date.getTimezoneOffset();
+  const sign = offsetMin >= 0 ? '+' : '-';
+  const absMin = Math.abs(offsetMin);
+  const hours = Math.floor(absMin / 60);
+  const mins = absMin % 60;
+  const tzStr = mins === 0
+    ? `UTC${sign}${hours}`
+    : `UTC${sign}${hours}:${String(mins).padStart(2, '0')}`;
+
+  return `${localStr} (${tzStr})`;
+}
+
 let lastStepTime = Date.now();
 
 /**
@@ -222,6 +249,7 @@ module.exports = {
   escapePipe,
   escapeHtml,
   parseDate,
+  getTodayLocalDate,
   isIgnoredFile,
   getExtension,
   toMondayFirstIndex,
@@ -231,5 +259,6 @@ module.exports = {
   pluralize,
   diffDays,
   openInBrowser,
+  formatGeneratedAt,
   logStep
 };

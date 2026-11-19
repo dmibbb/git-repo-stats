@@ -10,6 +10,7 @@ const {
     pluralize,
     getExtension,
     parseDate,
+    getTodayLocalDate,
     toMondayFirstIndex
 } = require('./utils');
 const { getLanguageIcon } = require('./lang-icons');
@@ -564,9 +565,7 @@ function renderHeatmapHTML(groupedByDate) {
     if (!groupedByDate || Object.keys(groupedByDate).length === 0) return '';
 
     // --- 1. Getting the range: Mon - 52 Weeks till today (in UTC) ---
-    const now = new Date();
-    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-
+    const today = getTodayLocalDate();
     const startDate = new Date(today);
     startDate.setUTCDate(startDate.getUTCDate() - 364); // ~52 weeks ago
 

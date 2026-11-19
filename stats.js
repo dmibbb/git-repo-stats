@@ -1,11 +1,12 @@
 const {
-    parseDate,
-    diffDays,
-    toMondayFirstIndex,
     WEEKDAY_NAMES,
     MONTH_NAMES,
     TOP_FILES_COUNT,
     TOP_EXTENSIONS_COUNT,
+    parseDate,
+    getTodayLocalDate,
+    diffDays,
+    toMondayFirstIndex,
     getExtension,
     normalizeGitPath,
     isIgnoredFile
@@ -101,8 +102,7 @@ function calculateCurrentStreak(dates) {
     if (dates.length === 0) return 0;
 
     const dateSet = new Set(dates);
-    const now = new Date();
-    const cursor = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const cursor = getTodayLocalDate();
 
     const formatUTC = (d) => {
         const y = d.getUTCFullYear();
@@ -111,7 +111,7 @@ function calculateCurrentStreak(dates) {
         return `${y}-${m}-${day}`;
     };
 
-    // If no commits today, checking from yesterday
+    // If no commits today (in local calendar date), check from yesterday
     if (!dateSet.has(formatUTC(cursor))) {
         cursor.setUTCDate(cursor.getUTCDate() - 1);
         if (!dateSet.has(formatUTC(cursor))) {
@@ -296,9 +296,8 @@ function calculateOverallStats(groupedByDate, repoBounds = null) {
     const trueFirstDate = repoBounds?.firstDate || firstDate;
     const trueLastDate = repoBounds?.lastDate || lastDate;
     const trueStartDate = parseDate(trueFirstDate);
-    const now = new Date();
-    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-    const repoAge = diffDays(trueStartDate, todayUTC);
+    const todayLocal = getTodayLocalDate();
+    const repoAge = diffDays(trueStartDate, todayLocal);
 
     const totalCommits = Object.values(groupedByDate).reduce((sum, d) => sum + d.commits.length, 0);
     const totalInsertions = Object.values(groupedByDate).reduce((sum, d) => sum + d.totalInsertions, 0);
@@ -525,15 +524,12 @@ function findLegacyFiles(groupedByDate, topN = TOP_FILES_COUNT) {
         }
     }
 
-    const now = new Date();
-    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-
     return Array.from(fileLastSeen.entries())
         .filter(([, info]) => !info.deleted)
         .map(([file, info]) => ({
             file,
             lastDate: info.date,
-            daysAgo: diffDays(parseDate(info.date), todayUTC),
+            daysAgo: diffDays(parseDate(info.date), getTodayLocalDate()),
         }))
         .sort((a, b) => b.daysAgo - a.daysAgo || a.lastDate.localeCompare(b.lastDate))
         .slice(0, topN);
