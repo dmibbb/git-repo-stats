@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { MAX_FILES_PER_COMMIT, OPEN_DAYS_COUNT, formatNumber, escapeHtml, WEEKDAY_NAMES, MONTH_NAMES, pluralize } = require('./utils');
+const { getLanguageIcon } = require('./lang-icons');
 
 /**
  * Reads CSS file from misc/repo-stats.css.
@@ -432,16 +433,18 @@ function renderTechStackListHTML(stack) {
     return stack.map((item) => {
         const isNoExt = item.ext === 'no-ext';
         const extDisplay = isNoExt ? '<no-ext>' : `.${item.ext}`;
+        const iconHtml = getLanguageIcon(isNoExt ? '' : item.ext);
         const detailTitle = item.churn !== undefined
             ? `${pluralize(item.churn, 'line')} changed`
             : `${pluralize(item.count, 'file touch')}`;
 
+        const badgeContent = `${iconHtml}<span>${escapeHtml(extDisplay)}</span>`;
         const extAttr = isNoExt
             ? ''
             : ` class="tech-ext tech-ext--clickable" data-filter-file="${escapeHtml(extDisplay)}" title="Filter changelog by ${escapeHtml(extDisplay)}"`;
         const extSpan = isNoExt
-            ? `<span class="tech-ext">${escapeHtml(extDisplay)}</span>`
-            : `<span${extAttr}>${escapeHtml(extDisplay)}</span>`;
+            ? `<span class="tech-ext">${badgeContent}</span>`
+            : `<span${extAttr}>${badgeContent}</span>`;
 
         return `<div class="tech-bar-row" title="${detailTitle}">
       ${extSpan}
