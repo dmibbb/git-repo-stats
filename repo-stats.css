@@ -430,6 +430,7 @@ em {
 }
 
 .toc-title {
+  display: block;
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -438,6 +439,14 @@ em {
   padding: 0 0.5rem 0.5rem;
   margin-bottom: 0.4rem;
   border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.toc-title:hover {
+  color: var(--accent);
+  text-decoration: none;
 }
 
 .toc-list {
@@ -1028,19 +1037,6 @@ html.is-jumping .changelog-day {
   color: var(--removed);
 }
 
-.day-summary h3 {
-  display: inline;
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--fg-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.day-summary:hover h3 {
-  color: var(--accent);
-}
-
 .changelog-table {
   width: 100%;
   table-layout: fixed;
@@ -1282,6 +1278,7 @@ html.is-jumping .changelog-day {
   .theme-toggle,
   .search-bar,
   .back-to-top,
+  .sticky-toc,
   .card--placeholder {
     display: none !important;
   }

@@ -16,7 +16,7 @@ const {
 const { getLanguageIcon } = require('./lang-icons');
 
 /**
- * Reads CSS file from misc/repo-stats.css.
+ * Reads CSS file from repo-stats.css.
  * Falls back to empty string if file not found.
  */
 function loadCSS() {
@@ -80,7 +80,7 @@ ${css}
 </head>
 <body>
 <nav class="sticky-toc" aria-label="Table of contents">
-  <div class="toc-title">Navigation</div>
+  <a href="#" class="toc-title" title="Back to top">Navigation</a>
   <ul class="toc-list">
     <li><a href="#sec-tech" class="toc-link" data-target="sec-tech">🗂️ Files & Stack</a></li>
     <li><a href="#sec-records" class="toc-link" data-target="sec-records">🏆 Records</a></li>
