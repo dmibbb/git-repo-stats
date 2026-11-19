@@ -263,7 +263,7 @@ function renderKPICard(icon, title, value, sub, subTitle = '', targetDate = '', 
     const commitAttr = targetCommit ? ` data-commit="${escapeHtml(targetCommit)}"` : '';
     const clickableClass = targetDate ? ' card--clickable' : '';
 
-    return `<div class="card${clickableClass}"${dateAttr}${commitAttr}>
+    return `<div class="card card--kpi${clickableClass}"${dateAttr}${commitAttr}>
     <div class="card-header">
       <span class="card-title">${title}</span>
       <span class="card-icon">${icon}</span>
