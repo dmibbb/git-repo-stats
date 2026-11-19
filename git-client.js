@@ -46,6 +46,7 @@ function parseCommitEntry(entry) {
     added: { txt: 0, bin: 0 },
     modified: { txt: 0, bin: 0 },
     deleted: { txt: 0, bin: 0 },
+    renamed: { txt: 0, bin: 0 },
   };
 
   let insertions = 0;
@@ -63,7 +64,8 @@ function parseCommitEntry(entry) {
     if (line.startsWith(':')) {
       const tabParts = line.split('\t');
       const meta = tabParts[0].split(' ');
-      const statusChar = meta[meta.length - 1]; // e.g., 'A', 'M', 'D', 'R100'
+      const rawStatus = meta[meta.length - 1]; // e.g., 'A', 'M', 'D', 'R100'
+      const statusChar = rawStatus[0]; // Normalize 'R100' -> 'R'
       const targetPath = tabParts[tabParts.length - 1];
       fileStatuses.set(targetPath, statusChar);
       continue;
@@ -101,7 +103,9 @@ function parseCommitEntry(entry) {
         ? fileStats.added
         : status === 'D'
           ? fileStats.deleted
-          : fileStats.modified;
+          : status === 'R'
+            ? fileStats.renamed
+            : fileStats.modified;
 
       if (isBinary) {
         binaryCount++;
@@ -158,7 +162,7 @@ function fetchRepoDateBounds(repoPath) {
   try {
     const out = execFileSync(
       'git',
-      ['log', '--date=short', '--pretty=format:%ad'],
+      ['log', '--no-merges', '--date=short', '--pretty=format:%ad'],
       { encoding: 'utf-8', maxBuffer: MAX_BUFFER, cwd: repoPath }
     ).trim();
 

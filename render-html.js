@@ -162,6 +162,7 @@ function renderDeltaCellHTML(commit) {
         const rows = [
             { label: 'Added', text: formatStatBreakdown(commit.fileStats.added) },
             { label: 'Modified', text: formatStatBreakdown(commit.fileStats.modified) },
+            { label: 'Renamed', text: formatStatBreakdown(commit.fileStats.renamed) },
             { label: 'Deleted', text: formatStatBreakdown(commit.fileStats.deleted) },
         ].filter(r => r.text);
 
