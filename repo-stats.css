@@ -371,8 +371,13 @@ em {
   font-variant-numeric: tabular-nums;
 }
 
+.volume-item .value.positive,
 .volume-item .value .positive { color: var(--added); }
+
+.volume-item .value.negative,
 .volume-item .value .negative { color: var(--removed); }
+
+.volume-item .value.neutral,
 .volume-item .value .neutral { color: var(--fg); }
 
 @media (max-width: 1100px) {
