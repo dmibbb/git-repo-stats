@@ -8,7 +8,7 @@ const MAX_BUFFER = 1024 * 1024 * 50; // 50MB
 const TOP_FILES_COUNT = 5;
 const TOP_EXTENSIONS_COUNT = 5;
 const HISTOGRAM_WIDTH = 25;
-const OPEN_DAYS_COUNT = 7;
+const OPEN_DAYS_COUNT = 3;
 
 // Files to exclude from statistics (but still shown in commit tables)
 const IGNORED_PATTERNS = [

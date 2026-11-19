@@ -1005,6 +1005,11 @@ html.is-jumping .changelog-day {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  transition: background-color 0.15s ease;
+}
+
+.day-summary:hover {
+  background-color: var(--bg-soft);
 }
 
 .day-summary::-webkit-details-marker {
@@ -1072,6 +1077,11 @@ html.is-jumping .changelog-day {
 
 .day-summary-meta .negative {
   color: var(--removed);
+}
+
+.summary-authors {
+  color: var(--fg-muted);
+  font-weight: 500;
 }
 
 .changelog-table {

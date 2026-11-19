@@ -115,8 +115,12 @@ function calculateReleases(groupedByDate) {
     for (const commit of orderedCommits) {
         if (commit.tags && commit.tags.length > 0) {
             if (currentBucket.commits.length > 0) {
+                const firstDate = currentBucket.commits[currentBucket.commits.length - 1].date;
+                const lastDate = currentBucket.commits[0].date;
                 releases.push({
                     ...currentBucket,
+                    firstDate,
+                    lastDate,
                     uniqueFilesCount: currentBucket.uniqueFiles.size,
                 });
             }
@@ -140,8 +144,12 @@ function calculateReleases(groupedByDate) {
     }
 
     if (currentBucket.commits.length > 0) {
+        const firstDate = currentBucket.commits[currentBucket.commits.length - 1].date;
+        const lastDate = currentBucket.commits[0].date;
         releases.push({
             ...currentBucket,
+            firstDate,
+            lastDate,
             uniqueFilesCount: currentBucket.uniqueFiles.size,
         });
     }

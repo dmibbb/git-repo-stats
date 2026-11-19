@@ -118,7 +118,7 @@
     function initCollapseControls() {
         const collapseBtn = document.querySelector('[data-action="collapse-all"]');
         const expandBtn = document.querySelector('[data-action="expand-all"]');
-        const allDays = document.querySelectorAll('.changelog-day');
+        const allDays = document.querySelectorAll('.changelog-day:not(.release-card)');
 
         if (collapseBtn) {
             collapseBtn.addEventListener('click', () => {
@@ -339,7 +339,9 @@
             const titleRaw = card.querySelector('.release-title')?.textContent?.trim() || 'Release';
             const versionName = titleRaw.replace(/^[^\w\d]+/, '').trim();
             const dateRaw = card.querySelector('.day-weekday')?.textContent?.replace(/[()]/g, '').trim() || '';
-            const formattedDate = dateRaw ? dateRaw.replace(/-/g, '/') : '';
+            const dateParts = dateRaw.split('—');
+            const finalDate = dateParts[dateParts.length - 1].trim();
+            const formattedDate = finalDate ? finalDate.replace(/-/g, '/') : '';
 
             const subjects = Array.from(card.querySelectorAll('.release-commit-subject'))
                 .map(el => `- ${el.textContent.trim()}`);

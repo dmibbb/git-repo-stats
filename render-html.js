@@ -217,16 +217,22 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
         ? dayTags.map(t => `<span class="tag-badge">🏷️ ${escapeHtml(t)}</span>`).join(' ')
         : '';
 
+    const authorsSummary = formatAuthorsSummary(dayData.commits);
+    const authorsHtml = authorsSummary
+        ? `<span class="meta-sep">|</span>\n          <span class="summary-authors">${authorsSummary}</span>`
+        : '';
+
     let html = `<details id="day-${date}" class="changelog-day"${openAttr}>\n`;
     html += `<summary class="day-summary">
       <div class="day-summary-content">
         <div class="day-summary-date">${date} <span class="day-weekday">(${weekday})</span> ${dayTagsHtml}</div>
-        <div class="day-summary-meta">
+         <div class="day-summary-meta">
           <span><strong>${pluralize(commitsCount, 'commit')}</strong></span>
           <span class="meta-sep">|</span>
           <span><strong class="positive">+${fmt(dayData.totalInsertions)}</strong> / <strong class="negative">-${fmt(dayData.totalDeletions)}</strong></span>
           <span class="meta-sep">|</span>
           <span><strong>${fmt(uniqueFilesCount)}</strong> ${uniqueFilesCount === 1 ? 'unique file' : 'unique files'}</span>
+          ${authorsHtml}
         </div>
       </div>
     </summary>\n`;
@@ -1121,6 +1127,35 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
 }
 
 /**
+ * Formats unique commit authors joined by ' · ' (truncating if > 4 authors).
+ */
+function formatAuthorsSummary(commits) {
+    if (!commits || commits.length === 0) return '';
+
+    const uniqueAuthors = [];
+    const seen = new Set();
+
+    for (const c of commits) {
+        const author = (c.author || '').trim();
+        if (author && !seen.has(author)) {
+            seen.add(author);
+            uniqueAuthors.push(author);
+        }
+    }
+
+    if (uniqueAuthors.length === 0) return '';
+
+    const MAX_VISIBLE = 4;
+    if (uniqueAuthors.length <= MAX_VISIBLE) {
+        return uniqueAuthors.map(escapeHtml).join(' · ');
+    }
+
+    const visible = uniqueAuthors.slice(0, MAX_VISIBLE).map(escapeHtml).join(' · ');
+    const restCount = uniqueAuthors.length - MAX_VISIBLE;
+    return `${visible} · +${restCount} more`;
+}
+
+/**
  * Renders the collapsible Releases & Tags section (Release Notes).
  */
 function renderReleasesHTML(releases) {
@@ -1133,14 +1168,27 @@ function renderReleasesHTML(releases) {
         const badgeHtml = rel.isUnreleased
             ? `<span class="release-title">🚧 Unreleased</span>`
             : `<span class="release-title">🏷️ ${escapeHtml(rel.name)}</span>`;
-        const dateHtml = rel.date ? `<span class="day-weekday">(${rel.date})</span>` : '';
+
+        const rangeStr = rel.firstDate && rel.lastDate && rel.firstDate !== rel.lastDate
+            ? `${rel.firstDate} — ${rel.lastDate}`
+            : (rel.lastDate || rel.date || '');
+        const dateHtml = rangeStr ? `<span class="day-weekday">(${rangeStr})</span>` : '';
+
         const primaryTag = rel.isUnreleased ? 'unreleased' : rel.name.split(',')[0].trim();
         const releaseId = `release-${primaryTag.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 
-        const rowsHtml = rel.commits.map(c => `<li class="release-commit-item">
+        const authorsSummary = formatAuthorsSummary(rel.commits);
+        const authorsHtml = authorsSummary
+            ? `<span class="meta-sep">|</span>\n              <span class="summary-authors">${authorsSummary}</span>`
+            : '';
+
+        const rowsHtml = rel.commits.map(c => {
+            const timePart = c.time ? ` ${c.time.slice(0, 8)}` : '';
+            return `<li class="release-commit-item">
               <span class="release-commit-bullet">•</span>
-              <span class="release-commit-subject" data-date="${c.date}" data-row-id="${c.rowId}" title="Jump to commit in Changelog Details (${c.date})">${escapeHtml(c.subject)}</span>
-            </li>`).join('\n');
+              <span class="release-commit-subject" data-date="${c.date}" data-row-id="${c.rowId}" title="Jump to commit in Changelog Details (${c.date}${timePart} by ${c.author})">${escapeHtml(c.subject)}</span>
+            </li>`;
+        }).join('\n');
 
         html += `<details id="${releaseId}" class="changelog-day release-card">\n`;
         html += `<summary class="day-summary release-summary">
@@ -1152,6 +1200,7 @@ function renderReleasesHTML(releases) {
               <span><strong class="positive">+${fmt(rel.insertions)}</strong> / <strong class="negative">-${fmt(rel.deletions)}</strong></span>
               <span class="meta-sep">|</span>
               <span><strong>${fmt(rel.uniqueFilesCount)}</strong> ${rel.uniqueFilesCount === 1 ? 'unique file' : 'unique files'}</span>
+              ${authorsHtml}
             </div>
           </div>
           <button type="button" class="btn release-copy-btn" title="Copy release notes to clipboard">📋 Copy</button>
