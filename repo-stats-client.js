@@ -164,6 +164,8 @@
      */
     function initDateNavigation(searchApi) {
         document.addEventListener('click', function (e) {
+            if (window.getSelection()?.toString()) return;
+
             const trigger = e.target.closest('[data-date]');
             if (!trigger) return;
 
@@ -289,6 +291,78 @@
         });
     }
 
+    /**
+    * Hides the expand arrow on the Releases ribbon if all tag pills fit on a single row.
+    */
+    function initTagsRibbon() {
+        const tagsBar = document.querySelector('.tags-bar');
+        const summary = tagsBar?.querySelector('.tags-summary');
+        const pills = tagsBar?.querySelector('.tags-pills');
+        if (!tagsBar || !summary || !pills) return;
+
+        summary.addEventListener('click', function (e) {
+            if (tagsBar.classList.contains('is-single-line')) {
+                e.preventDefault();
+            }
+        });
+
+        function checkOverflow() {
+            const wasOpen = tagsBar.hasAttribute('open');
+            if (wasOpen) tagsBar.removeAttribute('open');
+
+            const isOverflowing = pills.scrollHeight > pills.clientHeight + 2;
+            tagsBar.classList.toggle('is-single-line', !isOverflowing);
+
+            if (wasOpen && isOverflowing) tagsBar.setAttribute('open', '');
+        }
+
+        checkOverflow();
+        window.addEventListener('resize', checkOverflow, { passive: true });
+    }
+
+    /**
+     * Initializes one-click copy of release notes to clipboard.
+     */
+    function initReleaseCopy() {
+        document.addEventListener('click', function (e) {
+            const copyBtn = e.target.closest('.release-copy-btn');
+            if (!copyBtn) return;
+
+            e.preventDefault(); // Prevent <details> from toggling
+            e.stopPropagation();
+
+            const card = copyBtn.closest('.release-card');
+            if (!card) return;
+
+            const titleRaw = card.querySelector('.release-title')?.textContent?.trim() || 'Release';
+            const versionName = titleRaw.replace(/^[^\w\d]+/, '').trim();
+            const dateRaw = card.querySelector('.day-weekday')?.textContent?.replace(/[()]/g, '').trim() || '';
+            const formattedDate = dateRaw ? dateRaw.replace(/-/g, '/') : '';
+
+            const subjects = Array.from(card.querySelectorAll('.release-commit-subject'))
+                .map(el => `- ${el.textContent.trim()}`);
+
+            if (subjects.length === 0) return;
+
+            const headerLines = [versionName];
+            if (formattedDate) {
+                headerLines.push(`Released on ${formattedDate}`);
+            }
+
+            const payload = `${headerLines.join('\n')}\n\nChanges:\n${subjects.join('\n')}`;
+
+            navigator.clipboard?.writeText(payload).then(() => {
+                const prevText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Copied!';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.textContent = prevText;
+                    copyBtn.classList.remove('copied');
+                }, 1500);
+            });
+        });
+    }
+
     // === Bootstrap ===
     initThemeToggle();
     const searchApi = initSearch();
@@ -298,4 +372,6 @@
     initStickyTOC();
     initCardTabs();
     initFileFilterNavigation(searchApi);
+    initTagsRibbon();
+    initReleaseCopy();
 })();

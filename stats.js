@@ -81,6 +81,75 @@ function extractTagsList(groupedByDate) {
 }
 
 /**
+ * Groups commits into release buckets separated by git tags (newest first).
+ * Omits the initial Unreleased bucket if the latest commit is already tagged.
+ */
+function calculateReleases(groupedByDate) {
+    const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
+    const orderedCommits = [];
+
+    for (const date of sortedDates) {
+        groupedByDate[date].commits.forEach((commit, index) => {
+            orderedCommits.push({
+                ...commit,
+                date,
+                rowId: `commit-${date}-${index}`,
+            });
+        });
+    }
+
+    if (orderedCommits.length === 0) return [];
+
+    const releases = [];
+    let currentBucket = {
+        name: 'Unreleased',
+        isUnreleased: true,
+        date: orderedCommits[0].date,
+        tagRowId: null,
+        commits: [],
+        insertions: 0,
+        deletions: 0,
+        uniqueFiles: new Set(),
+    };
+
+    for (const commit of orderedCommits) {
+        if (commit.tags && commit.tags.length > 0) {
+            if (currentBucket.commits.length > 0) {
+                releases.push({
+                    ...currentBucket,
+                    uniqueFilesCount: currentBucket.uniqueFiles.size,
+                });
+            }
+
+            currentBucket = {
+                name: commit.tags.join(', '),
+                isUnreleased: false,
+                date: commit.date,
+                tagRowId: commit.rowId,
+                commits: [],
+                insertions: 0,
+                deletions: 0,
+                uniqueFiles: new Set(),
+            };
+        }
+
+        currentBucket.commits.push(commit);
+        currentBucket.insertions += commit.insertions;
+        currentBucket.deletions += commit.deletions;
+        commit.trackedFiles.forEach(f => currentBucket.uniqueFiles.add(f));
+    }
+
+    if (currentBucket.commits.length > 0) {
+        releases.push({
+            ...currentBucket,
+            uniqueFilesCount: currentBucket.uniqueFiles.size,
+        });
+    }
+
+    return releases;
+}
+
+/**
  * Calculates the longest streak of consecutive active days.
  */
 function calculateMaxStreak(dates) {
@@ -654,6 +723,7 @@ function findWidestCommit(groupedByDate) {
 module.exports = {
     groupCommitsByDate,
     extractTagsList,
+    calculateReleases,
     calculateMaxStreak,
     calculateCurrentStreak,
     calculateLongestGap,

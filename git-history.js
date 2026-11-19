@@ -54,6 +54,7 @@ const {
 const {
     groupCommitsByDate,
     extractTagsList,
+    calculateReleases,
     calculateOverallStats,
     findTopFrequentFiles,
     findLargestCommit,
@@ -223,6 +224,7 @@ function main() {
         const repoBounds = fetchRepoDateBounds(absoluteRepoPath);
         const groupedByDate = groupCommitsByDate(commits);
         const tagsList = extractTagsList(groupedByDate);
+        const releases = calculateReleases(groupedByDate);
         const stats = calculateOverallStats(groupedByDate, repoBounds);
         const topFiles = findTopFrequentFiles(groupedByDate);
         const hotspotFiles = findChurnHotspotFiles(groupedByDate);
@@ -283,6 +285,7 @@ function main() {
                 timeOfDayStats,
                 techStackByLines,
                 contributors,
+                releases,
                 generatedAt,
                 args
             );

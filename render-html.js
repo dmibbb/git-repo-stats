@@ -87,6 +87,7 @@ ${css}
     <li><a href="#sec-contribution" class="toc-link" data-target="sec-contribution">👨‍👩‍👧‍👦 Contribution</a></li>
     <li><a href="#sec-patterns" class="toc-link" data-target="sec-patterns">📊 Patterns</a></li>
     <li><a href="#sec-timeline" class="toc-link" data-target="sec-timeline">📉 Timeline</a></li>
+    <li><a href="#sec-releases" class="toc-link" data-target="sec-releases">🏷️ Releases</a></li>
     <li><a href="#sec-changelog" class="toc-link" data-target="sec-changelog">📝 Changelog</a></li>
   </ul>
 </nav>
@@ -751,7 +752,7 @@ function renderSearchBarHTML() {
 /**
  * Renders the full dashboard overview.
  */
-function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCommit, techStack, fileLifecycle, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors, generatedAt, args) {
+function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCommit, techStack, fileLifecycle, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors, releases, generatedAt, args) {
     const fmt = formatNumber;
     let html = '';
 
@@ -857,6 +858,50 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
 
     // 7. Section: Code Churn Timeline (100% width)
     html += renderChurnTimelineHTML(groupedByDate);
+
+    // 8. Section: Releases & Tags
+    html += renderReleasesHTML(releases);
+
+    return html;
+}
+
+/**
+ * Renders the collapsible Releases & Tags section (Release Notes).
+ */
+function renderReleasesHTML(releases) {
+    if (!releases || releases.length === 0) return '';
+
+    const fmt = formatNumber;
+    let html = '<div id="sec-releases" class="section-title">🏷️ Releases & Tags</div>\n';
+
+    releases.forEach((rel) => {
+        const badgeHtml = rel.isUnreleased
+            ? `<span class="release-title">🚧 Unreleased</span>`
+            : `<span class="release-title">🏷️ ${escapeHtml(rel.name)}</span>`;
+        const dateHtml = rel.date ? `<span class="day-weekday">(${rel.date})</span>` : '';
+
+        const rowsHtml = rel.commits.map(c => `<li class="release-commit-item">
+              <span class="release-commit-bullet">•</span>
+              <span class="release-commit-subject" data-date="${c.date}" data-row-id="${c.rowId}" title="Jump to commit in Changelog Details (${c.date})">${escapeHtml(c.subject)}</span>
+            </li>`).join('\n');
+
+        html += `<details class="changelog-day release-card">\n`;
+        html += `<summary class="day-summary release-summary">
+          <div class="day-summary-content">
+            <div class="day-summary-date">${badgeHtml} ${dateHtml}</div>
+            <div class="day-summary-meta">
+              <span><strong>${pluralize(rel.commits.length, 'commit')}</strong></span>
+              <span class="meta-sep">|</span>
+              <span><strong class="positive">+${fmt(rel.insertions)}</strong> / <strong class="negative">-${fmt(rel.deletions)}</strong></span>
+              <span class="meta-sep">|</span>
+              <span><strong>${fmt(rel.uniqueFilesCount)}</strong> ${rel.uniqueFilesCount === 1 ? 'unique file' : 'unique files'}</span>
+            </div>
+          </div>
+          <button type="button" class="btn release-copy-btn" title="Copy release notes to clipboard">📋 Copy</button>
+        </summary>\n`;
+        html += `<div class="release-body"><ul class="release-commits-list">\n${rowsHtml}\n</ul></div>\n`;
+        html += `</details>\n`;
+    });
 
     return html;
 }
