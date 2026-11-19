@@ -180,17 +180,6 @@ em {
   user-select: none;
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.header-meta {
-  color: var(--fg-muted);
-  font-size: 0.9rem;
-}
-
 .theme-toggle {
   position: absolute;
   top: 0.5rem;
@@ -986,12 +975,6 @@ html.is-jumping .changelog-day {
   color: var(--fg-muted);
 }
 
-.delta-meta {
-  font-size: 0.78rem;
-  color: var(--fg-subtle);
-  margin-top: 0.35rem;
-}
-
 .file-status {
   font-size: 0.8em;
   font-weight: 500;
@@ -1101,14 +1084,22 @@ html.is-jumping .changelog-day {
     max-width: 100%;
   }
 
-  /* Hide interactive controls */
+  /* Hide interactive controls and placeholders */
   .theme-toggle,
   .search-bar,
-  .back-to-top {
+  .back-to-top,
+  .card--placeholder {
     display: none !important;
   }
 
   /* Compact grid layout for A4 pages */
+  .volume-banner {
+    grid-template-columns: repeat(6, 1fr);
+    box-shadow: none !important;
+    padding: 0.8rem 0.6rem;
+    break-inside: avoid;
+  }
+
   .grid {
     gap: 0.6rem;
     margin-bottom: 1rem;
@@ -1116,6 +1107,10 @@ html.is-jumping .changelog-day {
 
   .grid-4 {
     grid-template-columns: repeat(4, 1fr);
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .grid-heatmap-contrib {
