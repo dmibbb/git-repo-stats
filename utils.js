@@ -47,6 +47,15 @@ function formatNumber(n) {
 }
 
 /**
+ * Formats byte size into human-readable units (B, KB, MB).
+ */
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+/**
  * Formats a count with singular or plural noun:
  * pluralize(1, 'commit') -> '1 commit'
  * pluralize(5, 'commit') -> '5 commits'
@@ -246,6 +255,7 @@ module.exports = {
   OPEN_DAYS_COUNT,
   getRepoName,
   formatNumber,
+  formatBytes,
   escapePipe,
   escapeHtml,
   parseDate,

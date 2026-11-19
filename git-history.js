@@ -43,6 +43,7 @@ const {
     openInBrowser,
     logStep,
     formatNumber,
+    formatBytes,
     formatGeneratedAt
 } = require('./utils');
 const {
@@ -205,7 +206,10 @@ function main() {
         }
 
         const repoName = getRepoName(absoluteRepoPath);
+        logStep('⏳ Fetching git log history...');
         const rawLog = fetchRawGitLog(absoluteRepoPath, args.since, args.until);
+
+        logStep('⚙️  Parsing commits and file stats...');
         const commits = parseRawLog(rawLog);
 
         if (commits.length === 0) {
@@ -221,7 +225,7 @@ function main() {
         const topFiles = findTopFrequentFiles(groupedByDate);
         const hotspotFiles = findChurnHotspotFiles(groupedByDate);
         const legacyFiles = findLegacyFiles(groupedByDate);
-        const filesData = { frequent: topFiles, hotspots: hotspotFiles, legacy: legacyFiles }
+        const filesData = { frequent: topFiles, hotspots: hotspotFiles, legacy: legacyFiles };
         const largestCommit = findLargestCommit(groupedByDate);
         const widestCommit = findWidestCommit(groupedByDate);
         const techStack = calculateTechStack(groupedByDate);
@@ -232,7 +236,7 @@ function main() {
         const monthCounts = calculateActivityByMonth(groupedByDate);
         const timeOfDayStats = calculateActivityByTimeOfDay(groupedByDate);
 
-        logStep(`📊 Calculated repository statistics`);
+        logStep('📊 Calculated repository statistics');
 
         // === Resolve output directory ===
         const outputDir = resolveOutputDir(args.out, absoluteRepoPath);
@@ -242,6 +246,7 @@ function main() {
 
         // === Generate Markdown ===
         if (mode.md) {
+            logStep('📝 Rendering Markdown report...');
             let md = renderOverview(
                 repoName,
                 stats,
@@ -254,11 +259,13 @@ function main() {
             md += renderChangelog(groupedByDate);
             const mdPath = path.join(outputDir, 'repo-stats.md');
             fs.writeFileSync(mdPath, md, 'utf-8');
-            logStep(`✅ Markdown saved: ${mdPath}`);
+            const mdSize = formatBytes(Buffer.byteLength(md, 'utf-8'));
+            logStep(`✅ Markdown saved: ${mdPath} (${mdSize})`);
         }
 
         // === Generate HTML ===
         if (mode.html) {
+            logStep('🎨 Rendering HTML dashboard...');
             const generatedAt = formatGeneratedAt();
             let htmlContent = renderOverviewHTML(
                 repoName,
@@ -281,7 +288,8 @@ function main() {
             const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`, generatedAt);
             const htmlPath = path.join(outputDir, 'repo-stats.html');
             fs.writeFileSync(htmlPath, fullHTML, 'utf-8');
-            logStep(`✅ HTML saved: ${htmlPath}`);
+            const htmlSize = formatBytes(Buffer.byteLength(fullHTML, 'utf-8'));
+            logStep(`✅ HTML saved: ${htmlPath} (${htmlSize})`);
 
             if (args.open) {
                 openInBrowser(htmlPath);
