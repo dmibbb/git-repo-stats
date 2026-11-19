@@ -1,6 +1,17 @@
 const fs = require('fs');
 const path = require('path');
-const { MAX_FILES_PER_COMMIT, OPEN_DAYS_COUNT, formatNumber, escapeHtml, WEEKDAY_NAMES, MONTH_NAMES, pluralize } = require('./utils');
+const {
+    MAX_FILES_PER_COMMIT,
+    OPEN_DAYS_COUNT,
+    WEEKDAY_NAMES,
+    MONTH_NAMES,
+    formatNumber,
+    escapeHtml,
+    pluralize,
+    getExtension,
+    parseDate,
+    toMondayFirstIndex
+} = require('./utils');
 const { getLanguageIcon } = require('./lang-icons');
 
 /**
@@ -194,9 +205,21 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
     const commitsCount = dayData.commits.length;
     const uniqueFilesCount = dayData.uniqueFiles.size;
     const openAttr = isOpen ? ' open' : '';
+    const weekday = WEEKDAY_NAMES[toMondayFirstIndex(parseDate(date).getUTCDay())];
 
     let html = `<details id="day-${date}" class="changelog-day"${openAttr}>\n`;
-    html += `<summary class="day-summary"><h3>${date}: ${pluralize(commitsCount, 'commit')} (+${fmt(dayData.totalInsertions)} / -${fmt(dayData.totalDeletions)}) in ${pluralize(uniqueFilesCount, 'unique file')}</h3></summary>\n`;
+    html += `<summary class="day-summary">
+      <div class="day-summary-content">
+        <div class="day-summary-date">${date} <span class="day-weekday">(${weekday})</span></div>
+        <div class="day-summary-meta">
+          <span><strong>${pluralize(commitsCount, 'commit')}</strong></span>
+          <span class="meta-sep">|</span>
+          <span><strong class="positive">+${fmt(dayData.totalInsertions)}</strong> / <strong class="negative">-${fmt(dayData.totalDeletions)}</strong></span>
+          <span class="meta-sep">|</span>
+          <span><strong>${fmt(uniqueFilesCount)}</strong> ${uniqueFilesCount === 1 ? 'unique file' : 'unique files'}</span>
+        </div>
+      </div>
+    </summary>\n`;
     html += '<table class="changelog-table">\n<thead><tr><th>Commit</th><th>Changed Files</th><th>Delta</th></tr></thead>\n<tbody>\n';
 
     dayData.commits.forEach((commit) => {
@@ -390,7 +413,15 @@ function renderFilesCard(filesData) {
         return `<ul class="details-list">\n${items.map(formatter).join('\n')}\n</ul>`;
     };
 
-    const renderFileBadge = (file) => `<span class="file-name file-name--clickable" data-filter-file="${escapeHtml(file)}" title="Filter changelog by ${escapeHtml(file)}">${escapeHtml(file)}</span>`;
+    const renderFileBadge = (file) => {
+        const baseName = file.split('/').pop();
+        const ext = getExtension(baseName);
+        const iconHtml = getLanguageIcon(ext === 'no-ext' ? '' : ext);
+        const safeFull = escapeHtml(file);
+        const safeBase = escapeHtml(baseName);
+
+        return `<span class="file-name file-name--clickable" data-filter-file="${safeFull}" title="${safeFull} (click to filter)">${iconHtml}<span class="file-name-text">${safeBase}</span></span>`;
+    };
 
     const frequentHtml = renderList(
         frequent,
@@ -493,12 +524,10 @@ function renderFileLifecycleCard(lifecycle) {
             return '<div style="color: var(--fg-muted); font-size: 0.85rem; padding: 0.5rem 0;">No operations</div>';
         }
 
-        const maxVal = Math.max(...rowsConfig.map(r => bucket[r.key] || 0));
-
         return `<ul class="histogram-list">\n${rowsConfig.map(r => {
             const count = bucket[r.key] || 0;
-            const percent = ((count / bucket.total) * 100).toFixed(0);
-            const barWidth = maxVal > 0 ? ((count / maxVal) * 100).toFixed(1) : 0;
+            const exactPercent = bucket.total > 0 ? ((count / bucket.total) * 100).toFixed(1) : '0';
+            const percent = Math.round(Number(exactPercent));
             const isClickable = count > 0;
             const clickAttrs = isClickable
                 ? ` class="bar-row bar-row--clickable" data-filter-file="${r.query}" title="Filter changelog by ${r.label.toLowerCase()} files"`
@@ -506,7 +535,7 @@ function renderFileLifecycleCard(lifecycle) {
 
             return `<li${clickAttrs}>
           <span class="bar-label bar-label--wide">${r.icon} ${r.label}</span>
-          <div class="bar-container"><div class="bar ${r.barClass}" style="width: ${barWidth}%"></div></div>
+          <div class="bar-container"><div class="bar ${r.barClass}" style="width: ${exactPercent}%"></div></div>
           <span class="bar-value">${percent}% (${formatNumber(count)})</span>
         </li>`;
         }).join('\n')}\n</ul>`;
