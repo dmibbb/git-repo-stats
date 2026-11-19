@@ -363,6 +363,22 @@
         });
     }
 
+    /**
+    * Switches visible heatmap period when changing the dropdown in the card header.
+    */
+    function initHeatmapPeriodSelect() {
+        const select = document.querySelector('.heatmap-select');
+        const card = select?.closest('[data-heatmap-card]');
+        if (!select || !card) return;
+
+        select.addEventListener('change', function () {
+            const targetView = this.value;
+            card.querySelectorAll('.heatmap-view').forEach(view => {
+                view.classList.toggle('active', view.getAttribute('data-heatmap-view') === targetView);
+            });
+        });
+    }
+
     // === Bootstrap ===
     initThemeToggle();
     const searchApi = initSearch();
@@ -374,4 +390,5 @@
     initFileFilterNavigation(searchApi);
     initTagsRibbon();
     initReleaseCopy();
+    initHeatmapPeriodSelect()
 })();

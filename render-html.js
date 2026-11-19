@@ -82,13 +82,13 @@ ${css}
 <nav class="sticky-toc" aria-label="Table of contents">
   <a href="#" class="toc-title" title="Back to top">Navigation</a>
   <ul class="toc-list">
-    <li><a href="#sec-tech" class="toc-link" data-target="sec-tech">🗂️ Files & Stack</a></li>
+    <li><a href="#sec-tech" class="toc-link" data-target="sec-tech">🗂️ Files & Tech Stack</a></li>
     <li><a href="#sec-records" class="toc-link" data-target="sec-records">🏆 Records</a></li>
     <li><a href="#sec-contribution" class="toc-link" data-target="sec-contribution">👨‍👩‍👧‍👦 Contribution</a></li>
-    <li><a href="#sec-patterns" class="toc-link" data-target="sec-patterns">📊 Patterns</a></li>
-    <li><a href="#sec-timeline" class="toc-link" data-target="sec-timeline">📉 Timeline</a></li>
-    <li><a href="#sec-releases" class="toc-link" data-target="sec-releases">🏷️ Releases</a></li>
-    <li><a href="#sec-changelog" class="toc-link" data-target="sec-changelog">📝 Changelog</a></li>
+    <li><a href="#sec-patterns" class="toc-link" data-target="sec-patterns">📊 Activity Patterns</a></li>
+    <li><a href="#sec-timeline" class="toc-link" data-target="sec-timeline">📉 Code Timeline</a></li>
+    <li><a href="#sec-releases" class="toc-link" data-target="sec-releases">🏷️ Releases & Tags</a></li>
+    <li><a href="#sec-changelog" class="toc-link" data-target="sec-changelog">📝 Changelog Details</a></li>
   </ul>
 </nav>
 <div class="dashboard-container">
@@ -573,22 +573,13 @@ function renderFileLifecycleCard(lifecycle) {
 }
 
 /**
- * Renders contribution heatmap for the last year (GitHub-style).
- * Range: from Monday 52 weeks ago to today, aligned by weeks (Mon-first).
+ * Builds a single GitHub-style heatmap grid panel for the given [startDate, endDate] range (in UTC).
  */
-function renderHeatmapHTML(groupedByDate) {
-    if (!groupedByDate || Object.keys(groupedByDate).length === 0) return '';
+function buildHeatmapViewHTML(groupedByDate, startDate, endDate, viewKey, isActive) {
+    const cursor = new Date(startDate);
+    const daysToMonday = (cursor.getUTCDay() + 6) % 7;
+    cursor.setUTCDate(cursor.getUTCDate() - daysToMonday);
 
-    // --- 1. Getting the range: Mon - 52 Weeks till today (in UTC) ---
-    const today = getTodayLocalDate();
-    const startDate = new Date(today);
-    startDate.setUTCDate(startDate.getUTCDate() - 364); // ~52 weeks ago
-
-    // Shift back to Mon (getUTCDay(): 0=Sun, 1=Mon, ..., 6=Sat)
-    const daysToMonday = (startDate.getUTCDay() + 6) % 7;
-    startDate.setUTCDate(startDate.getUTCDate() - daysToMonday);
-
-    // --- 2. Generate days array ---
     const formatDateUTC = (d) => {
         const y = d.getUTCFullYear();
         const m = String(d.getUTCMonth() + 1).padStart(2, '0');
@@ -597,15 +588,14 @@ function renderHeatmapHTML(groupedByDate) {
     };
 
     const days = [];
-    const cursor = new Date(startDate);
-    while (cursor <= today) {
+    while (cursor <= endDate) {
         const dateStr = formatDateUTC(cursor);
         const commitsCount = groupedByDate[dateStr]?.commits.length || 0;
-        days.push({ date: new Date(cursor), dateStr, commitsCount });
+        const inRange = cursor >= startDate && cursor <= endDate;
+        days.push({ date: new Date(cursor), dateStr, commitsCount, inRange });
         cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
 
-    // --- 3. Group by weeks (columns) ---
     const weeks = [];
     let currentWeek = [];
     days.forEach((day) => {
@@ -617,10 +607,12 @@ function renderHeatmapHTML(groupedByDate) {
     });
     if (currentWeek.length > 0) weeks.push(currentWeek);
 
-    // --- 4. Determine month labels for each week ---
-    const monthLabels = weeks.map(week => MONTH_NAMES[week[0].date.getUTCMonth()]);
+    // Pick a representative day inside the target range for accurate month labels
+    const monthLabels = weeks.map(week => {
+        const validDay = week.find(d => d.inRange) || week;
+        return MONTH_NAMES[validDay.date.getUTCMonth()];
+    });
 
-    // --- 5. Helper for cells ---
     const getLevel = (count) => {
         if (count === 0) return '';
         if (count <= 2) return 'l1';
@@ -631,10 +623,9 @@ function renderHeatmapHTML(groupedByDate) {
 
     const numWeeks = weeks.length;
     const gridCols = `40px repeat(${numWeeks}, 1fr)`;
+    const activeClass = isActive ? ' active' : '';
 
-    // --- 6. Render ---
-    let html = '<div class="card"><div class="card-header"><span class="card-title">🗓️ Contribution Heatmap (last year)</span></div>\n';
-    html += '<div class="heatmap-container">\n';
+    let html = `<div class="heatmap-view${activeClass}" data-heatmap-view="${viewKey}">\n`;
     html += '<div class="heatmap-grid-wrapper">\n';
 
     // Month labels row
@@ -648,8 +639,6 @@ function renderHeatmapHTML(groupedByDate) {
 
     // Grid with day labels
     html += `<div class="heatmap-grid" style="grid-template-columns: ${gridCols}; grid-template-rows: repeat(7, 1fr)">\n`;
-
-    // Day labels (Mon, Wed, Fri)
     const dayLabels = ['Mon', '', 'Wed', '', 'Fri', '', ''];
     dayLabels.forEach((label, i) => {
         html += `<div class="heatmap-day-label" style="grid-row: ${i + 1}">${label}</div>\n`;
@@ -658,32 +647,76 @@ function renderHeatmapHTML(groupedByDate) {
     // Cells
     weeks.forEach((week, weekIndex) => {
         week.forEach((day, dayIndex) => {
+            if (!day.inRange) {
+                html += `<div class="heatmap-cell heatmap-cell--outside" style="grid-column: ${weekIndex + 2}; grid-row: ${dayIndex + 1}"></div>\n`;
+                return;
+            }
+
             const level = getLevel(day.commitsCount);
-            const isActive = day.commitsCount > 0;
-            const title = !isActive
+            const hasCommits = day.commitsCount > 0;
+            const title = !hasCommits
                 ? `No commits on ${day.dateStr}`
                 : `${pluralize(day.commitsCount, 'commit')} on ${day.dateStr} (click to view)`;
-            const activeAttrs = isActive ? ` data-date="${day.dateStr}" data-active="true"` : '';
+            const activeAttrs = hasCommits ? ` data-date="${day.dateStr}" data-active="true"` : '';
             html += `<div class="heatmap-cell ${level}"${activeAttrs} style="grid-column: ${weekIndex + 2}; grid-row: ${dayIndex + 1}" title="${title}"></div>\n`;
         });
     });
 
     html += '</div>\n'; // heatmap-grid
-
-    // Legend
-    html += '<div class="heatmap-legend">\n';
-    html += '<span>Less</span>\n';
-    html += '<div class="swatch" style="background: var(--bg-soft)"></div>\n';
-    html += '<div class="swatch" style="background: color-mix(in srgb, var(--added) 30%, var(--bg-soft))"></div>\n';
-    html += '<div class="swatch" style="background: color-mix(in srgb, var(--added) 55%, var(--bg-soft))"></div>\n';
-    html += '<div class="swatch" style="background: color-mix(in srgb, var(--added) 80%, var(--bg-soft))"></div>\n';
-    html += '<div class="swatch" style="background: var(--added)"></div>\n';
-    html += '<span>More</span>\n';
-    html += '</div>\n';
-
     html += '</div>\n'; // heatmap-grid-wrapper
-    html += '</div>\n'; // heatmap-container
-    html += '</div>\n'; // card
+    html += '</div>\n'; // heatmap-view
+
+    return html;
+}
+
+/**
+ * Renders contribution heatmap with a period selector badge (Last 365 days + active years).
+ */
+function renderHeatmapHTML(groupedByDate) {
+    if (!groupedByDate || Object.keys(groupedByDate).length === 0) return '';
+
+    const today = getTodayLocalDate();
+    const start365 = new Date(today);
+    start365.setUTCDate(start365.getUTCDate() - 364);
+
+    // Collect distinct years that have commits (newest first)
+    const years = Array.from(
+        new Set(Object.keys(groupedByDate).map(d => d.slice(0, 4)))
+    ).sort((a, b) => b.localeCompare(a));
+
+    const optionsHtml = [
+        `<option value="last-365" selected>Last 365 days</option>`,
+        ...years.map(y => `<option value="${y}">${y}</option>`)
+    ].join('\n');
+
+    let viewsHtml = buildHeatmapViewHTML(groupedByDate, start365, today, 'last-365', true);
+    for (const yearStr of years) {
+        const y = parseInt(yearStr, 10);
+        const yearStart = new Date(Date.UTC(y, 0, 1));
+        const yearEnd = new Date(Date.UTC(y, 11, 31));
+        viewsHtml += buildHeatmapViewHTML(groupedByDate, yearStart, yearEnd, yearStr, false);
+    }
+
+    let html = `<div class="card" data-heatmap-card>
+    <div class="card-header">
+      <span class="card-title">🗓️ Contribution Heatmap</span>
+      <select class="heatmap-select" aria-label="Select heatmap period">
+        ${optionsHtml}
+      </select>
+    </div>
+    <div class="heatmap-container">
+      ${viewsHtml}
+      <div class="heatmap-legend">
+        <span>Less</span>
+        <div class="swatch" style="background: var(--bg-soft)"></div>
+        <div class="swatch" style="background: color-mix(in srgb, var(--added) 30%, var(--bg-soft))"></div>
+        <div class="swatch" style="background: color-mix(in srgb, var(--added) 55%, var(--bg-soft))"></div>
+        <div class="swatch" style="background: color-mix(in srgb, var(--added) 80%, var(--bg-soft))"></div>
+        <div class="swatch" style="background: var(--added)"></div>
+        <span>More</span>
+      </div>
+    </div>
+  </div>`;
 
     return html;
 }
