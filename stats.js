@@ -477,6 +477,69 @@ function findTopFrequentFiles(groupedByDate, topN = TOP_FILES_COUNT) {
 }
 
 /**
+ * Finds top files by total code churn (insertions + deletions).
+ */
+function findChurnHotspotFiles(groupedByDate, topN = TOP_FILES_COUNT) {
+    const fileChurnMap = new Map();
+
+    for (const data of Object.values(groupedByDate)) {
+        for (const commit of data.commits) {
+            for (const [file, delta] of commit.fileDeltas.entries()) {
+                if (delta.binary) continue;
+                const normFile = normalizeGitPath(file);
+                if (isIgnoredFile(normFile)) continue;
+
+                const churn = (delta.ins || 0) + (delta.del || 0);
+                if (churn === 0) continue;
+
+                fileChurnMap.set(normFile, (fileChurnMap.get(normFile) || 0) + churn);
+            }
+        }
+    }
+
+    return Array.from(fileChurnMap.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, topN)
+        .map(([file, churn]) => ({ file, churn }));
+}
+
+/**
+ * Finds top untouched/legacy files that have not been modified for the longest time.
+ * Excludes files that were deleted in their latest commit.
+ */
+function findLegacyFiles(groupedByDate, topN = TOP_FILES_COUNT) {
+    const fileLastSeen = new Map(); // normFile -> { date, deleted }
+    const sortedDates = Object.keys(groupedByDate).sort((a, b) => a.localeCompare(b));
+
+    for (const date of sortedDates) {
+        for (const commit of groupedByDate[date].commits) {
+            for (const [file, delta] of commit.fileDeltas.entries()) {
+                const normFile = normalizeGitPath(file);
+                if (isIgnoredFile(normFile)) continue;
+
+                fileLastSeen.set(normFile, {
+                    date,
+                    deleted: delta.status === 'D',
+                });
+            }
+        }
+    }
+
+    const now = new Date();
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+    return Array.from(fileLastSeen.entries())
+        .filter(([, info]) => !info.deleted)
+        .map(([file, info]) => ({
+            file,
+            lastDate: info.date,
+            daysAgo: diffDays(parseDate(info.date), todayUTC),
+        }))
+        .sort((a, b) => b.daysAgo - a.daysAgo || a.lastDate.localeCompare(b.lastDate))
+        .slice(0, topN);
+}
+
+/**
  * Calculates tech stack distribution by file extensions.
  */
 function calculateTechStack(groupedByDate) {
@@ -544,5 +607,7 @@ module.exports = {
     calculateActivityByTimeOfDay,
     calculateContributors,
     calculateTechStackByLines,
-    findWidestCommit
+    findWidestCommit,
+    findChurnHotspotFiles,
+    findLegacyFiles
 };

@@ -376,18 +376,49 @@ function renderMonthHistogramHTML(monthCounts) {
 }
 
 /**
- * Renders the most frequent files card.
+ * Renders the tabbed Files card (Frequent | Hotspots | Legacy).
  */
-function renderTopFilesCard(topFiles) {
-    if (!topFiles || topFiles.length === 0) return '';
+function renderFilesCard(filesData) {
+    const { frequent = [], hotspots = [], legacy = [] } = filesData || {};
+    if (frequent.length === 0 && hotspots.length === 0 && legacy.length === 0) return '';
 
-    let html = `<div class="card"><div class="card-header"><span class="card-title">📂 Most frequent changed files</span></div><ul class="details-list">\n`;
-    topFiles.forEach((f) => {
-        html += `<li><span class="file-name">${escapeHtml(f.file)}</span><span class="count">${pluralize(f.count, 'commit')}</span></li>\n`;
-    });
-    html += `</ul></div>`;
+    const renderList = (items, formatter) => {
+        if (!items || items.length === 0) {
+            return '<div style="color: var(--fg-muted); font-size: 0.85rem; padding: 0.5rem 0;">No data</div>';
+        }
+        return `<ul class="details-list">\n${items.map(formatter).join('\n')}\n</ul>`;
+    };
 
-    return html;
+    const renderFileBadge = (file) => `<span class="file-name file-name--clickable" data-filter-file="${escapeHtml(file)}" title="Filter changelog by ${escapeHtml(file)}">${escapeHtml(file)}</span>`;
+
+    const frequentHtml = renderList(
+        frequent,
+        (f) => `<li>${renderFileBadge(f.file)}<span class="count">${pluralize(f.count, 'commit')}</span></li>`
+    );
+
+    const hotspotsHtml = renderList(
+        hotspots,
+        (f) => `<li>${renderFileBadge(f.file)}<span class="count">${pluralize(f.churn, 'line')}</span></li>`
+    );
+
+    const legacyHtml = renderList(
+        legacy,
+        (f) => `<li>${renderFileBadge(f.file)}<span class="count" title="Last touched: ${f.lastDate}">${pluralize(f.daysAgo, 'day')} ago</span></li>`
+    );
+
+    return `<div class="card" data-tab-card>
+    <div class="card-header">
+      <span class="card-title">📂 Files</span>
+      <div class="card-tabs" role="tablist">
+        <button type="button" class="card-tab active" data-tab="frequent" title="Most frequently changed files">🔄 Frequent</button>
+        <button type="button" class="card-tab" data-tab="hotspots" title="Files with highest total lines changed">🔥 Hotspots</button>
+        <button type="button" class="card-tab" data-tab="legacy" title="Files untouched for the longest time">🕰️ Legacy</button>
+      </div>
+    </div>
+    <div class="tab-panel active" data-panel="frequent">${frequentHtml}</div>
+    <div class="tab-panel" data-panel="hotspots">${hotspotsHtml}</div>
+    <div class="tab-panel" data-panel="legacy">${legacyHtml}</div>
+  </div>`;
 }
 
 /**
@@ -592,7 +623,7 @@ function renderSearchBarHTML() {
 /**
  * Renders the full dashboard overview.
  */
-function renderOverviewHTML(repoName, stats, topFiles, largestCommit, widestCommit, techStack, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors, generatedAt, args) {
+function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCommit, techStack, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors, generatedAt, args) {
     const fmt = formatNumber;
     let html = '';
 
@@ -605,7 +636,7 @@ function renderOverviewHTML(repoName, stats, topFiles, largestCommit, widestComm
     // 3. Section: Files & Tech Stack (3 columns)
     html += `<div id="sec-tech" class="section-title">🗂️ Files & Tech Stack</div>`;
     html += `<div class="grid grid-3">`;
-    html += renderTopFilesCard(topFiles);
+    html += renderFilesCard(filesData);
     html += renderTechStackCard(techStack, '🧰 Tech stack (by file touches)');
     html += renderTechStackCard(techStackByLines, '📏 Tech stack (by lines changed)');
     html += `</div>`;

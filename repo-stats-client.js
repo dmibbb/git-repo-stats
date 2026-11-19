@@ -240,6 +240,47 @@
         updateActiveSection();
     }
 
+    /**
+    * Initializes tab switchers inside cards marked with [data-tab-card].
+    */
+    function initCardTabs() {
+        document.addEventListener('click', function (e) {
+            const tabBtn = e.target.closest('.card-tab[data-tab]');
+            if (!tabBtn) return;
+
+            const card = tabBtn.closest('[data-tab-card]');
+            if (!card) return;
+
+            const targetTab = tabBtn.getAttribute('data-tab');
+
+            card.querySelectorAll('.card-tab').forEach(btn => {
+                btn.classList.toggle('active', btn === tabBtn);
+            });
+
+            card.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.getAttribute('data-panel') === targetTab);
+            });
+        });
+    }
+
+    /**
+     * Filters changelog by file path when clicking a file badge in overview cards.
+     */
+    function initFileFilterNavigation(searchApi) {
+        document.addEventListener('click', function (e) {
+            const fileTrigger = e.target.closest('[data-filter-file]');
+            if (!fileTrigger || !searchApi?.filterByQuery) return;
+
+            const filePath = fileTrigger.getAttribute('data-filter-file');
+            searchApi.filterByQuery(filePath);
+
+            const changelogSection = document.getElementById('sec-changelog');
+            if (changelogSection) {
+                changelogSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
     // === Bootstrap ===
     initThemeToggle();
     const searchApi = initSearch();
@@ -247,4 +288,6 @@
     initBackToTop();
     initDateNavigation(searchApi);
     initStickyTOC();
+    initCardTabs();
+    initFileFilterNavigation(searchApi);
 })();

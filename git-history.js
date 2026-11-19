@@ -50,7 +50,9 @@ const {
     calculateActivityByTimeOfDay,
     calculateTechStackByLines,
     calculateContributors,
-    findWidestCommit
+    findWidestCommit,
+    findChurnHotspotFiles,
+    findLegacyFiles
 } = require('./stats');
 const { renderOverview, renderChangelog } = require('./render-md');
 const { renderOverviewHTML, renderChangelogHTML, wrapInHTMLTemplate } = require('./render-html');
@@ -199,6 +201,9 @@ function main() {
         const groupedByDate = groupCommitsByDate(commits);
         const stats = calculateOverallStats(groupedByDate, repoBounds);
         const topFiles = findTopFrequentFiles(groupedByDate);
+        const hotspotFiles = findChurnHotspotFiles(groupedByDate);
+        const legacyFiles = findLegacyFiles(groupedByDate);
+        const filesData = { frequent: topFiles, hotspots: hotspotFiles, legacy: legacyFiles }
         const largestCommit = findLargestCommit(groupedByDate);
         const widestCommit = findWidestCommit(groupedByDate);
         const techStack = calculateTechStack(groupedByDate);
@@ -239,7 +244,7 @@ function main() {
             let htmlContent = renderOverviewHTML(
                 repoName,
                 stats,
-                topFiles,
+                filesData,
                 largestCommit,
                 widestCommit,
                 techStack,
