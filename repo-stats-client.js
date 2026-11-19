@@ -203,10 +203,48 @@
         });
     }
 
+    /**
+    * Highlights the active section in the floating Sticky TOC while scrolling.
+    */
+    function initStickyTOC() {
+        const tocLinks = Array.from(document.querySelectorAll('.toc-link'));
+        if (tocLinks.length === 0) return;
+
+        const sections = tocLinks
+            .map(link => document.getElementById(link.getAttribute('data-target')))
+            .filter(Boolean);
+
+        if (sections.length === 0) return;
+
+        function updateActiveSection() {
+            const scrollPos = window.scrollY + 140;
+            let currentId = sections[0].id;
+
+            for (const sec of sections) {
+                if (sec.offsetTop <= scrollPos) {
+                    currentId = sec.id;
+                }
+            }
+
+            // Highlight the last section if scrolled to the very bottom
+            if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 20) {
+                currentId = sections[sections.length - 1].id;
+            }
+
+            tocLinks.forEach(link => {
+                link.classList.toggle('active', link.getAttribute('data-target') === currentId);
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveSection, { passive: true });
+        updateActiveSection();
+    }
+
     // === Bootstrap ===
     initThemeToggle();
     const searchApi = initSearch();
     initCollapseControls();
     initBackToTop();
     initDateNavigation(searchApi);
+    initStickyTOC();
 })();

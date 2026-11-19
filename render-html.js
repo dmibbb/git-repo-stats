@@ -66,6 +66,17 @@ ${css}
 </style>
 </head>
 <body>
+<nav class="sticky-toc" aria-label="Table of contents">
+  <div class="toc-title">Navigation</div>
+  <ul class="toc-list">
+    <li><a href="#sec-tech" class="toc-link" data-target="sec-tech">🗂️ Files & Stack</a></li>
+    <li><a href="#sec-records" class="toc-link" data-target="sec-records">🏆 Records</a></li>
+    <li><a href="#sec-contribution" class="toc-link" data-target="sec-contribution">👨‍👩‍👧‍👦 Contribution</a></li>
+    <li><a href="#sec-patterns" class="toc-link" data-target="sec-patterns">📊 Patterns</a></li>
+    <li><a href="#sec-timeline" class="toc-link" data-target="sec-timeline">📉 Timeline</a></li>
+    <li><a href="#sec-changelog" class="toc-link" data-target="sec-changelog">📝 Changelog</a></li>
+  </ul>
+</nav>
 <div class="dashboard-container">
 ${content}
 <footer class="dashboard-footer">

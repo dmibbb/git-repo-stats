@@ -404,6 +404,7 @@ em {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  scroll-margin-top: 1.5rem;
 }
 
 .section-title::before {
@@ -412,6 +413,71 @@ em {
   height: 1.35rem;
   background: var(--accent);
   border-radius: 3px;
+}
+
+/* === Sticky Table of Contents === */
+.sticky-toc {
+  position: fixed;
+  top: 2rem;
+  left: max(1rem, calc((100vw - 1400px) / 2 - 205px));
+  width: 185px;
+  z-index: 40;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.toc-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-subtle);
+  font-weight: 700;
+  padding: 0 0.5rem 0.5rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.toc-link {
+  display: block;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.toc-link:hover {
+  background: var(--bg-soft);
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.toc-link.active {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+
+@media (max-width: 1820px) {
+  .sticky-toc {
+    display: none;
+  }
 }
 
 /* === Histogram Bars === */
