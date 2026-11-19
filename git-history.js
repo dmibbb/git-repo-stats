@@ -5,11 +5,11 @@
  * 📊 Git Repository Statistics & Changelog Generator
  * ============================================================================
  * Zero-dependency Node.js CLI utility that analyzes git commit history and
- * generates a comprehensive Markdown changelog (`CHANGELOG.md`) alongside a
+ * generates a comprehensive Markdown changelog (`repo-stats.md`) alongside a
  * styled, dark-mode-ready HTML dashboard (`repo-stats.html`).
  * 
- * Author: Димасик (dmibbb)
- * Version: 20261119
+ * Author: dmibbb
+ * Version: 1.0.0
  *
  * Features:
  * - High-level repository overview (age, active days, streaks, gaps, records)

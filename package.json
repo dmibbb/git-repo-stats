@@ -1,12 +1,13 @@
 {
-  "name": "repo-stats-cli",
+  "name": "git-repo-stats",
   "version": "1.0.0",
   "description": "Zero-dependency Git repository statistics and changelog generator",
   "main": "git-history.js",
   "bin": {
     "repo-stats": "./git-history.js"
   },
-  "keywords": ["git", "changelog", "statistics", "cli"],
-  "author": "Димасик",
-  "license": "MIT"
+  "engines": { "node": ">=24.0.0" },
+  "keywords": ["git", "changelog", "statistics", "cli", "dashboard"],
+  "author": "dmibbb",
+  "license": "GPL-3.0"
 }
