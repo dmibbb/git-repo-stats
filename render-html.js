@@ -208,10 +208,18 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
     const openAttr = isOpen ? ' open' : '';
     const weekday = WEEKDAY_NAMES[toMondayFirstIndex(parseDate(date).getUTCDay())];
 
+    const dayTags = [];
+    dayData.commits.forEach(c => {
+        if (c.tags && c.tags.length > 0) dayTags.push(...c.tags);
+    });
+    const dayTagsHtml = dayTags.length > 0
+        ? dayTags.map(t => `<span class="tag-badge">🏷️ ${escapeHtml(t)}</span>`).join(' ')
+        : '';
+
     let html = `<details id="day-${date}" class="changelog-day"${openAttr}>\n`;
     html += `<summary class="day-summary">
       <div class="day-summary-content">
-        <div class="day-summary-date">${date} <span class="day-weekday">(${weekday})</span></div>
+        <div class="day-summary-date">${date} <span class="day-weekday">(${weekday})</span> ${dayTagsHtml}</div>
         <div class="day-summary-meta">
           <span><strong>${pluralize(commitsCount, 'commit')}</strong></span>
           <span class="meta-sep">|</span>
@@ -223,10 +231,16 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
     </summary>\n`;
     html += '<table class="changelog-table">\n<thead><tr><th>Commit</th><th>Changed Files</th><th>Delta</th></tr></thead>\n<tbody>\n';
 
-    dayData.commits.forEach((commit) => {
+    dayData.commits.forEach((commit, index) => {
+        const hasTags = commit.tags && commit.tags.length > 0;
+        const rowClass = hasTags ? 'commit-row commit-row--tagged' : 'commit-row';
         const timeHtml = commit.time ? `<span class="commit-time">Committed: ${commit.time.slice(0, 8)}</span>` : '';
         const authorHtml = commit.author ? `<span class="commit-author">Author: ${escapeHtml(commit.author)}</span>` : '';
-        html += `<tr class="commit-row"><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}${authorHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
+        const tagsHtml = hasTags
+            ? `<div class="commit-tags">${commit.tags.map(t => `<span class="tag-badge">🏷️ ${escapeHtml(t)}</span>`).join(' ')}</div>`
+            : '';
+
+        html += `<tr id="commit-${date}-${index}" class="${rowClass}"><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}${authorHtml}${tagsHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
     });
 
     html += '</tbody>\n</table>\n</details>\n';
@@ -848,10 +862,32 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
 }
 
 /**
+ * Renders a collapsible ribbon of all git tags above the search bar.
+ * When collapsed, shows only the first row of tags; clicking expands all.
+ */
+function renderTagsBarHTML(tagsList) {
+    if (!tagsList || tagsList.length === 0) return '';
+
+    const pillsHtml = tagsList.map(item => {
+        const safeTag = escapeHtml(item.tag);
+        const safeSubj = escapeHtml(item.subject);
+        return `<button type="button" class="tag-pill" data-date="${item.date}" data-row-id="${item.rowId}" title="${safeTag} (${item.date}) — ${safeSubj}">🏷️ ${safeTag}</button>`;
+    }).join('\n');
+
+    return `<details class="tags-bar">
+      <summary class="tags-summary" title="Click to expand/collapse all releases">
+        <span class="tags-bar-label">Releases (${formatNumber(tagsList.length)}):</span>
+        <div class="tags-pills">${pillsHtml}</div>
+      </summary>
+    </details>\n`;
+}
+
+/**
  * Renders the full changelog section.
  */
-function renderChangelogHTML(groupedByDate) {
+function renderChangelogHTML(groupedByDate, tagsList = []) {
     let html = '<div id="sec-changelog" class="section-title">📝 Changelog Details</div>\n';
+    html += renderTagsBarHTML(tagsList);
     html += renderSearchBarHTML();
 
     const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));

@@ -1091,6 +1091,13 @@ html.is-jumping .changelog-day {
   font-weight: 500;
 }
 
+.commit-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
 .commit-time,
 .commit-author {
   display: block;
@@ -1279,6 +1286,7 @@ html.is-jumping .changelog-day {
   .search-bar,
   .back-to-top,
   .sticky-toc,
+  .tags-bar,
   .card--placeholder {
     display: none !important;
   }
@@ -1437,4 +1445,131 @@ html.is-jumping .changelog-day {
   flex-direction: column;
   flex: 1;
   justify-content: center;
+}
+
+/* === Git Tags & Releases Ribbon === */
+.tags-bar {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.85rem;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.tags-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  list-style: none;
+  cursor: pointer;
+}
+
+.tags-summary::-webkit-details-marker {
+  display: none;
+}
+
+.tags-summary::before {
+  content: '▶';
+  font-size: 0.7em;
+  color: var(--fg-muted);
+  margin-top: 0.42rem;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.tags-bar[open] > .tags-summary::before {
+  transform: rotate(90deg);
+}
+
+.tags-bar-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  white-space: nowrap;
+  margin-top: 0.28rem;
+  flex-shrink: 0;
+}
+
+.tags-summary:hover .tags-bar-label {
+  color: var(--accent);
+}
+
+.tags-pills {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.tags-bar:not([open]) .tags-pills {
+  max-height: 1.85rem;
+  overflow: hidden;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+
+.tag-pill:hover {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.tags-total {
+  font-size: 0.78rem;
+  color: var(--fg-subtle);
+  margin-left: auto;
+}
+
+.commit-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-soft));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.commit-row--tagged {
+  background-color: color-mix(in srgb, var(--accent) 15%, transparent) !important;
+}
+
+.commit-row--tagged td {
+  border-top: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+}
+
+.commit-row--tagged td:first-child {
+  border-left: 2px solid var(--accent);
+}
+
+.commit-row--tagged td:last-child {
+  border-right: 2px solid var(--accent);
 }

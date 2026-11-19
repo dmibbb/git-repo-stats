@@ -43,7 +43,8 @@ function groupCommitsByDate(commits) {
             binaryCount: commit.binaryCount,
             textCount: commit.textCount,
             fileStats: commit.fileStats,
-            hasOnlyIgnored: commit.hasOnlyIgnored
+            hasOnlyIgnored: commit.hasOnlyIgnored,
+            tags: commit.tags || []
         });
 
         groupedByDate[date].totalInsertions += commit.insertions;
@@ -52,6 +53,31 @@ function groupCommitsByDate(commits) {
     });
 
     return groupedByDate;
+}
+
+/**
+ * Extracts all git tags across commits in reverse chronological order (newest first).
+ */
+function extractTagsList(groupedByDate) {
+    const tagsList = [];
+    const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
+
+    for (const date of sortedDates) {
+        groupedByDate[date].commits.forEach((commit, index) => {
+            if (commit.tags && commit.tags.length > 0) {
+                for (const tag of commit.tags) {
+                    tagsList.push({
+                        tag,
+                        date,
+                        subject: commit.subject,
+                        rowId: `commit-${date}-${index}`,
+                    });
+                }
+            }
+        });
+    }
+
+    return tagsList;
 }
 
 /**
@@ -627,6 +653,7 @@ function findWidestCommit(groupedByDate) {
 
 module.exports = {
     groupCommitsByDate,
+    extractTagsList,
     calculateMaxStreak,
     calculateCurrentStreak,
     calculateLongestGap,

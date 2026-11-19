@@ -53,6 +53,7 @@ const {
 } = require('./git-client');
 const {
     groupCommitsByDate,
+    extractTagsList,
     calculateOverallStats,
     findTopFrequentFiles,
     findLargestCommit,
@@ -221,6 +222,7 @@ function main() {
 
         const repoBounds = fetchRepoDateBounds(absoluteRepoPath);
         const groupedByDate = groupCommitsByDate(commits);
+        const tagsList = extractTagsList(groupedByDate);
         const stats = calculateOverallStats(groupedByDate, repoBounds);
         const topFiles = findTopFrequentFiles(groupedByDate);
         const hotspotFiles = findChurnHotspotFiles(groupedByDate);
@@ -284,7 +286,7 @@ function main() {
                 generatedAt,
                 args
             );
-            htmlContent += renderChangelogHTML(groupedByDate);
+            htmlContent += renderChangelogHTML(groupedByDate, tagsList);
             const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`, generatedAt);
             const htmlPath = path.join(outputDir, 'repo-stats.html');
             fs.writeFileSync(htmlPath, fullHTML, 'utf-8');

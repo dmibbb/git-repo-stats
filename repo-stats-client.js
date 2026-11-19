@@ -167,16 +167,21 @@
             const trigger = e.target.closest('[data-date]');
             if (!trigger) return;
 
+            if (trigger.classList.contains('tag-pill')) {
+                e.preventDefault(); // Prevent <summary> from toggling when clicking a tag pill
+            }
+
             const date = trigger.getAttribute('data-date');
             const commitSubject = trigger.getAttribute('data-commit');
+            const rowId = trigger.getAttribute('data-row-id');
             const targetDay = document.getElementById('day-' + date);
             if (!targetDay) return;
 
             if (commitSubject && searchApi?.filterByQuery) {
-                // Filter specifically by this commit's subject
+                // Filter specifically by this commit's subject (Largest / Widest commit cards)
                 searchApi.filterByQuery(commitSubject);
             } else if (searchApi?.resetSearch) {
-                // Always clear active search filter when jumping to a full day
+                // Clear active search filter so full day context is visible (Heatmap, Day records, Tag pills)
                 searchApi.resetSearch(false);
             }
 
@@ -188,7 +193,10 @@
 
             requestAnimationFrame(() => {
                 let scrollTarget = targetDay;
-                if (commitSubject) {
+                if (rowId) {
+                    const targetRow = document.getElementById(rowId);
+                    if (targetRow) scrollTarget = targetRow;
+                } else if (commitSubject) {
                     const visibleRow = targetDay.querySelector('.commit-row:not(.hidden)');
                     if (visibleRow) scrollTarget = visibleRow;
                 }
