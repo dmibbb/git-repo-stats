@@ -540,6 +540,42 @@ function findLegacyFiles(groupedByDate, topN = TOP_FILES_COUNT) {
 }
 
 /**
+ * Aggregates file lifecycle operations (added, modified, renamed, deleted)
+ * across all commits, broken down by All, Text, and Binary files.
+ */
+function calculateFileLifecycle(groupedByDate) {
+    const totals = {
+        all: { added: 0, modified: 0, renamed: 0, deleted: 0, total: 0 },
+        text: { added: 0, modified: 0, renamed: 0, deleted: 0, total: 0 },
+        binary: { added: 0, modified: 0, renamed: 0, deleted: 0, total: 0 },
+    };
+
+    const ops = ['added', 'modified', 'renamed', 'deleted'];
+
+    for (const data of Object.values(groupedByDate)) {
+        for (const commit of data.commits) {
+            if (!commit.fileStats) continue;
+
+            for (const op of ops) {
+                const txt = commit.fileStats[op]?.txt || 0;
+                const bin = commit.fileStats[op]?.bin || 0;
+
+                totals.text[op] += txt;
+                totals.text.total += txt;
+
+                totals.binary[op] += bin;
+                totals.binary.total += bin;
+
+                totals.all[op] += txt + bin;
+                totals.all.total += txt + bin;
+            }
+        }
+    }
+
+    return totals;
+}
+
+/**
  * Calculates tech stack distribution by file extensions.
  */
 function calculateTechStack(groupedByDate) {
@@ -609,5 +645,6 @@ module.exports = {
     calculateTechStackByLines,
     findWidestCommit,
     findChurnHotspotFiles,
-    findLegacyFiles
+    findLegacyFiles,
+    calculateFileLifecycle
 };

@@ -52,7 +52,8 @@ const {
     calculateContributors,
     findWidestCommit,
     findChurnHotspotFiles,
-    findLegacyFiles
+    findLegacyFiles,
+    calculateFileLifecycle
 } = require('./stats');
 const { renderOverview, renderChangelog } = require('./render-md');
 const { renderOverviewHTML, renderChangelogHTML, wrapInHTMLTemplate } = require('./render-html');
@@ -208,6 +209,7 @@ function main() {
         const widestCommit = findWidestCommit(groupedByDate);
         const techStack = calculateTechStack(groupedByDate);
         const techStackByLines = calculateTechStackByLines(groupedByDate);
+        const fileLifecycle = calculateFileLifecycle(groupedByDate);
         const contributors = calculateContributors(groupedByDate);
         const weekdayCounts = calculateActivityByWeekday(groupedByDate);
         const monthCounts = calculateActivityByMonth(groupedByDate);
@@ -248,6 +250,7 @@ function main() {
                 largestCommit,
                 widestCommit,
                 techStack,
+                fileLifecycle,
                 weekdayCounts,
                 monthCounts,
                 groupedByDate,

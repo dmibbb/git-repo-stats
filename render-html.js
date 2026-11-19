@@ -473,6 +473,58 @@ function renderTabbedTechStackCard(techStackByFiles, techStackByLines) {
 }
 
 /**
+ * Renders the File Lifecycle card with tabs (All | Text | Binary).
+ */
+function renderFileLifecycleCard(lifecycle) {
+    if (!lifecycle || !lifecycle.all || lifecycle.all.total === 0) return '';
+
+    const rowsConfig = [
+        { key: 'added', icon: '➕', label: 'Added', query: 'Added:', barClass: 'lifecycle-bar--added' },
+        { key: 'modified', icon: '✏️', label: 'Modified', query: 'Modified:', barClass: 'lifecycle-bar--modified' },
+        { key: 'renamed', icon: '📛', label: 'Renamed', query: 'Renamed:', barClass: 'lifecycle-bar--renamed' },
+        { key: 'deleted', icon: '🗑️', label: 'Deleted', query: 'Deleted:', barClass: 'lifecycle-bar--deleted' },
+    ];
+
+    const renderPanel = (bucket) => {
+        if (!bucket || bucket.total === 0) {
+            return '<div style="color: var(--fg-muted); font-size: 0.85rem; padding: 0.5rem 0;">No operations</div>';
+        }
+
+        const maxVal = Math.max(...rowsConfig.map(r => bucket[r.key] || 0));
+
+        return `<ul class="histogram-list">\n${rowsConfig.map(r => {
+            const count = bucket[r.key] || 0;
+            const percent = ((count / bucket.total) * 100).toFixed(0);
+            const barWidth = maxVal > 0 ? ((count / maxVal) * 100).toFixed(1) : 0;
+            const isClickable = count > 0;
+            const clickAttrs = isClickable
+                ? ` class="bar-row bar-row--clickable" data-filter-file="${r.query}" title="Filter changelog by ${r.label.toLowerCase()} files"`
+                : ` class="bar-row"`;
+
+            return `<li${clickAttrs}>
+          <span class="bar-label bar-label--wide">${r.icon} ${r.label}</span>
+          <div class="bar-container"><div class="bar ${r.barClass}" style="width: ${barWidth}%"></div></div>
+          <span class="bar-value">${percent}% (${formatNumber(count)})</span>
+        </li>`;
+        }).join('\n')}\n</ul>`;
+    };
+
+    return `<div class="card" data-tab-card>
+    <div class="card-header">
+      <span class="card-title">🔄 File lifecycle</span>
+      <div class="card-tabs" role="tablist">
+        <button type="button" class="card-tab active" data-tab="all" title="All tracked file operations">📦 All</button>
+        <button type="button" class="card-tab" data-tab="text" title="Text file operations only">📄 Text</button>
+        <button type="button" class="card-tab" data-tab="binary" title="Binary file operations only">🖼️ Binary</button>
+      </div>
+    </div>
+    <div class="tab-panel active" data-panel="all">${renderPanel(lifecycle.all)}</div>
+    <div class="tab-panel" data-panel="text">${renderPanel(lifecycle.text)}</div>
+    <div class="tab-panel" data-panel="binary">${renderPanel(lifecycle.binary)}</div>
+  </div>`;
+}
+
+/**
  * Renders contribution heatmap for the last year (GitHub-style).
  * Range: from Monday 52 weeks ago to today, aligned by weeks (Mon-first).
  */
@@ -654,7 +706,7 @@ function renderSearchBarHTML() {
 /**
  * Renders the full dashboard overview.
  */
-function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCommit, techStack, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors, generatedAt, args) {
+function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCommit, techStack, fileLifecycle, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors, generatedAt, args) {
     const fmt = formatNumber;
     let html = '';
 
@@ -669,15 +721,7 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
     html += `<div class="grid grid-3">`;
     html += renderFilesCard(filesData);
     html += renderTabbedTechStackCard(techStack, techStackByLines);
-    html += `<div class="card card--placeholder">
-      <div class="card-header">
-        <span class="card-title">🔄 File Lifecycle</span>
-        <span class="card-icon">🚧</span>
-      </div>
-      <div class="placeholder-body">
-        <span class="placeholder-text">Coming soon... (All | Text | Binary)</span>
-      </div>
-    </div>`;
+    html += renderFileLifecycleCard(fileLifecycle);
     html += `</div>`;
 
     // 4. Section: Records (1 row x 4 cards, clickable where date exists)

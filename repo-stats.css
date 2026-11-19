@@ -550,12 +550,45 @@ em {
   color: var(--added);
 }
 
+.bar-row--clickable {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0.15rem 0.35rem;
+  margin-left: -0.35rem;
+  margin-right: -0.35rem;
+  transition: background 0.15s;
+}
+
+.bar-row--clickable:hover {
+  background: var(--bg-soft);
+}
+
+.bar-row--clickable:hover .bar-label {
+  color: var(--accent);
+}
+
 .bar-value {
   min-width: 5rem;
   text-align: right;
   font-variant-numeric: tabular-nums;
   color: var(--fg-muted);
   font-size: 0.9rem;
+}
+
+.lifecycle-bar--added {
+  background: linear-gradient(90deg, var(--added) 0%, var(--added-light) 100%);
+}
+
+.lifecycle-bar--modified {
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+}
+
+.lifecycle-bar--renamed {
+  background: linear-gradient(90deg, var(--warning) 0%, var(--warning-border) 100%);
+}
+
+.lifecycle-bar--deleted {
+  background: linear-gradient(90deg, var(--removed) 0%, color-mix(in srgb, var(--removed) 75%, #ffffff) 100%);
 }
 
 /* === Details List === */
