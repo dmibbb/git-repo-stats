@@ -270,6 +270,8 @@
             card.querySelectorAll('.tab-panel').forEach(panel => {
                 panel.classList.toggle('active', panel.getAttribute('data-panel') === targetTab);
             });
+
+            scrollChurnTimelinesToEnd();
         });
     }
 
@@ -379,6 +381,95 @@
         });
     }
 
+    /**
+     * Initializes interactive hover tooltip for the SVG Code Churn Timeline.
+     */
+    function initChurnTooltip() {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'churn-tooltip';
+        document.body.appendChild(tooltip);
+
+        let activeGroup = null;
+
+        document.addEventListener('mouseover', function (e) {
+            const group = e.target.closest('.churn-bar-group');
+            if (!group) return;
+
+            activeGroup = group;
+            const date = group.getAttribute('data-date');
+            const subject = group.getAttribute('data-subject');
+            const author = group.getAttribute('data-author');
+            const ins = Number(group.getAttribute('data-ins') || 0).toLocaleString('en-US');
+            const del = Number(group.getAttribute('data-del') || 0).toLocaleString('en-US');
+            const bin = group.getAttribute('data-bin');
+            const tags = group.getAttribute('data-tags');
+
+            const binHtml = bin ? ` · <span class="churn-tt-bin">${bin} bin</span>` : '';
+            const tagHtml = tags ? `<div class="churn-tt-tag">🏷️ ${tags}</div>` : '';
+
+            tooltip.innerHTML = `
+              <div class="churn-tt-subject">${subject}</div>
+              <div class="churn-tt-meta">${date} · ${author}</div>
+              ${tagHtml}
+              <div class="churn-tt-stats"><span class="positive">+${ins}</span> / <span class="negative">-${del}</span>${binHtml}</div>
+            `;
+            tooltip.classList.add('visible');
+        });
+
+        document.addEventListener('mousemove', function (e) {
+            if (!activeGroup) return;
+            const pad = 14;
+            const rect = tooltip.getBoundingClientRect();
+            let left = e.clientX + pad;
+            let top = e.clientY - rect.height - pad;
+
+            if (left + rect.width > window.innerWidth - 10) {
+                left = e.clientX - rect.width - pad;
+            }
+            if (top < 10) {
+                top = e.clientY + pad;
+            }
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }, { passive: true });
+
+        document.addEventListener('mouseout', function (e) {
+            const group = e.target.closest('.churn-bar-group');
+            if (group && group === activeGroup) {
+                activeGroup = null;
+                tooltip.classList.remove('visible');
+            }
+        });
+    }
+
+    /**
+     * Scrolls wide churn timeline charts to the rightmost (latest) commits.
+     */
+    function scrollChurnTimelinesToEnd() {
+        document.querySelectorAll('.churn-scroll-wrapper').forEach(wrapper => {
+            wrapper.scrollLeft = wrapper.scrollWidth;
+        });
+    }
+
+    /**
+     * Jumps to and expands the target release card when clicking a release pill on the timeline.
+     */
+    function initReleaseJumpNavigation() {
+        document.addEventListener('click', function (e) {
+            const pill = e.target.closest('[data-release-id]');
+            if (!pill) return;
+
+            const releaseId = pill.getAttribute('data-release-id');
+            const targetRelease = document.getElementById(releaseId);
+            if (!targetRelease) return;
+
+            targetRelease.setAttribute('open', '');
+            targetRelease.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            flashHighlight(targetRelease);
+        });
+    }
+
     // === Bootstrap ===
     initThemeToggle();
     const searchApi = initSearch();
@@ -390,5 +481,8 @@
     initFileFilterNavigation(searchApi);
     initTagsRibbon();
     initReleaseCopy();
-    initHeatmapPeriodSelect()
+    initHeatmapPeriodSelect();
+    initChurnTooltip();
+    scrollChurnTimelinesToEnd();
+    initReleaseJumpNavigation();
 })();

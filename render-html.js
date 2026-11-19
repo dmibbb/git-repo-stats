@@ -722,22 +722,244 @@ function renderHeatmapHTML(groupedByDate) {
 }
 
 /**
- * Renders the per-commit code churn timeline (diverging bar chart).
- * Currently renders a placeholder card; will be replaced with an SVG chart.
+ * Builds the fixed Y-axis SVG column, full-width background grid, and left-aligned scrollable timeline SVG.
+ */
+function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
+    const count = commits.length;
+    const svgHeight = 244;
+    const yAxisWidth = 56;
+    const padLeft = 10;
+    const padRight = 18;
+    const padTop = 28;
+    const padBottom = 28;
+    const plotHeight = svgHeight - padTop - padBottom;
+    const halfHeight = plotHeight / 2;
+    const zeroY = padTop + halfHeight;
+    const bottomAxisY = svgHeight - padBottom;
+
+    // Consistent bar thickness across small and large repositories
+    const slotWidth = 12;
+    const barWidth = 8;
+    const plotWidth = Math.max(120, count * slotWidth);
+    const svgWidth = padLeft + plotWidth + padRight;
+
+    const scaleFn = (v) => {
+        if (v <= 0 || maxVal <= 0) return 0;
+        if (scaleMode === 'log') {
+            return (Math.log10(v + 1) / Math.log10(maxVal + 1)) * (halfHeight - 4);
+        }
+        return (v / maxVal) * (halfHeight - 4);
+    };
+
+    const topTickLabel = `+${formatNumber(maxVal)}`;
+    const bottomTickLabel = `-${formatNumber(maxVal)}`;
+    const midVal = scaleMode === 'log'
+        ? Math.round(Math.pow(10, Math.log10(maxVal + 1) / 2) - 1)
+        : Math.round(maxVal / 2);
+    const midTopLabel = midVal > 0 ? `+${formatNumber(midVal)}` : '';
+    const midBottomLabel = midVal > 0 ? `-${formatNumber(midVal)}` : '';
+
+    const topMidY = padTop + halfHeight / 2;
+    const botMidY = zeroY + halfHeight / 2;
+
+    // 1. Fixed Y-axis SVG (pinned on the left)
+    let yAxisSvg = `<svg class="churn-yaxis-svg" viewBox="0 0 ${yAxisWidth} ${svgHeight}" width="${yAxisWidth}" height="${svgHeight}" aria-hidden="true">\n`;
+    yAxisSvg += `<text x="${yAxisWidth - 6}" y="${padTop + 4}" class="churn-axis-label churn-axis-label--pos">${topTickLabel}</text>\n`;
+    if (midTopLabel) {
+        yAxisSvg += `<text x="${yAxisWidth - 6}" y="${topMidY + 3}" class="churn-axis-label">${midTopLabel}</text>\n`;
+    }
+    yAxisSvg += `<text x="${yAxisWidth - 6}" y="${zeroY + 3}" class="churn-axis-label">0</text>\n`;
+    if (midBottomLabel) {
+        yAxisSvg += `<text x="${yAxisWidth - 6}" y="${botMidY + 3}" class="churn-axis-label">${midBottomLabel}</text>\n`;
+    }
+    yAxisSvg += `<text x="${yAxisWidth - 6}" y="${bottomAxisY}" class="churn-axis-label churn-axis-label--neg">${bottomTickLabel}</text>\n`;
+    yAxisSvg += `</svg>`;
+
+    // 2. Full-width background grid lines stretching to the right card border
+    let bgGridSvg = `<svg class="churn-bg-grid" aria-hidden="true">\n`;
+    bgGridSvg += `<line x1="0" y1="${padTop}" x2="100%" y2="${padTop}" class="churn-grid-line" />\n`;
+    bgGridSvg += `<line x1="0" y1="${topMidY}" x2="100%" y2="${topMidY}" class="churn-grid-line churn-grid-line--dashed" />\n`;
+    bgGridSvg += `<line x1="0" y1="${botMidY}" x2="100%" y2="${botMidY}" class="churn-grid-line churn-grid-line--dashed" />\n`;
+    bgGridSvg += `<line x1="0" y1="${bottomAxisY}" x2="100%" y2="${bottomAxisY}" class="churn-grid-line" />\n`;
+    bgGridSvg += `<line x1="0" y1="${zeroY}" x2="100%" y2="${zeroY}" class="churn-zero-line" />\n`;
+    bgGridSvg += `</svg>`;
+
+    // 3. Left-aligned scrollable plot SVG
+    let svg = `<svg class="churn-svg" viewBox="0 0 ${svgWidth} ${svgHeight}" width="${svgWidth}" height="${svgHeight}" role="img" aria-label="Code churn timeline (${scaleMode} scale)">\n`;
+
+    // X-axis evenly spaced date ticks (deduplicated)
+    const targetTicks = Math.max(2, Math.min(12, Math.floor(plotWidth / 145) + 1));
+    const tickIndices = new Set([0, count - 1]);
+    if (count > 2 && targetTicks > 2) {
+        for (let t = 1; t < targetTicks - 1; t++) {
+            const idx = Math.round((t * (count - 1)) / (targetTicks - 1));
+            tickIndices.add(idx);
+        }
+    }
+
+    const sortedTicks = Array.from(tickIndices).sort((a, b) => a - b);
+    let lastTickX = -Infinity;
+    let lastShownDate = '';
+    const rightLimitX = svgWidth - padRight - 70;
+
+    sortedTicks.forEach((idx) => {
+        const isFirst = idx === 0;
+        const isLast = idx === count - 1;
+        const cx = padLeft + idx * slotWidth + slotWidth / 2;
+        const tickDate = commits[idx].date;
+
+        if (!isFirst && !isLast) {
+            if (tickDate === lastShownDate || cx - lastTickX < 95 || cx > rightLimitX) return;
+        }
+        if (isLast && count > 1 && cx - lastTickX < 75) return;
+
+        const anchor = isFirst ? 'start' : isLast ? 'end' : 'middle';
+        const textX = isFirst ? padLeft : isLast ? svgWidth - padRight : cx;
+
+        svg += `<line x1="${cx.toFixed(2)}" y1="${bottomAxisY}" x2="${cx.toFixed(2)}" y2="${bottomAxisY + 4}" class="churn-tick-mark" />\n`;
+        svg += `<text x="${textX.toFixed(2)}" y="${svgHeight - 7}" class="churn-x-label" text-anchor="${anchor}">${tickDate}</text>\n`;
+        lastTickX = cx;
+        lastShownDate = tickDate;
+    });
+
+    // Release tag vertical markers with pill badges (rightmost/newest tags take priority on overlap)
+    const tagMarkers = [];
+    commits.forEach((c, idx) => {
+        if (!c.tags || c.tags.length === 0) return;
+        const rawText = c.tags.join(', ');
+        const pillWidth = rawText.length * 6 + 26;
+        const rawCx = padLeft + idx * slotWidth + slotWidth / 2;
+        const pillX = Math.max(2, Math.min(svgWidth - pillWidth - 2, rawCx - pillWidth / 2));
+        const releaseId = `release-${c.tags[0].trim().replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+
+        tagMarkers.push({
+            cx: rawCx,
+            pillX,
+            pillWidth,
+            releaseId,
+            tagText: escapeHtml(rawText),
+        });
+    });
+
+    const visibleLabels = new Set();
+    let nextMinLeft = Infinity;
+    for (let i = tagMarkers.length - 1; i >= 0; i--) {
+        const m = tagMarkers[i];
+        if (m.pillX + m.pillWidth + 4 <= nextMinLeft) {
+            visibleLabels.add(i);
+            nextMinLeft = m.pillX;
+        }
+    }
+
+    tagMarkers.forEach((marker) => {
+        svg += `<line x1="${marker.cx.toFixed(2)}" y1="${padTop - 2}" x2="${marker.cx.toFixed(2)}" y2="${bottomAxisY}" class="churn-release-line" />\n`;
+
+        const pillY = 4;
+        const pillH = 18;
+        const textCenterX = marker.pillX + marker.pillWidth / 2;
+        svg += `<g class="churn-release-pill-group" data-release-id="${marker.releaseId}" style="cursor: pointer;">\n`;
+        svg += `  <title>Jump to release ${marker.tagText}</title>\n`;
+        svg += `  <rect x="${marker.pillX.toFixed(1)}" y="${pillY}" width="${marker.pillWidth.toFixed(1)}" height="${pillH}" rx="9" class="churn-release-pill-bg" />\n`;
+        svg += `  <text x="${textCenterX.toFixed(1)}" y="${pillY + 12.5}" class="churn-release-label" text-anchor="middle">🏷️ ${marker.tagText}</text>\n`;
+        svg += `</g>\n`;
+    })
+
+    // Commit bars
+    commits.forEach((c, idx) => {
+        const slotX = padLeft + idx * slotWidth;
+        const barX = slotX + (slotWidth - barWidth) / 2;
+        const insH = scaleFn(c.insertions);
+        const delH = scaleFn(c.deletions);
+        const hasBinary = c.binaryCount > 0;
+
+        const safeSubj = escapeHtml(c.subject);
+        const safeAuthor = escapeHtml(c.author);
+        const binAttr = hasBinary ? ` data-bin="${c.binaryCount}"` : '';
+        const tagAttr = c.tags && c.tags.length > 0 ? ` data-tags="${escapeHtml(c.tags.join(', '))}"` : '';
+
+        svg += `<g class="churn-bar-group" data-date="${c.date}" data-row-id="${c.rowId}" data-subject="${safeSubj}" data-author="${safeAuthor}" data-ins="${c.insertions}" data-del="${c.deletions}"${binAttr}${tagAttr}>\n`;
+        svg += `  <rect x="${slotX.toFixed(2)}" y="${padTop}" width="${slotWidth.toFixed(2)}" height="${plotHeight}" class="churn-hit-area" />\n`;
+
+        if (insH > 0) {
+            const h = Math.max(1.5, insH);
+            svg += `  <rect x="${barX.toFixed(2)}" y="${(zeroY - h).toFixed(2)}" width="${barWidth.toFixed(2)}" height="${h.toFixed(2)}" rx="1" class="churn-bar-ins" />\n`;
+        }
+        if (delH > 0) {
+            const h = Math.max(1.5, delH);
+            svg += `  <rect x="${barX.toFixed(2)}" y="${zeroY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${h.toFixed(2)}" rx="1" class="churn-bar-del" />\n`;
+        }
+        if (hasBinary) {
+            const cx = slotX + slotWidth / 2;
+            svg += `  <circle cx="${cx.toFixed(2)}" cy="${zeroY.toFixed(2)}" r="3" class="churn-bar-bin" />\n`;
+        }
+        svg += `</g>\n`;
+    });
+
+    svg += `</svg>`;
+
+    return `<div class="churn-chart-layout">
+      ${yAxisSvg}
+      ${bgGridSvg}
+      <div class="churn-scroll-wrapper">${svg}</div>
+    </div>`;
+}
+
+/**
+ * Renders the per-commit code churn timeline (diverging bar chart with Linear | Log scale toggle).
  */
 function renderChurnTimelineHTML(groupedByDate) {
     if (!groupedByDate || Object.keys(groupedByDate).length === 0) return '';
 
+    // Collect commits in chronological order (oldest -> newest, preserving intra-day order)
+    const sortedDates = Object.keys(groupedByDate).sort((a, b) => a.localeCompare(b));
+    const chronologicalCommits = [];
+
+    for (const date of sortedDates) {
+        const dayCommits = groupedByDate[date].commits;
+        // Within a day, git log is newest-first; reverse so timeline flows chronologically left-to-right
+        for (let i = dayCommits.length - 1; i >= 0; i--) {
+            const c = dayCommits[i];
+            chronologicalCommits.push({
+                date,
+                rowId: `commit-${date}-${i}`,
+                subject: c.subject,
+                author: c.author,
+                insertions: c.insertions || 0,
+                deletions: c.deletions || 0,
+                binaryCount: c.binaryCount || 0,
+                tags: c.tags || [],
+            });
+        }
+    }
+
+    if (chronologicalCommits.length === 0) return '';
+
+    let maxVal = 0;
+    for (const c of chronologicalCommits) {
+        if (c.insertions > maxVal) maxVal = c.insertions;
+        if (c.deletions > maxVal) maxVal = c.deletions;
+    }
+
+    const linearChart = buildChurnTimelineHTML(chronologicalCommits, maxVal, 'linear');
+    const logChart = buildChurnTimelineHTML(chronologicalCommits, maxVal, 'log');
+
     return `<div id="sec-timeline" class="section-title">📉 Code Churn Timeline</div>
-    <div class="card card--placeholder" style="margin-bottom: 1.5rem;">
+    <div class="card" data-tab-card style="margin-bottom: 1.5rem;">
       <div class="card-header">
-        <span class="card-title">Per-commit insertions & deletions</span>
-        <span class="card-icon">🚧</span>
+        <span class="card-title">Per-commit insertions & deletions (${formatNumber(chronologicalCommits.length)} commits)</span>
+        <div class="churn-controls">
+          <div class="churn-legend">
+            <span class="churn-legend-item"><i class="churn-dot churn-dot--ins"></i> Insertions</span>
+            <span class="churn-legend-item"><i class="churn-dot churn-dot--del"></i> Deletions</span>
+          </div>
+          <div class="card-tabs" role="tablist">
+            <button type="button" class="card-tab active" data-tab="linear" title="Linear vertical scale">📏 Linear</button>
+            <button type="button" class="card-tab" data-tab="log" title="Logarithmic scale (easier to see small commits next to huge ones)">📐 Log</button>
+          </div>
+        </div>
       </div>
-      <div class="placeholder-body">
-        <div class="placeholder-zero-line"></div>
-        <span class="placeholder-text">Coming soon... (diverging +insertions / -deletions bar chart per commit)</span>
-      </div>
+      <div class="tab-panel active" data-panel="linear">${linearChart}</div>
+      <div class="tab-panel" data-panel="log">${logChart}</div>
     </div>`;
 }
 
@@ -912,13 +1134,15 @@ function renderReleasesHTML(releases) {
             ? `<span class="release-title">🚧 Unreleased</span>`
             : `<span class="release-title">🏷️ ${escapeHtml(rel.name)}</span>`;
         const dateHtml = rel.date ? `<span class="day-weekday">(${rel.date})</span>` : '';
+        const primaryTag = rel.isUnreleased ? 'unreleased' : rel.name.split(',')[0].trim();
+        const releaseId = `release-${primaryTag.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 
         const rowsHtml = rel.commits.map(c => `<li class="release-commit-item">
               <span class="release-commit-bullet">•</span>
               <span class="release-commit-subject" data-date="${c.date}" data-row-id="${c.rowId}" title="Jump to commit in Changelog Details (${c.date})">${escapeHtml(c.subject)}</span>
             </li>`).join('\n');
 
-        html += `<details class="changelog-day release-card">\n`;
+        html += `<details id="${releaseId}" class="changelog-day release-card">\n`;
         html += `<summary class="day-summary release-summary">
           <div class="day-summary-content">
             <div class="day-summary-date">${badgeHtml} ${dateHtml}</div>

@@ -1415,38 +1415,229 @@ html.is-jumping .changelog-day {
   }
 }
 
-/* === Placeholder Card === */
-.card--placeholder {
-  border-style: dashed;
-  background: var(--bg-soft);
-}
-
-.placeholder-body {
-  position: relative;
-  height: 90px;
+/* === Code Churn Timeline (SVG Diverging Bar Chart) === */
+.churn-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.placeholder-zero-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  border-top: 1px dashed var(--border);
-}
-
-.placeholder-text {
-  position: relative;
-  z-index: 1;
-  background: var(--bg-soft);
-  padding: 0.25rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  font-size: 0.85rem;
-  font-style: italic;
+.churn-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.78rem;
   color: var(--fg-muted);
+}
+
+.churn-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.churn-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.churn-dot--ins { background: var(--added); }
+.churn-dot--del { background: var(--removed); }
+.churn-dot--bin { background: var(--accent); border-radius: 50%; }
+
+.churn-chart-layout {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.churn-yaxis-svg {
+  flex-shrink: 0;
+  display: block;
+  position: relative;
+  z-index: 2;
+}
+
+.churn-bg-grid {
+  position: absolute;
+  left: 56px;
+  top: 0;
+  width: calc(100% - 56px);
+  height: 244px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.churn-scroll-wrapper {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.churn-svg {
+  display: block;
+  height: 244px;
+}
+
+.churn-tick-mark {
+  stroke: var(--fg-subtle);
+  stroke-width: 1;
+}
+
+.churn-release-line {
+  stroke: var(--accent);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+  opacity: 0.75;
+}
+
+.churn-release-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  fill: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.churn-release-pill-bg {
+  fill: var(--bg);
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+
+.churn-release-pill-group:hover .churn-release-pill-bg {
+  fill: var(--accent);
+}
+
+.churn-release-pill-group:hover .churn-release-label {
+  fill: #ffffff;
+}
+
+.churn-grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.churn-grid-line--dashed {
+  stroke-dasharray: 3 3;
+  opacity: 0.35;
+}
+
+.churn-zero-line {
+  stroke: var(--fg-subtle);
+  stroke-width: 1.2;
+}
+
+.churn-axis-label {
+  font-size: 10px;
+  fill: var(--fg-muted);
+  text-anchor: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.churn-axis-label--pos { fill: var(--added); font-weight: 600; }
+.churn-axis-label--neg { fill: var(--removed); font-weight: 600; }
+
+.churn-x-label {
+  font-size: 10px;
+  fill: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.churn-bar-group {
+  cursor: pointer;
+}
+
+.churn-hit-area {
+  fill: transparent;
+}
+
+.churn-bar-group:hover .churn-hit-area {
+  fill: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.churn-bar-ins {
+  fill: var(--added);
+  transition: opacity 0.15s;
+}
+
+.churn-bar-del {
+  fill: var(--removed);
+  transition: opacity 0.15s;
+}
+
+.churn-bar-bin {
+  fill: var(--accent);
+  stroke: var(--bg);
+  stroke-width: 0.8px;
+}
+
+.churn-bar-group:hover .churn-bar-ins,
+.churn-bar-group:hover .churn-bar-del,
+.churn-bar-group:hover .churn-bar-bin {
+  opacity: 0.8;
+}
+
+.churn-tooltip {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+  max-width: 340px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  transition: opacity 0.12s ease;
+}
+
+.churn-tooltip.visible {
+  opacity: 1;
+}
+
+.churn-tt-subject {
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 0.2rem;
+  word-break: break-word;
+}
+
+.churn-tt-meta {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  margin-bottom: 0.25rem;
+}
+
+.churn-tt-stats {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.churn-tt-stats .positive { color: var(--added); }
+.churn-tt-stats .negative { color: var(--removed); }
+.churn-tt-bin { color: var(--accent); }
+
+.churn-tt-tag {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-soft));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 999px;
+  padding: 0.05rem 0.45rem;
+  margin-bottom: 0.25rem;
 }
 
 /* === Card Tabs === */
