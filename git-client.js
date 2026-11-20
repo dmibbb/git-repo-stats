@@ -1,6 +1,9 @@
 const { execFileSync } = require('child_process');
 const { MAX_BUFFER, isIgnoredFile, normalizeGitPath } = require('./utils');
 
+const COMMIT_SEP = '\x1e===COMMIT===\x1e';
+const FIELD_SEP = '\x1f';
+
 /**
  * Executes git log and returns raw output.
  * Supports optional --since and --until filters.
@@ -12,7 +15,7 @@ function fetchRawGitLog(repoPath, since, until) {
     'log',
     '--no-merges',
     '--date=iso',
-    '--pretty=format:===COMMIT===%ad|||%an|||%D|||%s',
+    `--pretty=format:${COMMIT_SEP}%ad${FIELD_SEP}%an${FIELD_SEP}%D${FIELD_SEP}%s`,
     '--raw',
     '--numstat',
   ];
@@ -31,12 +34,13 @@ function fetchRawGitLog(repoPath, since, until) {
  * Parses a single commit entry from the raw log.
  */
 function parseCommitEntry(entry) {
-  const lines = entry.trim().split('\n');
-  const [dateRaw, authorRaw, refsRaw, ...subjectParts] = lines[0].split('|||');
-  const date = dateRaw.split(' ')[0]; // YYYY-MM-DD
-  const time = dateRaw.split(' ')[1] || ''; // HH:MM:SS +ZZZZ
+  const lines = entry.replace(/\r\n/g, '\n').trim().split('\n');
+  if (!lines[0]) return null;
+
+  const [dateRaw, authorRaw, refsRaw, ...subjectParts] = lines[0].split(FIELD_SEP);
+  const [date, time = ''] = dateRaw.split(' ');
   const author = (authorRaw || 'Unknown').trim();
-  const subject = subjectParts.join('|||').trim();
+  const subject = subjectParts.join(FIELD_SEP).trim();
 
   const tags = [];
   if (refsRaw) {
@@ -48,10 +52,10 @@ function parseCommitEntry(entry) {
     });
   }
 
-  const files = [];
+  const files = [];  // keeps the raw git path (with rename arrows/braces) for display
   const fileDeltas = new Map();
   const fileStatuses = new Map(); // normalizedPath -> 'A' | 'M' | 'D' | 'R'
-  const trackedFiles = [];
+  const trackedFiles = []; // keeps the normalized path for statistics
   const ignoredFiles = new Set();
   const fileStats = {
     added: { txt: 0, bin: 0 },
@@ -66,19 +70,19 @@ function parseCommitEntry(entry) {
   let textCount = 0;
 
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+    const line = lines[i];
+    if (!line.trim()) continue;
 
     // 1. Parse --raw lines (start with ':')
-    // Format: :100644 100644 hash1 hash2 A\tpath/to/file
-    // Or rename: :100644 100644 hash1 hash2 R100\told/path\tnew/path
     if (line.startsWith(':')) {
       const tabParts = line.split('\t');
       const meta = tabParts[0].split(' ');
-      const rawStatus = meta[meta.length - 1]; // e.g., 'A', 'M', 'D', 'R100'
-      const statusChar = rawStatus[0]; // Normalize 'R100' -> 'R'
+      const rawStatus = meta[meta.length - 1]; // e.g., 'A', 'M', 'D', 'R100', 'C100'
+      const firstChar = rawStatus[0];
+      const statusChar = firstChar === 'C' ? 'A' : firstChar;
       const targetPath = tabParts[tabParts.length - 1];
-      fileStatuses.set(targetPath, statusChar);
+      const normalizedTarget = normalizeGitPath(targetPath);
+      fileStatuses.set(normalizedTarget, statusChar);
       continue;
     }
 
@@ -161,9 +165,11 @@ function parseCommitEntry(entry) {
  */
 function parseRawLog(rawLog) {
   return rawLog
-    .split('===COMMIT===')
+    .split(COMMIT_SEP)
+    .map(entry => entry.trim())
     .filter(Boolean)
-    .map(parseCommitEntry);
+    .map(parseCommitEntry)
+    .filter(Boolean);
 }
 
 /**
@@ -179,10 +185,12 @@ function fetchRepoDateBounds(repoPath) {
     ).trim();
 
     if (!out) return null;
-    const dates = out.split('\n');
+    const dates = out.split('\n').map(d => d.trim()).filter(Boolean);
+    if (dates.length === 0) return null;
+
     return {
-      lastDate: dates[0].trim(),
-      firstDate: dates[dates.length - 1].trim(),
+      firstDate: dates[dates.length - 1],
+      lastDate: dates[0],
     };
   } catch {
     return null;
@@ -190,6 +198,8 @@ function fetchRepoDateBounds(repoPath) {
 }
 
 module.exports = {
+  COMMIT_SEP,
+  FIELD_SEP,
   fetchRawGitLog,
   parseCommitEntry,
   parseRawLog,
