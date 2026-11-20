@@ -4,7 +4,8 @@ const { execSync, execFile } = require('child_process');
 // === Configuration ===
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const MAX_FILES_PER_COMMIT = 10;
-const MAX_BUFFER = 1024 * 1024 * 50; // 50MB
+const rawMax = parseInt(process.env.REPO_STATS_MAX_BUFFER, 10);
+const MAX_BUFFER = Number.isFinite(rawMax) && rawMax > 0 ? rawMax : 1024 * 1024 * 50;
 const TOP_FILES_COUNT = 5;
 const TOP_EXTENSIONS_COUNT = 5;
 const HISTOGRAM_WIDTH = 25;
@@ -12,13 +13,11 @@ const OPEN_DAYS_COUNT = 3;
 
 // Files to exclude from statistics (but still shown in commit tables)
 const IGNORED_PATTERNS = [
-  /^package-lock\.json$/,
-  /^yarn\.lock$/,
-  /^pnpm-lock\.yaml$/,
-  /(^|\/)dist\//,
-  /(^|\/)build\//,
-  /\.min\.js$/,
-  /\.min\.css$/,
+  /(^|\/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb)$/,
+  /(^|\/)(Cargo\.lock|Gemfile\.lock|poetry\.lock|composer\.lock|Pipfile\.lock|go\.sum)$/,
+  /(^|\/)(dist|build|vendor|third_party|coverage|\.next|\.nuxt)\//,
+  /\.min\.(js|css)$/,
+  /\.(map|bundle\.js|chunk\.js)$/,
 ];
 
 const WEEKDAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -31,11 +30,15 @@ function getRepoName(repoPath) {
   try {
     const topLevel = execSync('git rev-parse --show-toplevel', {
       encoding: 'utf-8',
-      cwd: repoPath
+      cwd: repoPath,
+      stdio: 'pipe'
     }).trim();
     return path.basename(topLevel);
   } catch (e) {
-    return 'Unknown Repo';
+    // Fallback to original repo
+    let originalRepo = path.basename(path.resolve(repoPath));
+    console.warn(`⚠️  Could not resolve repo root via git (${e.code || 'error'}); falling back to folder name "${originalRepo}".`);
+    return originalRepo;
   }
 }
 
@@ -43,13 +46,14 @@ function getRepoName(repoPath) {
  * Formats a number with thousands separator (English style: 45,200).
  */
 function formatNumber(n) {
-  return n.toLocaleString('en-US');
+  return (n ?? 0).toLocaleString('en-US');
 }
 
 /**
  * Formats byte size into human-readable units (B, KB, MB).
  */
 function formatBytes(bytes) {
+  if (bytes < 0) return '0 B';
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
@@ -68,14 +72,14 @@ function pluralize(count, singular, plural = `${singular}s`) {
  * Escapes the pipe character for Markdown tables.
  */
 function escapePipe(str) {
-  return str.replace(/\|/g, '\\|');
+  return str.replace(/((?:^|[^\\])(?:\\\\)*)\|/g, '$1\\|');
 }
 
 /**
  * Escapes HTML special characters to prevent markup breaking / XSS.
  */
 function escapeHtml(str) {
-  return String(str)
+  return String(str ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -105,7 +109,9 @@ function getTodayLocalDate() {
  * Calculates the difference in full days between two Date objects.
  */
 function diffDays(dateA, dateB) {
-  return Math.round((dateB - dateA) / MS_PER_DAY);
+  let result = Math.round((dateB - dateA) / MS_PER_DAY);
+  if (isNaN(result)) return 0;
+  return result;
 }
 
 /**
@@ -119,10 +125,14 @@ function isIgnoredFile(filename) {
  * Extracts the lowercase file extension, or 'no-ext' for extensionless files.
  */
 function getExtension(filename) {
-  const base = filename.split('/').pop();
+  const base = filename.split(/[/\\]/).pop() || filename;
   const dotIndex = base.lastIndexOf('.');
-  if (dotIndex <= 0) return 'no-ext';
-  return base.slice(dotIndex + 1).toLowerCase();
+  if (dotIndex === -1 || (dotIndex === 0 && base.indexOf('.', 1) === -1)) {
+    return 'no-ext';
+  }
+  // .env.local -> 'local', .gitignore -> 'no-ext'
+  const ext = base.slice(dotIndex + 1).toLowerCase();
+  return ext || 'no-ext';
 }
 
 /**
@@ -137,12 +147,12 @@ function toMondayFirstIndex(jsDay) {
  */
 function renderBar(value, maxValue, width = HISTOGRAM_WIDTH) {
   if (maxValue === 0) return '░'.repeat(width);
-  const filled = Math.round((value / maxValue) * width);
+  const filled = Math.min(width, Math.max(0, Math.round((value / maxValue) * width)));
   return '█'.repeat(filled) + '░'.repeat(width - filled);
 }
 
 /**
- * Prints CLI help message and exits.
+ * Prints CLI help message.
  */
 function printHelp() {
   console.log(`
@@ -189,12 +199,25 @@ function normalizeGitPath(filename) {
     const prefix = braceMatch[1];
     const newName = braceMatch[3];
     const suffix = braceMatch[4];
-    return prefix + newName + suffix;
+    return (prefix + newName + suffix).replace(/\/+/g, '/').replace(/^\//, '');
   }
 
-  // Case 2: Without braces (simple rename). E.g., "old.js => new.js"
   const parts = filename.split(' => ');
-  return parts[1];
+
+  // Case 2: multiple renames — always take the last segment
+  if (parts.length > 2) return parts[parts.length - 1];
+
+  // Case 3: single " => " — heuristic: treat as rename only if LHS
+  // looks like a path (contains '.' or '/'). Otherwise it's likely a
+  // literal filename containing " => ".
+  if (parts.length === 2) {
+    if (parts[0].includes('.') || parts[0].includes('/')) {
+      return parts[1];
+    }
+    return filename;
+  }
+
+  return filename;
 }
 
 /**
@@ -202,13 +225,13 @@ function normalizeGitPath(filename) {
  */
 function openInBrowser(filePath) {
   const platform = process.platform;
-  if (platform === 'win32') {
-    execFile('cmd', ['/c', 'start', '', filePath]);
-  } else if (platform === 'darwin') {
-    execFile('open', [filePath]);
-  } else {
-    execFile('xdg-open', [filePath]);
-  }
+  const command = platform === 'win32' ? 'cmd' : platform === 'darwin' ? 'open' : 'xdg-open';
+  const args = platform === 'win32' ? ['/c', 'start', '', filePath] : [filePath];
+
+  const child = execFile(command, args);
+  child.on('error', (err) => {
+    console.warn(`⚠️  Could not open browser: ${err.message}`);
+  });
 }
 
 /**
