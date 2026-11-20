@@ -1,3 +1,5 @@
+node_modules/
+package-lock.json
 .vscode
 project_dump.md
 repo-stats.html

@@ -1,13 +1,53 @@
 {
   "name": "git-repo-stats",
   "version": "1.0.0",
-  "description": "Zero-dependency Git repository statistics and changelog generator",
+  "private": true,
+  "description": "Zero-runtime-dependency Git repository statistics and changelog generator",
   "main": "git-history.js",
   "bin": {
-    "repo-stats": "./git-history.js"
+    "repo-stats": "git-history.js"
   },
-  "engines": { "node": ">=24.0.0" },
-  "keywords": ["git", "changelog", "statistics", "cli", "dashboard"],
+  "scripts": {
+    "start": "node git-history.js",
+    "lint": "eslint .",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  },
+  "files": [
+    "git-client.js",
+    "git-history.js",
+    "lang-icons.js",
+    "render-html.js",
+    "render-md.js",
+    "repo-stats-client.js",
+    "repo-stats.css",
+    "stats.js",
+    "utils.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmibbb/git-repo-stats.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dmibbb/git-repo-stats/issues"
+  },
+  "homepage": "https://github.com/dmibbb/git-repo-stats#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "eslint": "^10.0.0",
+    "globals": "^17.0.0"
+  },
+  "keywords": [
+    "git",
+    "changelog",
+    "statistics",
+    "cli",
+    "dashboard"
+  ],
   "author": "dmibbb",
   "license": "GPL-3.0"
 }
