@@ -105,7 +105,6 @@ function calculateReleases(groupedByDate) {
         name: 'Unreleased',
         isUnreleased: true,
         date: orderedCommits[0].date,
-        tagRowId: null,
         commits: [],
         insertions: 0,
         deletions: 0,
@@ -129,7 +128,6 @@ function calculateReleases(groupedByDate) {
                 name: commit.tags.join(', '),
                 isUnreleased: false,
                 date: commit.date,
-                tagRowId: commit.rowId,
                 commits: [],
                 insertions: 0,
                 deletions: 0,
@@ -199,7 +197,7 @@ function calculateMaxStreak(dates) {
 }
 
 /**
- * Calculates the current active streak of consecutive days ending today or yesterday (in UTC).
+ * Calculates the current active streak of consecutive days ending today or yesterday (local calendar date).
  */
 function calculateCurrentStreak(dates) {
     if (dates.length === 0) return 0;
@@ -239,13 +237,13 @@ function calculateLongestGap(dates) {
 
     const sorted = [...dates].sort((a, b) => a.localeCompare(b));
     let maxGap = 0;
-    let bestStart = sorted[0];
-    let bestEnd = sorted[0];
+    let bestStart = '';
+    let bestEnd = '';
 
     for (let i = 1; i < sorted.length; i++) {
         const prev = parseDate(sorted[i - 1]);
         const curr = parseDate(sorted[i]);
-        const gapDays = diffDays(prev, curr);
+        const gapDays = diffDays(prev, curr) - 1;
 
         if (gapDays > maxGap) {
             maxGap = gapDays;
@@ -281,14 +279,18 @@ function calculateActivityByMonth(groupedByDate) {
 
     for (const dateStr of Object.keys(groupedByDate)) {
         const [year, monthStr] = dateStr.split('-');
-        const monthIndex = parseInt(monthStr, 10) - 1;
-        const monthLabel = `${year}-${MONTH_NAMES[monthIndex]}`;
+        const ymKey = `${year}-${monthStr}`; // e.g., '2026-11' (sorts chronologically!)
         const commitsCount = groupedByDate[dateStr].commits.length;
-        monthCounts.set(monthLabel, (monthCounts.get(monthLabel) || 0) + commitsCount);
+        monthCounts.set(ymKey, (monthCounts.get(ymKey) || 0) + commitsCount);
     }
 
     return Array.from(monthCounts.entries())
-        .sort((a, b) => a[0].localeCompare(b[0]));
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([ymKey, count]) => {
+            const [year, monthStr] = ymKey.split('-');
+            const monthIndex = parseInt(monthStr, 10) - 1;
+            return [`${year}-${MONTH_NAMES[monthIndex]}`, count];
+        });
 }
 
 /**
@@ -385,6 +387,42 @@ function findLargestCommit(groupedByDate) {
  */
 function calculateOverallStats(groupedByDate, repoBounds = null) {
     const allDates = Object.keys(groupedByDate).sort((a, b) => a.localeCompare(b));
+    if (allDates.length === 0) {
+        return {
+            firstDate: '',
+            lastDate: '',
+            totalCalendarDays: 0,
+            activeDays: 0,
+            activityPercent: '0',
+            totalCommits: 0,
+            totalInsertions: 0,
+            totalDeletions: 0,
+            netChange: 0,
+            avgPerCommitIns: '0.0',
+            avgPerCommitDel: '0.0',
+            avgFilesPerCommit: '0.0',
+            avgPerActiveDayIns: 0,
+            avgPerActiveDayDel: 0,
+            avgCommitsPerActiveDay: '0.0',
+            recordCommitsDate: '',
+            recordCommitsCount: 0,
+            recordCodeDate: '',
+            recordCodeIns: 0,
+            recordCodeDel: 0,
+            maxStreakLength: 0,
+            maxStreakStart: '',
+            maxStreakEnd: '',
+            longestGapLength: 0,
+            longestGapStart: '',
+            longestGapEnd: '',
+            currentStreak: 0,
+            trueFirstDate: '',
+            trueLastDate: '',
+            repoAge: 0,
+            totalUniqueFiles: 0,
+        };
+    }
+
     const firstDate = allDates[0];
     const lastDate = allDates[allDates.length - 1];
 
@@ -400,7 +438,7 @@ function calculateOverallStats(groupedByDate, repoBounds = null) {
     const trueLastDate = repoBounds?.lastDate || lastDate;
     const trueStartDate = parseDate(trueFirstDate);
     const todayLocal = getTodayLocalDate();
-    const repoAge = diffDays(trueStartDate, todayLocal);
+    const repoAge = Math.max(0, diffDays(trueStartDate, todayLocal));
 
     const totalCommits = Object.values(groupedByDate).reduce((sum, d) => sum + d.commits.length, 0);
     const totalInsertions = Object.values(groupedByDate).reduce((sum, d) => sum + d.totalInsertions, 0);
@@ -606,6 +644,33 @@ function findChurnHotspotFiles(groupedByDate, topN = TOP_FILES_COUNT) {
 }
 
 /**
+ * Extracts the old (pre-rename) path from a git rename notation.
+ *
+ * Git represents renames in `--numstat` output as either:
+ *   - flat form:       'old.js => new.js'
+ *   - braced form:     'src/{old => new}.js'  (Git's path compaction)
+ *
+ * Returns the expanded old path, or `null` if the input has no ' => '
+ * (i.e., it's not a rename).
+ *
+ * Used by `findLegacyFiles` to remove the old path from the legacy map,
+ * so renamed files don't linger as ghosts under their previous name.
+ *
+ * Examples:
+ *   'old.js => new.js'         -> 'old.js'
+ *   'src/{old => new}.js'      -> 'src/old.js'
+ *   'a/b/{c => d}/e.js'        -> 'a/b/c/e.js'
+ *   'src/index.js'             -> null
+ */
+function extractOldGitPath(rawPath) {
+    if (!rawPath.includes(' => ')) return null;
+    const expanded = rawPath.includes('{')
+        ? rawPath.replace(/\{([^{}]*?)\s*=>\s*[^{}]*?\}/g, '$1')
+        : rawPath.replace(/^(.+?)\s*=>\s*.+$/, '$1');
+    return expanded.replace(/\/+/g, '/').replace(/^\//, '').trim();
+}
+
+/**
  * Finds top untouched/legacy files that have not been modified for the longest time.
  * Excludes files that were deleted in their latest commit.
  */
@@ -614,10 +679,19 @@ function findLegacyFiles(groupedByDate, topN = TOP_FILES_COUNT) {
     const sortedDates = Object.keys(groupedByDate).sort((a, b) => a.localeCompare(b));
 
     for (const date of sortedDates) {
-        for (const commit of groupedByDate[date].commits) {
+        const commits = groupedByDate[date].commits;
+        // Iterate chronological (oldest to newest within the day)
+        for (let i = commits.length - 1; i >= 0; i--) {
+            const commit = commits[i];
             for (const [file, delta] of commit.fileDeltas.entries()) {
+                if (delta.binary) continue;
                 const normFile = normalizeGitPath(file);
                 if (isIgnoredFile(normFile)) continue;
+
+                if (delta.status === 'R') {
+                    const oldFile = extractOldGitPath(file);
+                    if (oldFile) fileLastSeen.delete(oldFile);
+                }
 
                 fileLastSeen.set(normFile, {
                     date,
@@ -627,12 +701,13 @@ function findLegacyFiles(groupedByDate, topN = TOP_FILES_COUNT) {
         }
     }
 
+    const today = getTodayLocalDate();
     return Array.from(fileLastSeen.entries())
         .filter(([, info]) => !info.deleted)
         .map(([file, info]) => ({
             file,
             lastDate: info.date,
-            daysAgo: diffDays(parseDate(info.date), getTodayLocalDate()),
+            daysAgo: Math.max(0, diffDays(parseDate(info.date), today)),
         }))
         .sort((a, b) => b.daysAgo - a.daysAgo || a.lastDate.localeCompare(b.lastDate))
         .slice(0, topN);
