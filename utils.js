@@ -9,7 +9,7 @@ const MAX_BUFFER = Number.isFinite(rawMax) && rawMax > 0 ? rawMax : 1024 * 1024 
 const TOP_FILES_COUNT = 5;
 const TOP_EXTENSIONS_COUNT = 5;
 const HISTOGRAM_WIDTH = 25;
-const OPEN_DAYS_COUNT = 3;
+const OPEN_DAYS_COUNT = 0;
 
 // Files to exclude from statistics (but still shown in commit tables)
 const IGNORED_PATTERNS = [

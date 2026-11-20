@@ -23,7 +23,7 @@ function loadCSS() {
     try {
         const cssPath = path.join(__dirname, 'repo-stats.css');
         return fs.readFileSync(cssPath, 'utf-8');
-    } catch (e) {
+    } catch {
         console.warn('⚠️ Could not load repo-stats.css, using empty styles.');
         return '';
     }
@@ -37,7 +37,7 @@ function loadClientJS() {
     try {
         const jsPath = path.join(__dirname, 'repo-stats-client.js');
         return fs.readFileSync(jsPath, 'utf-8');
-    } catch (e) {
+    } catch {
         console.warn('⚠️ Could not load repo-stats-client.js, using empty script.');
         return '';
     }
@@ -278,7 +278,7 @@ function renderKPICard(icon, title, value, sub, subTitle = '', targetDate = '', 
  */
 function renderHeader(repoName, stats, generatedAt, args = {}) {
     const isFiltered = Boolean(args.since || args.until);
-    let periodHtml = '';
+    let periodHtml;
 
     if (isFiltered) {
         const filterParts = [];
@@ -903,7 +903,7 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
 
     svg += `</svg>`;
 
-    return `<div class="churn-chart-layout">
+    return `<div class="churn-chart-layout" style="--churn-yaxis-width: ${yAxisWidth}px; --churn-height: ${svgHeight}px;">
       ${yAxisSvg}
       ${bgGridSvg}
       <div class="churn-scroll-wrapper">${svg}</div>

@@ -472,6 +472,29 @@
         });
     }
 
+    /**
+     * Expands all <details> elements before printing so the PDF/paper
+     * contains full content, then restores original state afterwards.
+     */
+    function initPrintExpansion() {
+        let touched = [];
+
+        window.addEventListener('beforeprint', function () {
+            touched = [];
+            document.querySelectorAll('details:not([open])').forEach(function (el) {
+                el.setAttribute('open', '');
+                touched.push(el);
+            });
+        });
+
+        window.addEventListener('afterprint', function () {
+            touched.forEach(function (el) {
+                el.removeAttribute('open');
+            });
+            touched = [];
+        });
+    }
+
     // === Bootstrap ===
     initThemeToggle();
     const searchApi = initSearch();
@@ -487,4 +510,5 @@
     initChurnTooltip();
     scrollChurnTimelinesToEnd();
     initReleaseJumpNavigation();
+    initPrintExpansion();
 })();
