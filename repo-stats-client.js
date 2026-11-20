@@ -1,8 +1,33 @@
 (function () {
     /**
+     * Escapes HTML special characters to prevent markup breaking / XSS.
+     */
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
+
+    /**
      * Initializes the 3-state theme switcher (System -> Dark -> Light).
      */
     function initThemeToggle() {
+        function safeStorageSet(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch {
+                console.warn(`localStorage: Couldn't set "${key}"="${value}"`);
+            }
+        }
+
+        function safeStorageRemove(key) {
+            try {
+                localStorage.removeItem(key);
+            } catch {
+                console.warn(`localStorage: Couldn't remove key "${key}"`);
+            }
+        }
+
         const html = document.documentElement;
         const themeBtn = document.querySelector('.theme-toggle');
         if (!themeBtn) return;
@@ -16,16 +41,16 @@
             if (isDark) {
                 // Dark --> Light
                 html.classList.add('theme-light');
-                localStorage.setItem('repo-stats-theme', 'light');
+                safeStorageSet('repo-stats-theme', 'light');
                 themeBtn.textContent = '🌙 Dark';
             } else if (isLight) {
                 // Light --> System
-                localStorage.removeItem('repo-stats-theme');
+                safeStorageRemove('repo-stats-theme');
                 themeBtn.textContent = '🌓 Theme';
             } else {
                 // System --> Dark
                 html.classList.add('theme-dark');
-                localStorage.setItem('repo-stats-theme', 'dark');
+                safeStorageSet('repo-stats-theme', 'dark');
                 themeBtn.textContent = '☀️ Light';
             }
         });
@@ -44,7 +69,7 @@
         const searchInput = document.querySelector('.search-input');
         const clearBtn = document.querySelector('.search-clear');
         const rows = document.querySelectorAll('.commit-row');
-        const days = document.querySelectorAll('.changelog-day');
+        const days = document.querySelectorAll('.changelog-day:not(.release-card)');
         const counter = document.querySelector('.search-counter');
         let debounceTimer = null;
 
@@ -169,10 +194,6 @@
             const trigger = e.target.closest('[data-date]');
             if (!trigger) return;
 
-            if (trigger.classList.contains('tag-pill')) {
-                e.preventDefault(); // Prevent <summary> from toggling when clicking a tag pill
-            }
-
             const date = trigger.getAttribute('data-date');
             const commitSubject = trigger.getAttribute('data-commit');
             const rowId = trigger.getAttribute('data-row-id');
@@ -271,7 +292,7 @@
                 panel.classList.toggle('active', panel.getAttribute('data-panel') === targetTab);
             });
 
-            scrollChurnTimelinesToEnd();
+            if (card.querySelector('.churn-scroll-wrapper')) scrollChurnTimelinesToEnd();
         });
     }
 
@@ -303,7 +324,7 @@
         if (!tagsBar || !summary || !pills) return;
 
         summary.addEventListener('click', function (e) {
-            if (tagsBar.classList.contains('is-single-line')) {
+            if (e.target.closest('.tag-pill') || tagsBar.classList.contains('is-single-line')) {
                 e.preventDefault();
             }
         });
@@ -326,11 +347,25 @@
      * Initializes one-click copy of release notes to clipboard.
      */
     function initReleaseCopy() {
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
         document.addEventListener('click', function (e) {
             const copyBtn = e.target.closest('.release-copy-btn');
             if (!copyBtn) return;
 
-            e.preventDefault(); // Prevent <details> from toggling
+            e.preventDefault();
             e.stopPropagation();
 
             const card = copyBtn.closest('.release-card');
@@ -355,7 +390,7 @@
 
             const payload = `${headerLines.join('\n')}\n\nChanges:\n${subjects.join('\n')}`;
 
-            navigator.clipboard?.writeText(payload).then(() => {
+            const showCopiedFeedback = () => {
                 const prevText = copyBtn.textContent;
                 copyBtn.textContent = '✅ Copied!';
                 copyBtn.classList.add('copied');
@@ -363,7 +398,17 @@
                     copyBtn.textContent = prevText;
                     copyBtn.classList.remove('copied');
                 }, 1500);
-            });
+            };
+
+            try {
+                navigator.clipboard.writeText(payload).then(showCopiedFeedback).catch(() => {
+                    fallbackCopy(payload);
+                    showCopiedFeedback();
+                });
+            } catch {
+                fallbackCopy(payload);
+                showCopiedFeedback();
+            }
         });
     }
 
@@ -387,11 +432,24 @@
      * Initializes interactive hover tooltip for the SVG Code Churn Timeline.
      */
     function initChurnTooltip() {
+        let hideTimer = null;
+        function scheduleHide() {
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(hideTooltip, 60);
+        }
+
         const tooltip = document.createElement('div');
         tooltip.className = 'churn-tooltip';
         document.body.appendChild(tooltip);
 
         let activeGroup = null;
+
+        function hideTooltip() {
+            clearTimeout(hideTimer);
+            if (!activeGroup) return;
+            activeGroup = null;
+            tooltip.classList.remove('visible');
+        }
 
         document.addEventListener('mouseover', function (e) {
             const group = e.target.closest('.churn-bar-group');
@@ -405,17 +463,16 @@
             const del = Number(group.getAttribute('data-del') || 0).toLocaleString('en-US');
             const bin = group.getAttribute('data-bin');
             const tags = group.getAttribute('data-tags');
-
-            const binHtml = bin ? ` · <span class="churn-tt-bin">${bin} bin</span>` : '';
-            const tagHtml = tags ? `<div class="churn-tt-tag">🏷️ ${tags}</div>` : '';
+            const binHtml = bin ? ` · <span class="churn-tt-bin">${escapeHtml(bin)} bin</span>` : '';
 
             tooltip.innerHTML = `
-              <div class="churn-tt-subject">${subject}</div>
-              <div class="churn-tt-meta">${date} · ${author}</div>
-              ${tagHtml}
+              <div class="churn-tt-subject">${escapeHtml(subject)}</div>
+              <div class="churn-tt-meta">${escapeHtml(date)} · ${escapeHtml(author)}</div>
+              ${tags ? `<div class="churn-tt-tag">🏷️ ${escapeHtml(tags)}</div>` : ''}
               <div class="churn-tt-stats"><span class="positive">+${ins}</span> / <span class="negative">-${del}</span>${binHtml}</div>
             `;
             tooltip.classList.add('visible');
+            clearTimeout(hideTimer);
         });
 
         document.addEventListener('mousemove', function (e) {
@@ -438,11 +495,14 @@
 
         document.addEventListener('mouseout', function (e) {
             const group = e.target.closest('.churn-bar-group');
-            if (group && group === activeGroup) {
-                activeGroup = null;
-                tooltip.classList.remove('visible');
-            }
+            if (!group || group !== activeGroup) return;
+            if (e.relatedTarget && group.contains(e.relatedTarget)) return;
+            scheduleHide();
         });
+
+        window.addEventListener('scroll', hideTooltip, { passive: true });
+
+        document.addEventListener('click', hideTooltip);
     }
 
     /**
@@ -457,7 +517,7 @@
     /**
      * Jumps to and expands the target release card when clicking a release pill on the timeline.
      */
-    function initReleaseJumpNavigation() {
+    function initReleaseJumpNavigation(searchApi) {
         document.addEventListener('click', function (e) {
             const pill = e.target.closest('[data-release-id]');
             if (!pill) return;
@@ -465,6 +525,10 @@
             const releaseId = pill.getAttribute('data-release-id');
             const targetRelease = document.getElementById(releaseId);
             if (!targetRelease) return;
+
+            if (searchApi?.resetSearch) {
+                searchApi.resetSearch(false);
+            }
 
             targetRelease.setAttribute('open', '');
             targetRelease.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -480,7 +544,8 @@
         let touched = [];
 
         window.addEventListener('beforeprint', function () {
-            touched = [];
+            if (touched.length > 0) return;
+            document.documentElement.classList.add('is-jumping');
             document.querySelectorAll('details:not([open])').forEach(function (el) {
                 el.setAttribute('open', '');
                 touched.push(el);
@@ -491,7 +556,8 @@
             touched.forEach(function (el) {
                 el.removeAttribute('open');
             });
-            touched = [];
+            touched.length = 0;
+            document.documentElement.classList.remove('is-jumping');
         });
     }
 
@@ -509,6 +575,6 @@
     initHeatmapPeriodSelect();
     initChurnTooltip();
     scrollChurnTimelinesToEnd();
-    initReleaseJumpNavigation();
+    initReleaseJumpNavigation(searchApi);
     initPrintExpansion();
 })();
