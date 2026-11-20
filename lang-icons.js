@@ -17,8 +17,6 @@ const EXT_ALIASES = {
     mdx: 'md',
     kt: 'kotlin',
     kts: 'kotlin',
-    gradle: 'java',
-    groovy: 'java',
     shell: 'sh',
     bash: 'sh',
     zsh: 'sh',
@@ -30,11 +28,16 @@ const EXT_ALIASES = {
     xaml: 'xml',
     plist: 'xml',
     csproj: 'xml',
-    pom: 'xml',
+    jsonl: 'json',
+    jsonc: 'json',
+    h: 'c',
+    hpp: 'cpp',
+    cc: 'cpp',
+    cxx: 'cpp',
 };
 
 /**
- * Compact inline SVG icons (14x14) for common programming languages and file types.
+ * Compact inline SVG icons (16x16 viewBox, rendered at 14x14) for common languages.
  */
 const LANG_SVGS = {
     js: `<svg class="lang-icon" viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#f1e05a"/><text x="8" y="12" text-anchor="middle" font-size="8.5" font-weight="800" font-family="sans-serif" fill="#1f2328">JS</text></svg>`,
@@ -53,6 +56,11 @@ const LANG_SVGS = {
     sql: `<svg class="lang-icon" viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5.5" ry="2" fill="#e38c00"/><path d="M2.5 4v8c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2V4" fill="none" stroke="#e38c00" stroke-width="1.4"/></svg>`,
     java: `<svg class="lang-icon" viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#b07219"/><text x="8" y="11.5" text-anchor="middle" font-size="8.5" font-weight="800" font-family="sans-serif" fill="#ffffff">JV</text></svg>`,
     kotlin: `<svg class="lang-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2h12L8 8l6 6H2V2z" fill="#7f52ff"/></svg>`,
+    cs: `<svg class="lang-icon" viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#68217a"/><text x="8" y="11.5" text-anchor="middle" font-size="8.5" font-weight="800" font-family="sans-serif" fill="#ffffff">C#</text></svg>`,
+    c: `<svg class="lang-icon" viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#555555"/><text x="8" y="11.8" text-anchor="middle" font-size="9" font-weight="800" font-family="sans-serif" fill="#ffffff">C</text></svg>`,
+    cpp: `<svg class="lang-icon" viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#f34b7d"/><text x="8" y="11.5" text-anchor="middle" font-size="7.5" font-weight="800" font-family="sans-serif" fill="#ffffff">C++</text></svg>`,
+    php: `<svg class="lang-icon" viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#4f5d95"/><text x="8" y="11.5" text-anchor="middle" font-size="7.2" font-weight="800" font-family="sans-serif" fill="#ffffff">PHP</text></svg>`,
+    rb: `<svg class="lang-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5h7l3 3.5L8 14 1.5 6l3-3.5z" fill="#cc342d"/></svg>`,
     default: `<svg class="lang-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9v-13z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9.5 1.5v3h3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>`,
 };
 
@@ -60,12 +68,14 @@ const LANG_SVGS = {
  * Returns an inline SVG icon string for the given file extension.
  */
 function getLanguageIcon(ext) {
-    if (!ext) return LANG_SVGS.default;
-    const normalized = ext.toLowerCase();
-    const key = EXT_ALIASES[normalized] || normalized;
-    return LANG_SVGS[key] || LANG_SVGS.default;
+    if (typeof ext !== 'string' || !ext) return LANG_SVGS.default;
+    const normalized = ext.toLowerCase().replace(/^\./, '');
+    const key = Object.hasOwn(EXT_ALIASES, normalized) ? EXT_ALIASES[normalized] : normalized;
+    return Object.hasOwn(LANG_SVGS, key) ? LANG_SVGS[key] : LANG_SVGS.default;
 }
 
 module.exports = {
     getLanguageIcon,
+    EXT_ALIASES,
+    LANG_SVGS,
 };
