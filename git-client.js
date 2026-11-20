@@ -197,11 +197,28 @@ function fetchRepoDateBounds(repoPath) {
   }
 }
 
+/**
+ * Checks whether the given directory is inside a Git repository.
+ */
+function isGitRepository(repoPath) {
+  try {
+    execFileSync('git', ['rev-parse', '--git-dir'], {
+      encoding: 'utf-8',
+      cwd: repoPath,
+      stdio: 'pipe',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 module.exports = {
   COMMIT_SEP,
   FIELD_SEP,
   fetchRawGitLog,
   parseCommitEntry,
   parseRawLog,
-  fetchRepoDateBounds
+  fetchRepoDateBounds,
+  isGitRepository
 };

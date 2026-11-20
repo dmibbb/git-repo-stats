@@ -158,7 +158,7 @@ function printHelp() {
   console.log(`
 📊 Git Repository Statistics & Changelog Generator (repo-stats)
 
-repo-stats is a npm link to "node git-history.js"
+repo-stats is a npm link to "node git-repo-stats.js"
 
 Usage:
   repo-stats [path] [options]
