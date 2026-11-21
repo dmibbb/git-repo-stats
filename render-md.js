@@ -8,10 +8,14 @@ const {
 } = require('./utils');
 
 /**
- * Escapes backticks for safe inline `code` spans in Markdown.
+ * Wraps text in inline Markdown code span, safely handling embedded backticks.
  */
-function escapeInlineCode(str) {
-    return String(str ?? '').replace(/`/g, "'");
+function wrapInlineCode(str) {
+    const s = String(str ?? '');
+    if (!s.includes('`')) return `\`${s}\``;
+    const maxRun = Math.max(...(s.match(/`+/g) || []).map(m => m.length));
+    const fence = '`'.repeat(maxRun + 1);
+    return `${fence} ${s} ${fence}`;
 }
 
 /**
@@ -19,7 +23,7 @@ function escapeInlineCode(str) {
  */
 function renderFileLink(filename, isRename = filename.includes(' => ')) {
     if (isRename) {
-        return `\`${escapePipe(escapeInlineCode(filename))}\``;
+        return escapePipe(wrapInlineCode(filename));
     }
 
     const escaped = escapePipe(filename);
@@ -159,7 +163,7 @@ function renderLongestGapLine(stats) {
  */
 function renderLargestCommitLine(largest, fmt) {
     if (!largest) return '';
-    return `* 💪 **Largest commit:** ${largest.date} — \`${escapePipe(escapeInlineCode(largest.subject))}\` (**+${fmt(largest.insertions)} / -${fmt(largest.deletions)}** lines)\n`;
+    return `* 💪 **Largest commit:** ${largest.date} — ${escapePipe(wrapInlineCode(largest.subject))} (**+${fmt(largest.insertions)} / -${fmt(largest.deletions)}** lines)\n`;
 }
 
 /**
@@ -167,7 +171,7 @@ function renderLargestCommitLine(largest, fmt) {
  */
 function renderWidestCommitLine(widest) {
     if (!widest) return '';
-    return `* 🚚 **Widest commit:** ${widest.date} — \`${escapePipe(escapeInlineCode(widest.subject))}\` (**${pluralize(widest.filesCount, 'file')}**)\n`;
+    return `* 🚚 **Widest commit:** ${widest.date} — ${escapePipe(wrapInlineCode(widest.subject))} (**${pluralize(widest.filesCount, 'file')}**)\n`;
 }
 
 /**
@@ -178,7 +182,7 @@ function renderHotspotFilesLine(hotspots) {
 
     let md = `* 🔥 **Churn hotspots (by lines changed):**\n`;
     hotspots.forEach(f => {
-        md += `  - \`${escapeInlineCode(f.file)}\` (**${pluralize(f.churn, 'line')}**)\n`;
+        md += `  - ${wrapInlineCode(f.file)} (**${pluralize(f.churn, 'line')}**)\n`;
     });
     return md;
 }
@@ -191,7 +195,7 @@ function renderLegacyFilesLine(legacy) {
 
     let md = `* 🕰️ **Legacy files (longest untouched):**\n`;
     legacy.forEach(f => {
-        md += `  - \`${escapeInlineCode(f.file)}\` (**${pluralize(f.daysAgo, 'day')}** ago, last: ${f.lastDate})\n`;
+        md += `  - ${wrapInlineCode(f.file)} (**${pluralize(f.daysAgo, 'day')}** ago, last: ${f.lastDate})\n`;
     });
     return md;
 }
@@ -373,7 +377,7 @@ function renderOverview(repoName, stats, topFiles, largestCommit, techStack, wee
     if (topFiles.length > 0) {
         md += `* 📂 **Most frequent changed files:**\n`;
         topFiles.forEach(f => {
-            md += `  - \`${escapeInlineCode(f.file)}\` (changed in **${pluralize(f.count, 'commit')}**)\n`;
+            md += `  - ${wrapInlineCode(f.file)} (changed in **${pluralize(f.count, 'commit')}**)\n`;
         });
     }
 

@@ -278,7 +278,11 @@ function generateOutputs(args, repoPath, data, repoName) {
     const mode = getGenerationMode(args);
     const outputDir = resolveOutputDir(args.out, repoPath);
 
-    if (!fs.existsSync(outputDir)) {
+    if (fs.existsSync(outputDir)) {
+        if (!fs.statSync(outputDir).isDirectory()) {
+            throw new Error(`⛔ Output path exists and is not a directory: ${outputDir}`);
+        }
+    } else {
         fs.mkdirSync(outputDir, { recursive: true });
     }
 
@@ -292,13 +296,13 @@ function generateMarkdown(outputDir, data, args, repoName) {
         stats, topFiles, hotspotFiles, legacyFiles,
         largestCommit, widestCommit,
         techStack, techStackByLines, fileLifecycle,
-        contributors, tagsList, timeOfDayStats,
+        contributors, timeOfDayStats,
         weekdayCounts, monthCounts, groupedByDate
     } = data;
 
     let md = renderOverview(
         repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts,
-        { widestCommit, contributors, tagsList, timeOfDayStats, techStackByLines, fileLifecycle, hotspotFiles, legacyFiles, args }
+        { widestCommit, contributors, timeOfDayStats, techStackByLines, fileLifecycle, hotspotFiles, legacyFiles, args }
     );
     md += renderReleases(data.releases);
     md += renderChangelog(groupedByDate);

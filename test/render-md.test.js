@@ -2,7 +2,6 @@ const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
 const {
     groupCommitsByDate,
-    extractTagsList,
     calculateOverallStats,
     findTopFrequentFiles,
     findLargestCommit,
@@ -64,7 +63,6 @@ describe('render-md', () => {
             {
                 widestCommit: findWidestCommit(groupedByDate),
                 contributors: calculateContributors(groupedByDate),
-                tagsList: extractTagsList(groupedByDate),
                 timeOfDayStats: calculateActivityByTimeOfDay(groupedByDate),
                 techStackByLines: calculateTechStackByLines(groupedByDate),
                 fileLifecycle: calculateFileLifecycle(groupedByDate),

@@ -1,6 +1,10 @@
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
-const { COMMIT_SEP, parseCommitEntry, parseRawLog, FIELD_SEP } = require('../git-client');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+const { COMMIT_SEP, parseCommitEntry, parseRawLog, fetchRepoDateBounds, FIELD_SEP } = require('../git-client');
 
 describe('parseCommitEntry', () => {
     test('parses standard commit with metadata, tags, and text file changes', () => {
@@ -157,5 +161,60 @@ describe('parseRawLog', () => {
     test('returns empty array for empty log', () => {
         assert.deepEqual(parseRawLog(''), []);
         assert.deepEqual(parseRawLog('   \n  '), []);
+    });
+});
+
+describe('fetchRepoDateBounds', () => {
+    test('returns chronological firstDate and lastDate even when commit timestamps are out of order', () => {
+        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-bounds-'));
+        const git = (args, envExtra = {}) =>
+            execFileSync('git', args, {
+                cwd: tmpDir,
+                stdio: 'pipe',
+                env: {
+                    ...process.env,
+                    GIT_AUTHOR_NAME: 'Test',
+                    GIT_AUTHOR_EMAIL: 'test@example.com',
+                    GIT_COMMITTER_NAME: 'Test',
+                    GIT_COMMITTER_EMAIL: 'test@example.com',
+                    ...envExtra,
+                },
+            });
+
+        try {
+            git(['init']);
+            fs.writeFileSync(path.join(tmpDir, 'a.txt'), '1');
+            git(['add', '.']);
+            git(['commit', '-m', 'newer date first'], {
+                GIT_AUTHOR_DATE: '2026-11-20T12:00:00Z',
+                GIT_COMMITTER_DATE: '2026-11-20T12:00:00Z',
+            });
+
+            fs.writeFileSync(path.join(tmpDir, 'a.txt'), '2');
+            git(['add', '.']);
+            git(['commit', '-m', 'older date second'], {
+                GIT_AUTHOR_DATE: '2026-01-15T12:00:00Z',
+                GIT_COMMITTER_DATE: '2026-01-15T12:00:00Z',
+            });
+
+            const bounds = fetchRepoDateBounds(tmpDir);
+            assert.deepEqual(bounds, {
+                firstDate: '2026-01-15',
+                lastDate: '2026-11-20',
+            });
+        } finally {
+            fs.rmSync(tmpDir, { recursive: true, force: true });
+        }
+    });
+
+    test('returns null for a non-git directory or empty repository', () => {
+        const emptyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-empty-'));
+        try {
+            assert.equal(fetchRepoDateBounds(emptyDir), null);
+            execFileSync('git', ['init'], { cwd: emptyDir, stdio: 'pipe' });
+            assert.equal(fetchRepoDateBounds(emptyDir), null);
+        } finally {
+            fs.rmSync(emptyDir, { recursive: true, force: true });
+        }
     });
 });

@@ -185,12 +185,12 @@ function fetchRepoDateBounds(repoPath) {
     ).trim();
 
     if (!out) return null;
-    const dates = out.split('\n').map(d => d.trim()).filter(Boolean);
+    const dates = out.split('\n').map(d => d.trim()).filter(Boolean).sort(); // sort in case of broken timestamps
     if (dates.length === 0) return null;
 
     return {
-      firstDate: dates[dates.length - 1],
-      lastDate: dates[0],
+      firstDate: dates[0],
+      lastDate: dates[dates.length - 1],
     };
   } catch {
     return null;
