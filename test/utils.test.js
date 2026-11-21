@@ -14,6 +14,9 @@ const {
     renderBar,
     normalizeGitPath,
     formatGeneratedAt,
+    startStep,
+    endStep,
+    logStep
 } = require('../utils');
 
 describe('Formatting helpers', () => {
@@ -140,5 +143,35 @@ describe('File path & Extension helpers', () => {
         assert.equal(normalizeGitPath('{legacy => }/old.js'), 'old.js');
         assert.equal(normalizeGitPath('my => notes.txt'), 'my => notes.txt');
         assert.equal(normalizeGitPath('a => b => c'), 'c');
+    });
+});
+
+describe('Step logger helpers', () => {
+    test('startStep, endStep, and logStep execute cleanly without throwing', () => {
+        const origLog = console.log;
+        const origWrite = process.stdout.write;
+        const output = [];
+
+        console.log = (...args) => output.push(args.join(' '));
+        process.stdout.write = (chunk) => {
+            output.push(String(chunk));
+            return true;
+        };
+
+        try {
+            endStep(); // no-op when no active step
+            startStep('⏳ Step 1...');
+            endStep('— done');
+            startStep('⚙️ Step 2...');
+            logStep('ℹ️ Interleaved log closes active step');
+        } finally {
+            console.log = origLog;
+            process.stdout.write = origWrite;
+        }
+
+        const joined = output.join('\n');
+        assert.match(joined, /Step 1\.\.\./);
+        assert.match(joined, /— done \(took \d+ms\)/);
+        assert.match(joined, /Interleaved log closes active step/);
     });
 });

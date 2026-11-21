@@ -254,18 +254,56 @@ function formatGeneratedAt(date = new Date()) {
   return `${localStr} (${tzStr})`;
 }
 
-let lastStepTime = Date.now();
+let activeStepStart = null;
 
-/**
- * Logs a message prefixed with current local time [HH:MM:SS] and elapsed step time.
- */
-function logStep(message) {
+function formatTimestamp() {
   const now = new Date();
   const time = now.toTimeString().slice(0, 8); // HH:MM:SS
-  const elapsed = Date.now() - lastStepTime;
-  lastStepTime = Date.now();
-  const deltaStr = elapsed > 0 ? `${elapsed}ms` : '0ms';
-  console.log(`[${time}]\t${message} (took ${deltaStr})`);
+  const ms = String(now.getMilliseconds()).padStart(3, '0');
+  return `${time}.${ms}`;
+}
+
+/**
+ * Prints an instant informational log line without step duration.
+ */
+function logStep(message) {
+  if (activeStepStart !== null) {
+    endStep();
+  }
+  console.log(`[${formatTimestamp()}]\t${message}`);
+}
+
+/**
+ * Starts a timed step, printing its label immediately so the user sees
+ * what is currently running before the step completes.
+ */
+function startStep(message) {
+  if (activeStepStart !== null) {
+    endStep();
+  }
+  activeStepStart = Date.now();
+  const line = `[${formatTimestamp()}]\t${message}`;
+  if (process.stdout.isTTY) {
+    process.stdout.write(`${line} `);
+  } else {
+    console.log(line);
+  }
+}
+
+/**
+ * Finishes the active timed step and prints its elapsed duration.
+ */
+function endStep(extraSuffix = '') {
+  if (activeStepStart === null) return;
+  const elapsed = Date.now() - activeStepStart;
+  activeStepStart = null;
+  const suffix = extraSuffix ? `${extraSuffix} (took ${elapsed}ms)` : `(took ${elapsed}ms)`;
+
+  if (process.stdout.isTTY) {
+    process.stdout.write(`${suffix}\n`);
+  } else {
+    console.log(`[${formatTimestamp()}]\t${suffix}`);
+  }
 }
 
 module.exports = {
@@ -295,5 +333,7 @@ module.exports = {
   diffDays,
   openInBrowser,
   formatGeneratedAt,
-  logStep
+  logStep,
+  startStep,
+  endStep
 };

@@ -40,6 +40,8 @@ const {
     printHelp,
     openInBrowser,
     logStep,
+    startStep,
+    endStep,
     formatNumber,
     formatBytes,
     formatGeneratedAt
@@ -243,12 +245,13 @@ function fetchAndParseCommits(repoPath, args) {
         logStep(`📅 Filtering by period: ${range}`);
     }
 
-    logStep('⏳ Fetching git log history...');
+    startStep('⏳ Fetching git log history...');
     const rawLog = fetchRawGitLog(repoPath, args.since, args.until);
+    endStep();
 
-    logStep('⚙️  Parsing commits and file stats...');
+    startStep('⚙️  Parsing commits and file stats...');
     const commits = parseRawLog(rawLog);
-    logStep(`🔍 Parsed ${formatNumber(commits.length)} commits from git log`);
+    endStep(`${formatNumber(commits.length)} commits done`);
 
     return commits;
 }
@@ -294,7 +297,7 @@ function generateOutputs(args, repoPath, data, repoName) {
 }
 
 function generateMarkdown(outputDir, data, args, repoName) {
-    logStep('📝 Rendering Markdown report...');
+    startStep('📝 Rendering and saving Markdown report...');
     const {
         stats, topFiles, hotspotFiles, legacyFiles,
         largestCommit, widestCommit,
@@ -312,11 +315,11 @@ function generateMarkdown(outputDir, data, args, repoName) {
 
     const mdPath = path.join(outputDir, OUTPUT_FILE_MARKDOWN);
     fs.writeFileSync(mdPath, md, 'utf-8');
-    logStep(`✅ Markdown saved: ${mdPath} (${formatBytes(Buffer.byteLength(md, 'utf-8'))})`);
+    endStep(`→ ${mdPath} (${formatBytes(Buffer.byteLength(md, 'utf-8'))})`);
 }
 
 function generateHtml(outputDir, data, args, repoName) {
-    logStep('🎨 Rendering HTML dashboard...');
+    startStep('🎨 Rendering and saving HTML dashboard...');
     const generatedAt = formatGeneratedAt();
     const { stats, groupedByDate, tagsList, releases, topFiles, hotspotFiles, legacyFiles,
         largestCommit, widestCommit, techStack, techStackByLines, fileLifecycle,
@@ -333,7 +336,7 @@ function generateHtml(outputDir, data, args, repoName) {
     const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`, generatedAt);
     const htmlPath = path.join(outputDir, OUTPUT_FILE_HTML);
     fs.writeFileSync(htmlPath, fullHTML, 'utf-8');
-    logStep(`✅ HTML saved: ${htmlPath} (${formatBytes(Buffer.byteLength(fullHTML, 'utf-8'))})`);
+    endStep(`→ ${htmlPath} (${formatBytes(Buffer.byteLength(fullHTML, 'utf-8'))})`);
 
     if (args.open) {
         openInBrowser(htmlPath);
@@ -362,8 +365,9 @@ function main() {
             return;
         }
 
+        startStep('📊 Calculating repository statistics...');
         const stats = collectStatistics(commits, absoluteRepoPath);
-        logStep('📊 Calculated repository statistics');
+        endStep();
 
         generateOutputs(args, absoluteRepoPath, stats, repoName);
 
