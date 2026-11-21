@@ -449,3 +449,7 @@ describe('Edge Cases & Empty Input', () => {
         assert.equal(calculateFileLifecycle(empty).all.total, 0);
     });
 });
+
+module.exports = {
+    makeCommit
+};

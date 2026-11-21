@@ -15,6 +15,23 @@ const {
 } = require('./utils');
 const { getLanguageIcon } = require('./lang-icons');
 
+// Churn widget hardcoded values
+const SVG_HEIGHT = 244;
+const Y_AXIS_WIDTH = 56;
+const PAD_LEFT = 10;
+const PAD_RIGHT = 18;
+const PAD_TOP = 28;
+const PAD_BOTTOM = 28;
+const SLOT_WIDTH = 12;
+const BAR_WIDTH = 8;
+const PLOT_WIDTH_MIN = 120;
+const TICK_MIN_SPACING = 95;
+const TICK_LAST_MIN_SPACING = 75;
+const TICK_TEXT_RESERVE = 70;
+const TICK_WIDTH_BUDGET = 145;
+const TICK_COUNT_MAX = 12;
+const TICK_COUNT_MIN = 2;
+
 /**
  * Reads CSS file from repo-stats.css.
  * Falls back to empty string if file not found.
@@ -44,14 +61,14 @@ function loadClientJS() {
 }
 
 /**
- * Renders an HTML link to a file.
+ * Renders an HTML link to a file. Explicit override for isRename; defaults to checking for ' => '
  */
-function renderFileLinkHTML(filename) {
-    if (filename.includes(' => ')) {
+function renderFileLinkHTML(filename, isRename = filename.includes(' => ')) {
+    if (isRename) {
         return `<code>${escapeHtml(filename)}</code>`;
     }
 
-    const encoded = encodeURI(filename);
+    const encoded = filename.split('/').map(encodeURIComponent).join('/');
     return `<a href="${encoded}" class="file-link">${escapeHtml(filename)}</a>`;
 }
 
@@ -59,9 +76,8 @@ function renderFileLinkHTML(filename) {
  * Wraps content in an HTML document.
  */
 function wrapInHTMLTemplate(content, title, generatedAt) {
-    const css = loadCSS();
-    const clientJS = loadClientJS();
-
+    const css = loadCSS().replace(/<\/style>/gi, '<\\/style>');
+    const clientJS = loadClientJS().replace(/<\/script>/gi, '<\\/script>');
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,8 +86,12 @@ function wrapInHTMLTemplate(content, title, generatedAt) {
 <title>${escapeHtml(title)}</title>
 <script>
   (function() {
-    var t = localStorage.getItem('repo-stats-theme');
-    if (t === 'light' || t === 'dark') document.documentElement.classList.add('theme-' + t);
+    try {
+      var t = localStorage.getItem('repo-stats-theme');
+      if (t === 'light' || t === 'dark') document.documentElement.classList.add('theme-' + t);
+    } catch {
+      console.warn('localStorage: Could not get value for repo-stats-theme');
+    }
   })();
 </script>
 <style>
@@ -112,8 +132,8 @@ function renderFilesCellHTML(files, ignoredFiles, fileDeltas) {
     if (files.length === 0) return '<em>no changes</em>';
 
     const renderFile = (f) => {
-        const link = renderFileLinkHTML(f);
         const delta = fileDeltas?.get(f);
+        const link = renderFileLinkHTML(f, delta ? delta.status === 'R' : f.includes(' => '));
         let deltaHtml = '';
         let statusHtml = '';
 
@@ -231,7 +251,7 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
           <span class="meta-sep">|</span>
           <span><strong class="positive">+${fmt(dayData.totalInsertions)}</strong> / <strong class="negative">-${fmt(dayData.totalDeletions)}</strong></span>
           <span class="meta-sep">|</span>
-          <span><strong>${fmt(uniqueFilesCount)}</strong> ${uniqueFilesCount === 1 ? 'unique file' : 'unique files'}</span>
+          <span><strong>${fmt(uniqueFilesCount)}</strong> ${pluralize(uniqueFilesCount, 'unique file')}</span>
           ${authorsHtml}
         </div>
       </div>
@@ -615,7 +635,7 @@ function buildHeatmapViewHTML(groupedByDate, startDate, endDate, viewKey, isActi
 
     // Pick a representative day inside the target range for accurate month labels
     const monthLabels = weeks.map(week => {
-        const validDay = week.find(d => d.inRange) || week;
+        const validDay = week.find(d => d.inRange) || week[0];
         return MONTH_NAMES[validDay.date.getUTCMonth()];
     });
 
@@ -732,22 +752,12 @@ function renderHeatmapHTML(groupedByDate) {
  */
 function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
     const count = commits.length;
-    const svgHeight = 244;
-    const yAxisWidth = 56;
-    const padLeft = 10;
-    const padRight = 18;
-    const padTop = 28;
-    const padBottom = 28;
-    const plotHeight = svgHeight - padTop - padBottom;
+    const plotHeight = SVG_HEIGHT - PAD_TOP - PAD_BOTTOM;
     const halfHeight = plotHeight / 2;
-    const zeroY = padTop + halfHeight;
-    const bottomAxisY = svgHeight - padBottom;
-
-    // Consistent bar thickness across small and large repositories
-    const slotWidth = 12;
-    const barWidth = 8;
-    const plotWidth = Math.max(120, count * slotWidth);
-    const svgWidth = padLeft + plotWidth + padRight;
+    const zeroY = PAD_TOP + halfHeight;
+    const bottomAxisY = SVG_HEIGHT - PAD_BOTTOM;
+    const plotWidth = Math.max(PLOT_WIDTH_MIN, count * SLOT_WIDTH);
+    const svgWidth = PAD_LEFT + plotWidth + PAD_RIGHT;
 
     const scaleFn = (v) => {
         if (v <= 0 || maxVal <= 0) return 0;
@@ -765,25 +775,25 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
     const midTopLabel = midVal > 0 ? `+${formatNumber(midVal)}` : '';
     const midBottomLabel = midVal > 0 ? `-${formatNumber(midVal)}` : '';
 
-    const topMidY = padTop + halfHeight / 2;
+    const topMidY = PAD_TOP + halfHeight / 2;
     const botMidY = zeroY + halfHeight / 2;
 
     // 1. Fixed Y-axis SVG (pinned on the left)
-    let yAxisSvg = `<svg class="churn-yaxis-svg" viewBox="0 0 ${yAxisWidth} ${svgHeight}" width="${yAxisWidth}" height="${svgHeight}" aria-hidden="true">\n`;
-    yAxisSvg += `<text x="${yAxisWidth - 6}" y="${padTop + 4}" class="churn-axis-label churn-axis-label--pos">${topTickLabel}</text>\n`;
+    let yAxisSvg = `<svg class="churn-yaxis-svg" viewBox="0 0 ${Y_AXIS_WIDTH} ${SVG_HEIGHT}" width="${Y_AXIS_WIDTH}" height="${SVG_HEIGHT}" aria-hidden="true">\n`;
+    yAxisSvg += `<text x="${Y_AXIS_WIDTH - 6}" y="${PAD_TOP + 4}" class="churn-axis-label churn-axis-label--pos">${topTickLabel}</text>\n`;
     if (midTopLabel) {
-        yAxisSvg += `<text x="${yAxisWidth - 6}" y="${topMidY + 3}" class="churn-axis-label">${midTopLabel}</text>\n`;
+        yAxisSvg += `<text x="${Y_AXIS_WIDTH - 6}" y="${topMidY + 3}" class="churn-axis-label">${midTopLabel}</text>\n`;
     }
-    yAxisSvg += `<text x="${yAxisWidth - 6}" y="${zeroY + 3}" class="churn-axis-label">0</text>\n`;
+    yAxisSvg += `<text x="${Y_AXIS_WIDTH - 6}" y="${zeroY + 3}" class="churn-axis-label">0</text>\n`;
     if (midBottomLabel) {
-        yAxisSvg += `<text x="${yAxisWidth - 6}" y="${botMidY + 3}" class="churn-axis-label">${midBottomLabel}</text>\n`;
+        yAxisSvg += `<text x="${Y_AXIS_WIDTH - 6}" y="${botMidY + 3}" class="churn-axis-label">${midBottomLabel}</text>\n`;
     }
-    yAxisSvg += `<text x="${yAxisWidth - 6}" y="${bottomAxisY}" class="churn-axis-label churn-axis-label--neg">${bottomTickLabel}</text>\n`;
+    yAxisSvg += `<text x="${Y_AXIS_WIDTH - 6}" y="${bottomAxisY}" class="churn-axis-label churn-axis-label--neg">${bottomTickLabel}</text>\n`;
     yAxisSvg += `</svg>`;
 
     // 2. Full-width background grid lines stretching to the right card border
     let bgGridSvg = `<svg class="churn-bg-grid" aria-hidden="true">\n`;
-    bgGridSvg += `<line x1="0" y1="${padTop}" x2="100%" y2="${padTop}" class="churn-grid-line" />\n`;
+    bgGridSvg += `<line x1="0" y1="${PAD_TOP}" x2="100%" y2="${PAD_TOP}" class="churn-grid-line" />\n`;
     bgGridSvg += `<line x1="0" y1="${topMidY}" x2="100%" y2="${topMidY}" class="churn-grid-line churn-grid-line--dashed" />\n`;
     bgGridSvg += `<line x1="0" y1="${botMidY}" x2="100%" y2="${botMidY}" class="churn-grid-line churn-grid-line--dashed" />\n`;
     bgGridSvg += `<line x1="0" y1="${bottomAxisY}" x2="100%" y2="${bottomAxisY}" class="churn-grid-line" />\n`;
@@ -791,10 +801,10 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
     bgGridSvg += `</svg>`;
 
     // 3. Left-aligned scrollable plot SVG
-    let svg = `<svg class="churn-svg" viewBox="0 0 ${svgWidth} ${svgHeight}" width="${svgWidth}" height="${svgHeight}" role="img" aria-label="Code churn timeline (${scaleMode} scale)">\n`;
+    let svg = `<svg class="churn-svg" viewBox="0 0 ${svgWidth} ${SVG_HEIGHT}" width="${svgWidth}" height="${SVG_HEIGHT}" role="img" aria-label="Code churn timeline (${scaleMode} scale)">\n`;
 
     // X-axis evenly spaced date ticks (deduplicated)
-    const targetTicks = Math.max(2, Math.min(12, Math.floor(plotWidth / 145) + 1));
+    const targetTicks = Math.max(TICK_COUNT_MIN, Math.min(TICK_COUNT_MAX, Math.floor(plotWidth / TICK_WIDTH_BUDGET) + 1));
     const tickIndices = new Set([0, count - 1]);
     if (count > 2 && targetTicks > 2) {
         for (let t = 1; t < targetTicks - 1; t++) {
@@ -806,37 +816,37 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
     const sortedTicks = Array.from(tickIndices).sort((a, b) => a - b);
     let lastTickX = -Infinity;
     let lastShownDate = '';
-    const rightLimitX = svgWidth - padRight - 70;
+    const rightLimitX = svgWidth - PAD_RIGHT - TICK_TEXT_RESERVE;
 
     sortedTicks.forEach((idx) => {
         const isFirst = idx === 0;
         const isLast = idx === count - 1;
-        const cx = padLeft + idx * slotWidth + slotWidth / 2;
+        const cx = PAD_LEFT + idx * SLOT_WIDTH + SLOT_WIDTH / 2;
         const tickDate = commits[idx].date;
 
         if (!isFirst && !isLast) {
-            if (tickDate === lastShownDate || cx - lastTickX < 95 || cx > rightLimitX) return;
+            if (tickDate === lastShownDate || cx - lastTickX < TICK_MIN_SPACING || cx > rightLimitX) return;
         }
-        if (isLast && count > 1 && cx - lastTickX < 75) return;
+        if (isLast && count > 1 && cx - lastTickX < TICK_LAST_MIN_SPACING) return;
 
         const anchor = isFirst ? 'start' : isLast ? 'end' : 'middle';
-        const textX = isFirst ? padLeft : isLast ? svgWidth - padRight : cx;
+        const textX = isFirst ? PAD_LEFT : isLast ? svgWidth - PAD_RIGHT : cx;
 
         svg += `<line x1="${cx.toFixed(2)}" y1="${bottomAxisY}" x2="${cx.toFixed(2)}" y2="${bottomAxisY + 4}" class="churn-tick-mark" />\n`;
-        svg += `<text x="${textX.toFixed(2)}" y="${svgHeight - 7}" class="churn-x-label" text-anchor="${anchor}">${tickDate}</text>\n`;
+        svg += `<text x="${textX.toFixed(2)}" y="${SVG_HEIGHT - 7}" class="churn-x-label" text-anchor="${anchor}">${tickDate}</text>\n`;
         lastTickX = cx;
         lastShownDate = tickDate;
     });
 
-    // Release tag vertical markers with pill badges (rightmost/newest tags take priority on overlap)
+    // Release tag vertical markers with pill badges (rightmost/newest tags overlap older tags)
     const tagMarkers = [];
     commits.forEach((c, idx) => {
         if (!c.tags || c.tags.length === 0) return;
         const rawText = c.tags.join(', ');
         const pillWidth = rawText.length * 6 + 26;
-        const rawCx = padLeft + idx * slotWidth + slotWidth / 2;
+        const rawCx = PAD_LEFT + idx * SLOT_WIDTH + SLOT_WIDTH / 2;
         const pillX = Math.max(2, Math.min(svgWidth - pillWidth - 2, rawCx - pillWidth / 2));
-        const releaseId = `release-${c.tags[0].trim().replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+        const releaseId = `release-${c.tags[0].trim().replace(/[^a-zA-Z0-9_-]/g, '-')}-${c.date}`;
 
         tagMarkers.push({
             cx: rawCx,
@@ -847,18 +857,8 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
         });
     });
 
-    const visibleLabels = new Set();
-    let nextMinLeft = Infinity;
-    for (let i = tagMarkers.length - 1; i >= 0; i--) {
-        const m = tagMarkers[i];
-        if (m.pillX + m.pillWidth + 4 <= nextMinLeft) {
-            visibleLabels.add(i);
-            nextMinLeft = m.pillX;
-        }
-    }
-
     tagMarkers.forEach((marker) => {
-        svg += `<line x1="${marker.cx.toFixed(2)}" y1="${padTop - 2}" x2="${marker.cx.toFixed(2)}" y2="${bottomAxisY}" class="churn-release-line" />\n`;
+        svg += `<line x1="${marker.cx.toFixed(2)}" y1="${PAD_TOP - 2}" x2="${marker.cx.toFixed(2)}" y2="${bottomAxisY}" class="churn-release-line" />\n`;
 
         const pillY = 4;
         const pillH = 18;
@@ -872,8 +872,8 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
 
     // Commit bars
     commits.forEach((c, idx) => {
-        const slotX = padLeft + idx * slotWidth;
-        const barX = slotX + (slotWidth - barWidth) / 2;
+        const slotX = PAD_LEFT + idx * SLOT_WIDTH;
+        const barX = slotX + (SLOT_WIDTH - BAR_WIDTH) / 2;
         const insH = scaleFn(c.insertions);
         const delH = scaleFn(c.deletions);
         const hasBinary = c.binaryCount > 0;
@@ -884,18 +884,18 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
         const tagAttr = c.tags && c.tags.length > 0 ? ` data-tags="${escapeHtml(c.tags.join(', '))}"` : '';
 
         svg += `<g class="churn-bar-group" data-date="${c.date}" data-row-id="${c.rowId}" data-subject="${safeSubj}" data-author="${safeAuthor}" data-ins="${c.insertions}" data-del="${c.deletions}"${binAttr}${tagAttr}>\n`;
-        svg += `  <rect x="${slotX.toFixed(2)}" y="${padTop}" width="${slotWidth.toFixed(2)}" height="${plotHeight}" class="churn-hit-area" />\n`;
+        svg += `  <rect x="${slotX.toFixed(2)}" y="${PAD_TOP}" width="${SLOT_WIDTH.toFixed(2)}" height="${plotHeight}" class="churn-hit-area" />\n`;
 
         if (insH > 0) {
             const h = Math.max(1.5, insH);
-            svg += `  <rect x="${barX.toFixed(2)}" y="${(zeroY - h).toFixed(2)}" width="${barWidth.toFixed(2)}" height="${h.toFixed(2)}" rx="1" class="churn-bar-ins" />\n`;
+            svg += `  <rect x="${barX.toFixed(2)}" y="${(zeroY - h).toFixed(2)}" width="${BAR_WIDTH.toFixed(2)}" height="${h.toFixed(2)}" rx="1" class="churn-bar-ins" />\n`;
         }
         if (delH > 0) {
             const h = Math.max(1.5, delH);
-            svg += `  <rect x="${barX.toFixed(2)}" y="${zeroY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${h.toFixed(2)}" rx="1" class="churn-bar-del" />\n`;
+            svg += `  <rect x="${barX.toFixed(2)}" y="${zeroY.toFixed(2)}" width="${BAR_WIDTH.toFixed(2)}" height="${h.toFixed(2)}" rx="1" class="churn-bar-del" />\n`;
         }
         if (hasBinary) {
-            const cx = slotX + slotWidth / 2;
+            const cx = slotX + SLOT_WIDTH / 2;
             svg += `  <circle cx="${cx.toFixed(2)}" cy="${zeroY.toFixed(2)}" r="3" class="churn-bar-bin" />\n`;
         }
         svg += `</g>\n`;
@@ -903,7 +903,7 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
 
     svg += `</svg>`;
 
-    return `<div class="churn-chart-layout" style="--churn-yaxis-width: ${yAxisWidth}px; --churn-height: ${svgHeight}px;">
+    return `<div class="churn-chart-layout" style="--churn-yaxis-width: ${Y_AXIS_WIDTH}px; --churn-height: ${SVG_HEIGHT}px;">
       ${yAxisSvg}
       ${bgGridSvg}
       <div class="churn-scroll-wrapper">${svg}</div>
@@ -1174,8 +1174,10 @@ function renderReleasesHTML(releases) {
             : (rel.lastDate || rel.date || '');
         const dateHtml = rangeStr ? `<span class="day-weekday">(${rangeStr})</span>` : '';
 
+        // Take the first tag by ID (rel.name may contain a few comma-separated tags)
         const primaryTag = rel.isUnreleased ? 'unreleased' : rel.name.split(',')[0].trim();
-        const releaseId = `release-${primaryTag.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+        const relDate = rel.date || 'nodate';
+        const releaseId = `release-${primaryTag.replace(/[^a-zA-Z0-9_-]/g, '-')}-${relDate}`;
 
         const authorsSummary = formatAuthorsSummary(rel.commits);
         const authorsHtml = authorsSummary
@@ -1186,7 +1188,7 @@ function renderReleasesHTML(releases) {
             const timePart = c.time ? ` ${c.time.slice(0, 8)}` : '';
             return `<li class="release-commit-item">
               <span class="release-commit-bullet">•</span>
-              <span class="release-commit-subject" data-date="${c.date}" data-row-id="${c.rowId}" title="Jump to commit in Changelog Details (${c.date}${timePart} by ${c.author})">${escapeHtml(c.subject)}</span>
+              <span class="release-commit-subject" data-date="${c.date}" data-row-id="${c.rowId}" title="Jump to commit in Changelog Details (${c.date}${timePart} by ${escapeHtml(c.author)})">${escapeHtml(c.subject)}</span>
             </li>`;
         }).join('\n');
 
@@ -1253,4 +1255,7 @@ module.exports = {
     renderOverviewHTML,
     renderChangelogHTML,
     wrapInHTMLTemplate,
+    renderFileLinkHTML,
+    renderKPICard,
+    renderHeader
 };
