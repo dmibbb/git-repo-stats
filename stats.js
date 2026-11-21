@@ -440,38 +440,36 @@ function calculateOverallStats(groupedByDate, repoBounds = null) {
     const todayLocal = getTodayLocalDate();
     const repoAge = Math.max(0, diffDays(trueStartDate, todayLocal));
 
-    const totalCommits = Object.values(groupedByDate).reduce((sum, d) => sum + d.commits.length, 0);
-    const totalInsertions = Object.values(groupedByDate).reduce((sum, d) => sum + d.totalInsertions, 0);
-    const totalDeletions = Object.values(groupedByDate).reduce((sum, d) => sum + d.totalDeletions, 0);
-    const netChange = totalInsertions - totalDeletions;
-
-    const avgPerCommitIns = totalCommits ? (totalInsertions / totalCommits).toFixed(1) : '0.0';
-    const avgPerCommitDel = totalCommits ? (totalDeletions / totalCommits).toFixed(1) : '0.0';
-
-    const totalFilesInCommits = Object.values(groupedByDate).reduce(
-        (sum, d) => sum + d.commits.reduce((s, c) => s + c.trackedFiles.length, 0),
-        0,
-    );
-    const avgFilesPerCommit = totalCommits ? (totalFilesInCommits / totalCommits).toFixed(1) : '0.0';
-
-    const avgPerActiveDayIns = activeDays ? Math.round(totalInsertions / activeDays) : 0;
-    const avgPerActiveDayDel = activeDays ? Math.round(totalDeletions / activeDays) : 0;
-    const avgCommitsPerActiveDay = activeDays ? (totalCommits / activeDays).toFixed(1) : '0.0';
+    let totalCommits = 0;
+    let totalInsertions = 0;
+    let totalDeletions = 0;
+    let totalFilesInCommits = 0;
 
     let recordCommitsDate = '';
     let recordCommitsCount = 0;
-    for (const [date, data] of Object.entries(groupedByDate)) {
-        if (data.commits.length > recordCommitsCount) {
-            recordCommitsCount = data.commits.length;
-            recordCommitsDate = date;
-        }
-    }
 
     let recordCodeDate = '';
     let recordCodeIns = 0;
     let recordCodeDel = 0;
     let recordCodeChurn = 0;
+
+    const allUniqueFiles = new Set();
+
     for (const [date, data] of Object.entries(groupedByDate)) {
+        const commitsCount = data.commits.length;
+        totalCommits += commitsCount;
+        totalInsertions += data.totalInsertions;
+        totalDeletions += data.totalDeletions;
+
+        for (const commit of data.commits) {
+            totalFilesInCommits += commit.trackedFiles.length;
+        }
+
+        if (commitsCount > recordCommitsCount) {
+            recordCommitsCount = commitsCount;
+            recordCommitsDate = date;
+        }
+
         const churn = data.totalInsertions + data.totalDeletions;
         if (churn > recordCodeChurn) {
             recordCodeChurn = churn;
@@ -479,18 +477,24 @@ function calculateOverallStats(groupedByDate, repoBounds = null) {
             recordCodeDel = data.totalDeletions;
             recordCodeDate = date;
         }
+
+        for (const file of data.uniqueFiles) {
+            allUniqueFiles.add(file);
+        }
     }
+
+    const netChange = totalInsertions - totalDeletions;
+    const avgPerCommitIns = totalCommits ? (totalInsertions / totalCommits).toFixed(1) : '0.0';
+    const avgPerCommitDel = totalCommits ? (totalDeletions / totalCommits).toFixed(1) : '0.0';
+    const avgFilesPerCommit = totalCommits ? (totalFilesInCommits / totalCommits).toFixed(1) : '0.0';
+
+    const avgPerActiveDayIns = activeDays ? Math.round(totalInsertions / activeDays) : 0;
+    const avgPerActiveDayDel = activeDays ? Math.round(totalDeletions / activeDays) : 0;
+    const avgCommitsPerActiveDay = activeDays ? (totalCommits / activeDays).toFixed(1) : '0.0';
 
     const maxStreakInfo = calculateMaxStreak(allDates);
     const currentStreak = calculateCurrentStreak(allDates);
     const longestGapInfo = calculateLongestGap(allDates);
-
-    const allUniqueFiles = new Set();
-    for (const d of Object.values(groupedByDate)) {
-        for (const file of d.uniqueFiles) {
-            allUniqueFiles.add(file);
-        }
-    }
     const totalUniqueFiles = allUniqueFiles.size;
 
     return {
