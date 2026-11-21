@@ -4,7 +4,14 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
-const { COMMIT_SEP, parseCommitEntry, parseRawLog, fetchRepoDateBounds, FIELD_SEP } = require('../git-client');
+const {
+    COMMIT_SEP,
+    FIELD_SEP,
+    fetchRawGitLog,
+    parseCommitEntry,
+    parseRawLog,
+    fetchRepoDateBounds
+} = require('../git-client');
 
 describe('parseCommitEntry', () => {
     test('parses standard commit with metadata, tags, and text file changes', () => {
@@ -137,6 +144,35 @@ describe('parseCommitEntry', () => {
         assert.equal(parseCommitEntry('   \r\n  '), null);
         assert.equal(parseCommitEntry(''), null);
     });
+
+    test('preserves very long commit subjects (>1000 chars)', () => {
+        const longSubject = 'feat: ' + 'a'.repeat(1200);
+        const entry = [
+            `2026-11-20 14:35:10 +0300${FIELD_SEP}dmibbb${FIELD_SEP}${FIELD_SEP}${longSubject}`,
+            ':100644 100644 abc1111 def2222 M\tsrc/index.js',
+            '1\t1\tsrc/index.js',
+        ].join('\n');
+
+        const commit = parseCommitEntry(entry);
+        assert.equal(commit.subject.length, 1206);
+        assert.equal(commit.subject, longSubject);
+    });
+
+    test('handles emojis, Cyrillic, and UTF-8 surrogate pairs in subject and author', () => {
+        const author = 'Димасик 👨‍💻 𝔘𝔫𝔦𝔠𝔬𝔡𝔢';
+        const subject = 'feat(ui): 🚀 добавил поддержку 👨‍👩‍👧‍👦 и 𝌆 символов';
+        const entry = [
+            `2026-11-20 14:35:10 +0300${FIELD_SEP}${author}${FIELD_SEP}tag: v1.0.0-🎉${FIELD_SEP}${subject}`,
+            ':100644 100644 abc1111 def2222 A\tsrc/папка/файл-🚀.js',
+            '5\t0\tsrc/папка/файл-🚀.js',
+        ].join('\n');
+
+        const commit = parseCommitEntry(entry);
+        assert.equal(commit.author, author);
+        assert.equal(commit.subject, subject);
+        assert.deepEqual(commit.tags, ['v1.0.0-🎉']);
+        assert.deepEqual(commit.trackedFiles, ['src/папка/файл-🚀.js']);
+    });
 });
 
 describe('parseRawLog', () => {
@@ -215,6 +251,52 @@ describe('fetchRepoDateBounds', () => {
             assert.equal(fetchRepoDateBounds(emptyDir), null);
         } finally {
             fs.rmSync(emptyDir, { recursive: true, force: true });
+        }
+    });
+});
+
+describe('fetchRawGitLog', () => {
+    test('excludes merge commits (--no-merges) and preserves UTF-8 paths and emojis', () => {
+        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-merges-'));
+        const git = (args) =>
+            execFileSync('git', args, {
+                cwd: tmpDir,
+                stdio: 'pipe',
+                env: {
+                    ...process.env,
+                    GIT_AUTHOR_NAME: 'Димасик 🚀',
+                    GIT_AUTHOR_EMAIL: 'test@example.com',
+                    GIT_COMMITTER_NAME: 'Димасик 🚀',
+                    GIT_COMMITTER_EMAIL: 'test@example.com',
+                },
+            });
+
+        try {
+            git(['init', '-b', 'main']);
+            fs.writeFileSync(path.join(tmpDir, 'base.js'), 'const a = 1;\n');
+            git(['add', '.']);
+            git(['commit', '-m', 'feat: base commit']);
+
+            git(['checkout', '-b', 'feature']);
+            fs.writeFileSync(path.join(tmpDir, 'фича-🔥.js'), 'const b = 2;\n');
+            git(['add', '.']);
+            git(['commit', '-m', 'feat: feature commit 👨‍👩‍👧‍👦']);
+
+            git(['checkout', 'main']);
+            git(['merge', '--no-ff', 'feature', '-m', "Merge branch 'feature'"]);
+
+            const raw = fetchRawGitLog(tmpDir);
+            const commits = parseRawLog(raw);
+            const featureCommit = commits.find(c => c.subject.startsWith('feat: feature commit'));
+
+            assert.equal(commits.length, 2);
+            assert.ok(!commits.some(c => c.subject.startsWith('Merge branch')));
+            assert.ok(featureCommit, 'feature commit should be present');
+            assert.equal(featureCommit.subject, 'feat: feature commit 👨‍👩‍👧‍👦');
+            assert.equal(featureCommit.author, 'Димасик 🚀');
+            assert.deepEqual(featureCommit.trackedFiles, ['фича-🔥.js']);
+        } finally {
+            fs.rmSync(tmpDir, { recursive: true, force: true });
         }
     });
 });

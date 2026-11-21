@@ -128,6 +128,7 @@ describe('render-html', () => {
         assert.match(html, /<svg class="churn-svg"/);
         assert.match(html, /class="heatmap-select"/);
         assert.match(html, /data-release-id="release-v1-0-0"|data-release-id="release-/);
+        assert.match(html, /data-time="12:00:00"/);
     });
 
     test('handles null/empty data gracefully', () => {

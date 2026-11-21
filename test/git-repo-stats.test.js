@@ -4,6 +4,8 @@ const fs = require('fs');
 const os = require('node:os');
 const path = require('node:path');
 const { parseArgs, getGenerationMode, resolveOutputDir, validateRepoPath } = require('../git-repo-stats');
+const { execFileSync } = require('node:child_process');
+const { main } = require('../git-repo-stats');
 
 describe('parseArgs', () => {
     test('returns default options when argv is empty', () => {
@@ -167,3 +169,55 @@ describe('validateRepoPath', () => {
     });
 });
 
+
+describe('main() end-to-end integration', () => {
+    test('generates both HTML and Markdown reports for a real git repository', () => {
+        const tmpRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-repo-'));
+        const outDir = path.join(tmpRepo, 'reports');
+        const git = (args) =>
+            execFileSync('git', args, {
+                cwd: tmpRepo,
+                stdio: 'pipe',
+                env: {
+                    ...process.env,
+                    GIT_AUTHOR_NAME: 'Dmibbb',
+                    GIT_AUTHOR_EMAIL: 'dmibbb@example.com',
+                    GIT_COMMITTER_NAME: 'Dmibbb',
+                    GIT_COMMITTER_EMAIL: 'dmibbb@example.com',
+                },
+            });
+
+        const origArgv = process.argv;
+        const origLog = console.log;
+        const origWrite = process.stdout.write;
+        console.log = () => { };
+        process.stdout.write = () => true;
+
+        try {
+            git(['init']);
+            fs.writeFileSync(path.join(tmpRepo, 'index.js'), 'console.log("hello");\n');
+            git(['add', '.']);
+            git(['commit', '-m', 'feat: initial commit']);
+            git(['tag', 'v1.0.0']);
+
+            process.argv = ['node', 'git-repo-stats.js', tmpRepo, '--html', '--md', `--out=${outDir}`];
+            main();
+
+            const htmlPath = path.join(outDir, 'repo-stats.html');
+            const mdPath = path.join(outDir, 'repo-stats.md');
+            assert.ok(fs.existsSync(htmlPath), 'repo-stats.html should be generated');
+            assert.ok(fs.existsSync(mdPath), 'repo-stats.md should be generated');
+
+            const html = fs.readFileSync(htmlPath, 'utf-8');
+            const md = fs.readFileSync(mdPath, 'utf-8');
+            assert.ok(html.includes('feat: initial commit'));
+            assert.ok(md.includes('feat: initial commit'));
+            assert.ok(md.includes('v1.0.0'));
+        } finally {
+            process.argv = origArgv;
+            console.log = origLog;
+            process.stdout.write = origWrite;
+            fs.rmSync(tmpRepo, { recursive: true, force: true });
+        }
+    });
+});
