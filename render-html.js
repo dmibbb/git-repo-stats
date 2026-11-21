@@ -1007,9 +1007,11 @@ function renderContributorsCard(contributors) {
     const fmt = formatNumber;
     let html = `<div class="card"><div class="card-header"><span class="card-title">👥 Contributors</span></div><ul class="details-list" style="display:block">\n`;
     contributors.forEach((c) => {
-        html += `<li class="contrib-item">
+        const safeName = escapeHtml(c.name);
+        const filterQuery = escapeHtml(`Author: ${c.name}`);
+        html += `<li class="contrib-item contrib-item--clickable" data-filter-file="${filterQuery}" title="Filter changelog by ${safeName}">
           <div class="contrib-top">
-            <span>${escapeHtml(c.name)}</span>
+            <span class="contrib-name">${safeName}</span>
             <span class="count">${c.percent}%</span>
           </div>
           <div class="contrib-meta">

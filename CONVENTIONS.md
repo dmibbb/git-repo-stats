@@ -180,7 +180,8 @@ Options:
 - Don't add a dependency "just for convenience" (no `chalk`, no `commander`, no `dayjs`, no `lodash`).
 - Don't use `innerHTML` on the client side without `escapeHtml()` — even for "trusted" data.
 - Don't hardcode file counts (use `TOP_FILES_COUNT = 5`, `MAX_FILES_PER_COMMIT = 10`).
-- Don't break the `data-*` attribute contract — the client JS relies on `data-date`, `data-time`, `data-row-id`, `data-filter-file`, `data-release-id`, `data-tab`, `data-panel`, `data-heatmap-view`.
+- Don't break the `data-*` attribute contract — the client JS relies on `data-date`, `data-time`, `data-row-id`, `data-filter-file` (used for files, extensions, lifecycle statuses, and `Author: <name>`), `data-release-id`, `data-tab`, `data-panel`, `data-heatmap-view`.
+- Don't hijack native browser keyboard shortcuts (like `Ctrl+K` / `Cmd+K` or `Ctrl+F`) — only handle `Escape` inside `.search-input`.
 - Don't remove the `content-visibility: auto` optimization on `.changelog-day` — it's critical for rendering large dashboards.
 - Don't change `COMMIT_SEP` / `FIELD_SEP` without updating the parser AND tests.
 
@@ -221,8 +222,8 @@ The following features or changes were explicitly evaluated and rejected to pres
 - **Separate ESLint config for `repo-stats-client.js`**
   - Unnecessary. It is already configured correctly — the file is linted in a separate block with `globals.browser` in `eslint.config.js`.
 
-- **Cmd+K / Ctrl+K shortcut is not needed**
-  - Unnecessary. Intercepting the standard browser shortcut `Ctrl+K` (address bar/browser search) on a local HTML page is often annoying.
+- **Custom `Ctrl+K` / `Cmd+K` search shortcut**
+  - Hijacks the browser's built-in address/search bar shortcut on local `file://` pages, causing jarring UX. Keeping keyboard handling strictly scoped to `Escape` inside `.search-input` is cleaner and non-intrusive.
 
 ---
 
@@ -253,6 +254,8 @@ When refactoring, **do not regress** these user-visible features:
 - 🖨️ Print styles that auto-expand all `<details>` before printing
 - ⌨️ Sticky TOC with active-section highlighting
 - 🎯 Clickable KPI cards that jump to the record day/commit
+- 📂 Click-to-filter navigation (click any file badge, extension, lifecycle bar, or contributor row → jumps to changelog filtered by that query)
+- 🔗 Hash deep links (`#day-YYYY-MM-DD`, `#commit-...`, `#release-...`) that auto-expand parent `<details>` and highlight the target on page load / `hashchange`
 
 ---
 
