@@ -122,7 +122,8 @@ function isIgnoredFile(filename) {
 }
 
 /**
- * Extracts the lowercase file extension, or 'no-ext' for extensionless files.
+ * Extracts the lowercase file extension, or 'no-ext' for extensionless files
+ * and single-dot dotfiles (e.g. '.gitignore' -> 'no-ext', '.env.local' -> 'local').
  */
 function getExtension(filename) {
   const base = filename.split(/[/\\]/).pop() || filename;

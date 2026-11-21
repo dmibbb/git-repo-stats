@@ -334,7 +334,8 @@ function renderMonthHistogram(monthCounts) {
 }
 
 /**
- * Renders the overview statistics block.
+ * Renders the overview statistics block including histograms, file rankings,
+ * tech stack (by touches and lines), file lifecycle, and contributors.
  */
 function renderOverview(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts, extra = {}) {
     const fmt = formatNumber;

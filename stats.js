@@ -272,7 +272,7 @@ function calculateActivityByWeekday(groupedByDate) {
 }
 
 /**
- * Counts commits per month (YYYY-MMM format), returns ALL months chronologically.
+ * Counts commits per month, returning all months chronologically as [['YYYY-MMM', count], ...].
  */
 function calculateActivityByMonth(groupedByDate) {
     const monthCounts = new Map();

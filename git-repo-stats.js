@@ -2,30 +2,33 @@
 
 /**
  * ============================================================================
- * 📊 Git Repository Statistics & Changelog Generator
+ * 👨‍💻 Git Repository Statistics & Changelog Generator
  * ============================================================================
  * Zero-runtime-dependency Node.js CLI utility that analyzes git commit history
- * and generates a comprehensive Markdown changelog (`repo-stats.md`) alongside
- * a styled, dark-mode-ready HTML dashboard (`repo-stats.html`).
+ * and generates a self-contained HTML analytics dashboard (`repo-stats.html`)
+ * and/or a collapsible Markdown report (`repo-stats.md`).
  *
  * Features:
- * - High-level repository overview (age, active days, streaks, gaps, records)
- * - Code churn metrics (+insertions / -deletions), tech stack & hotspots
- * - Weekday and monthly activity histograms (ASCII in MD, CSS bars in HTML)
+ * - Repository overview (age, active days, current/max streaks, gaps, records)
+ * - Code churn metrics (+insertions / -deletions), SVG timeline (Linear / Log)
+ * - Releases & Tags grouping with release notes and one-click copy
+ * - Time-of-day, weekday, and monthly activity histograms
+ * - Frequent files, churn hotspots, legacy files, file lifecycle & tech stack
  * - Smart filtering of lock files, build artifacts, and minified assets
- * - Daily grouped commit tables with clickable file links
+ * - Daily grouped commit tables with live search and clickable file links
  *
  * Usage:
  *   node git-repo-stats.js                    # Analyze current dir (HTML only by default)
  *   node git-repo-stats.js --md               # Markdown only
- *   node git-repo-stats.js --html --md        # Both (explicit)
+ *   node git-repo-stats.js --html --md        # Both formats
  *   node git-repo-stats.js --since=2026-01-01 --until=2026-11-17
  *   node git-repo-stats.js --out=reports      # Save to ./reports/
+ *   node git-repo-stats.js --open             # Open generated HTML in default browser
  *   node git-repo-stats.js /path/to/repo      # Analyze a specific git repository
  *
  * Outputs (saved in repo root, or --out=DIR if provided):
- *   - repo-stats.md
  *   - repo-stats.html
+ *   - repo-stats.md
  * ============================================================================
  */
 
@@ -90,7 +93,7 @@ const OUTPUT_FILE_MARKDOWN = 'repo-stats.md';
 const OUTPUT_FILE_HTML = 'repo-stats.html';
 
 /**
- * Parses CLI arguments (supports --flag=value format and positional repo path).
+ * Parses CLI arguments (supports --flag=value, --flag value, and positional repo path).
  * Returns { since, until, html, md, out, help, repoPath, open }
  */
 function parseArgs(argv) {
