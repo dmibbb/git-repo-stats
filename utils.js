@@ -4,8 +4,9 @@ const { execSync, execFile } = require('child_process');
 // === Configuration ===
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const MAX_FILES_PER_COMMIT = 10;
-const rawMax = parseInt(process.env.REPO_STATS_MAX_BUFFER, 10);
-const MAX_BUFFER = Number.isFinite(rawMax) && rawMax > 0 ? rawMax : 1024 * 1024 * 50;
+const RAW_MAX = parseInt(process.env.REPO_STATS_MAX_BUFFER, 10);
+const DEFAULT_MAX_BUFFER_MB = 200;
+const MAX_BUFFER = Number.isFinite(RAW_MAX) && RAW_MAX > 0 ? RAW_MAX : 1024 * 1024 * DEFAULT_MAX_BUFFER_MB;
 const TOP_FILES_COUNT = 5;
 const TOP_EXTENSIONS_COUNT = 5;
 const HISTOGRAM_WIDTH = 25;

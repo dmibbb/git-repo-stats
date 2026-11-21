@@ -26,6 +26,10 @@
 - **Node.js:** `^20.19.0 || ^22.13.0 || >=24`
 - **Git:** Available in system `PATH`
 
+### 🤷‍♂️ Known Limitations
+
+- **REPO_STATS_MAX_BUFFER** — environment variable to override the default `200 MB` git log buffer limit for huge monorepos.
+
 ### 🚀 Usage
 
 Run directly with Node.js or link globally via `npm link` to use the `repo-stats` command anywhere:

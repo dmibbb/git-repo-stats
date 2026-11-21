@@ -23,11 +23,23 @@ function fetchRawGitLog(repoPath, since, until) {
   if (since) args.push(`--since=${since}`);
   if (until) args.push(`--until=${until}`);
 
-  return execFileSync('git', args, {
-    encoding: 'utf-8',
-    maxBuffer: MAX_BUFFER,
-    cwd: repoPath,
-  });
+  try {
+    return execFileSync('git', args, {
+      encoding: 'utf-8',
+      maxBuffer: MAX_BUFFER,
+      cwd: repoPath,
+    });
+  } catch (err) {
+    if (err.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') {
+      const currentMb = Math.round(MAX_BUFFER / (1024 * 1024));
+      throw new Error(
+        `Git log output exceeded buffer limit (${currentMb} MB). ` +
+        `Try filtering with --since=YYYY-MM-DD or increase REPO_STATS_MAX_BUFFER (in bytes), e.g. REPO_STATS_MAX_BUFFER=524288000`,
+        { cause: err }
+      );
+    }
+    throw err;
+  }
 }
 
 /**
