@@ -67,9 +67,11 @@ const {
 } = require('./stats');
 const {
     renderOverview,
+    renderReleases,
     renderChangelog
 } = require('./render-md');
-const { renderOverviewHTML,
+const {
+    renderOverviewHTML,
     renderChangelogHTML,
     wrapInHTMLTemplate
 } = require('./render-html');
@@ -83,6 +85,9 @@ const isValidDate = (s) => {
     const dt = new Date(Date.UTC(y, m - 1, d));
     return dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
 };
+
+const OUTPUT_FILE_MARKDOWN = 'repo-stats.md';
+const OUTPUT_FILE_HTML = 'repo-stats.html';
 
 /**
  * Parses CLI arguments (supports --flag=value format and positional repo path).
@@ -277,18 +282,28 @@ function generateOutputs(args, repoPath, data, repoName) {
         fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    if (mode.md) generateMarkdown(outputDir, data, repoName);
+    if (mode.md) generateMarkdown(outputDir, data, args, repoName);
     if (mode.html) generateHtml(outputDir, data, args, repoName);
 }
 
-function generateMarkdown(outputDir, data, repoName) {
+function generateMarkdown(outputDir, data, args, repoName) {
     logStep('📝 Rendering Markdown report...');
-    const { stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts, groupedByDate } = data;
+    const {
+        stats, topFiles, hotspotFiles, legacyFiles,
+        largestCommit, widestCommit,
+        techStack, techStackByLines, fileLifecycle,
+        contributors, tagsList, timeOfDayStats,
+        weekdayCounts, monthCounts, groupedByDate
+    } = data;
 
-    let md = renderOverview(repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts);
+    let md = renderOverview(
+        repoName, stats, topFiles, largestCommit, techStack, weekdayCounts, monthCounts,
+        { widestCommit, contributors, tagsList, timeOfDayStats, techStackByLines, fileLifecycle, hotspotFiles, legacyFiles, args }
+    );
+    md += renderReleases(data.releases);
     md += renderChangelog(groupedByDate);
 
-    const mdPath = path.join(outputDir, 'repo-stats.md');
+    const mdPath = path.join(outputDir, OUTPUT_FILE_MARKDOWN);
     fs.writeFileSync(mdPath, md, 'utf-8');
     logStep(`✅ Markdown saved: ${mdPath} (${formatBytes(Buffer.byteLength(md, 'utf-8'))})`);
 }
@@ -309,7 +324,7 @@ function generateHtml(outputDir, data, args, repoName) {
     htmlContent += renderChangelogHTML(groupedByDate, tagsList);
 
     const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`, generatedAt);
-    const htmlPath = path.join(outputDir, 'repo-stats.html');
+    const htmlPath = path.join(outputDir, OUTPUT_FILE_HTML);
     fs.writeFileSync(htmlPath, fullHTML, 'utf-8');
     logStep(`✅ HTML saved: ${htmlPath} (${formatBytes(Buffer.byteLength(fullHTML, 'utf-8'))})`);
 
