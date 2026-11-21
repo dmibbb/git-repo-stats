@@ -180,7 +180,7 @@ function renderWidestCommitLine(widest) {
 function renderHotspotFilesLine(hotspots) {
     if (!hotspots || hotspots.length === 0) return '';
 
-    let md = `* 🔥 **Churn hotspots (by lines changed):**\n`;
+    let md = `* ⚡ **Churn hotspots (by lines changed):**\n`;
     hotspots.forEach(f => {
         md += `  - ${wrapInlineCode(f.file)} (**${pluralize(f.churn, 'line')}**)\n`;
     });

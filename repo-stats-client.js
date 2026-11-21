@@ -457,6 +457,8 @@
 
             activeGroup = group;
             const date = group.getAttribute('data-date');
+            const time = group.getAttribute('data-time');
+            const dateTimeStr = time ? `${date} ${time}` : date;
             const subject = group.getAttribute('data-subject');
             const author = group.getAttribute('data-author');
             const ins = Number(group.getAttribute('data-ins') || 0).toLocaleString('en-US');
@@ -467,7 +469,7 @@
 
             tooltip.innerHTML = `
               <div class="churn-tt-subject">${escapeHtml(subject)}</div>
-              <div class="churn-tt-meta">${escapeHtml(date)} · ${escapeHtml(author)}</div>
+              <div class="churn-tt-meta">${escapeHtml(dateTimeStr)} by ${escapeHtml(author)}</div>
               ${tags ? `<div class="churn-tt-tag">🏷️ ${escapeHtml(tags)}</div>` : ''}
               <div class="churn-tt-stats"><span class="positive">+${ins}</span> / <span class="negative">-${del}</span>${binHtml}</div>
             `;

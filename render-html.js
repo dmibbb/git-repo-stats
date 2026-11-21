@@ -11,7 +11,8 @@ const {
     getExtension,
     parseDate,
     getTodayLocalDate,
-    toMondayFirstIndex
+    toMondayFirstIndex,
+    normalizeGitPath
 } = require('./utils');
 const { getLanguageIcon } = require('./lang-icons');
 
@@ -61,14 +62,39 @@ function loadClientJS() {
 }
 
 /**
- * Renders an HTML link to a file. Explicit override for isRename; defaults to checking for ' => '
+ * Renders an HTML link to a file.
+ * For renamed files (`old => new` or `prefix{old => new}suffix`), keeps the old part as text
+ * and renders the new destination segment as a clickable link pointing to the normalized new path.
  */
 function renderFileLinkHTML(filename, isRename = filename.includes(' => ')) {
+    const buildHref = (targetPath) => targetPath.split('/').map(encodeURIComponent).join('/');
+
+    if (isRename && filename.includes(' => ')) {
+        const newFullPath = normalizeGitPath(filename);
+        const href = buildHref(newFullPath);
+
+        const braceMatch = filename.match(/^(.*)\{(.*?)\s*=>\s*(.*)\}(.*)$/);
+        if (braceMatch) {
+            const [, prefix, oldPart, newPart, suffix] = braceMatch;
+            const linkLabel = newPart || newFullPath;
+            return `<code>${escapeHtml(prefix)}{${escapeHtml(oldPart)} =&gt; <a href="${href}" class="file-link">${escapeHtml(linkLabel)}</a>}${escapeHtml(suffix)}</code>`;
+        }
+
+        const arrowIdx = filename.lastIndexOf(' => ');
+        if (arrowIdx !== -1) {
+            const oldPart = filename.slice(0, arrowIdx);
+            const newPart = filename.slice(arrowIdx + 4);
+            return `<code>${escapeHtml(oldPart)} =&gt; <a href="${href}" class="file-link">${escapeHtml(newPart)}</a></code>`;
+        }
+
+        return `<code>${escapeHtml(filename)}</code>`;
+    }
+
     if (isRename) {
         return `<code>${escapeHtml(filename)}</code>`;
     }
 
-    const encoded = filename.split('/').map(encodeURIComponent).join('/');
+    const encoded = buildHref(filename);
     return `<a href="${encoded}" class="file-link">${escapeHtml(filename)}</a>`;
 }
 
@@ -105,9 +131,9 @@ ${css}
     <li><a href="#sec-tech" class="toc-link" data-target="sec-tech">🗂️ Files & Tech Stack</a></li>
     <li><a href="#sec-records" class="toc-link" data-target="sec-records">🏆 Records</a></li>
     <li><a href="#sec-contribution" class="toc-link" data-target="sec-contribution">👨‍👩‍👧‍👦 Contribution</a></li>
-    <li><a href="#sec-patterns" class="toc-link" data-target="sec-patterns">📊 Activity Patterns</a></li>
+    <li><a href="#sec-patterns" class="toc-link" data-target="sec-patterns">📅 Activity Patterns</a></li>
     <li><a href="#sec-timeline" class="toc-link" data-target="sec-timeline">📉 Code Timeline</a></li>
-    <li><a href="#sec-releases" class="toc-link" data-target="sec-releases">🏷️ Releases & Tags</a></li>
+    <li><a href="#sec-releases" class="toc-link" data-target="sec-releases">🔖 Releases & Tags</a></li>
     <li><a href="#sec-changelog" class="toc-link" data-target="sec-changelog">📝 Changelog Details</a></li>
   </ul>
 </nav>
@@ -283,13 +309,13 @@ function renderKPICard(icon, title, value, sub, subTitle = '', targetDate = '', 
     const commitAttr = targetCommit ? ` data-commit="${escapeHtml(targetCommit)}"` : '';
     const clickableClass = targetDate ? ' card--clickable' : '';
 
-    return `<div class="card card--kpi${clickableClass}"${dateAttr}${commitAttr}>
+    return `<div class="card card--kpi${clickableClass}"${dateAttr}${commitAttr}${titleAttr}>
     <div class="card-header">
       <span class="card-title">${title}</span>
       <span class="card-icon">${icon}</span>
     </div>
     <div class="kpi-value">${value}</div>
-    <div class="kpi-sub"${titleAttr}>${sub}</div>
+    <div class="kpi-sub">${sub}</div>
   </div>`;
 }
 
@@ -467,17 +493,17 @@ function renderFilesCard(filesData) {
 
     const frequentHtml = renderList(
         frequent,
-        (f) => `<li>${renderFileBadge(f.file)}<span class="count">${pluralize(f.count, 'commit')}</span></li>`
+        (f) => `<li>${renderFileBadge(f.file)}<span class="count" title="Modified in ${pluralize(f.count, 'commit')}">${pluralize(f.count, 'commit')}</span></li>`
     );
 
     const hotspotsHtml = renderList(
         hotspots,
-        (f) => `<li>${renderFileBadge(f.file)}<span class="count">${pluralize(f.churn, 'line')}</span></li>`
+        (f) => `<li>${renderFileBadge(f.file)}<span class="count" title="Total lines changed (insertions + deletions): ${formatNumber(f.churn)}">${pluralize(f.churn, 'line')}</span></li>`
     );
 
     const legacyHtml = renderList(
         legacy,
-        (f) => `<li>${renderFileBadge(f.file)}<span class="count" title="Last touched: ${f.lastDate}">${pluralize(f.daysAgo, 'day')} ago</span></li>`
+        (f) => `<li>${renderFileBadge(f.file)}<span class="count" title="Last modified on ${f.lastDate} (${pluralize(f.daysAgo, 'day')} ago)">${pluralize(f.daysAgo, 'day')} ago</span></li>`
     );
 
     return `<div class="card" data-tab-card>
@@ -485,7 +511,7 @@ function renderFilesCard(filesData) {
       <span class="card-title">📂 Files</span>
       <div class="card-tabs" role="tablist">
         <button type="button" class="card-tab active" data-tab="frequent" title="Top 5 most frequently changed files">🔄 Frequent</button>
-        <button type="button" class="card-tab" data-tab="hotspots" title="Top 5 files with highest total lines changed">🔥 Hotspots</button>
+        <button type="button" class="card-tab" data-tab="hotspots" title="Top 5 files with highest total lines changed">⚡ Hotspots</button>
         <button type="button" class="card-tab" data-tab="legacy" title="Top 5 files untouched for the longest time">🕰️ Legacy</button>
       </div>
     </div>
@@ -725,7 +751,7 @@ function renderHeatmapHTML(groupedByDate) {
 
     let html = `<div class="card" data-heatmap-card>
     <div class="card-header">
-      <span class="card-title">🗓️ Contribution Heatmap</span>
+      <span class="card-title">🧩 Contribution Heatmap</span>
       <select class="heatmap-select" aria-label="Select heatmap period">
         ${optionsHtml}
       </select>
@@ -882,8 +908,9 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
         const safeAuthor = escapeHtml(c.author);
         const binAttr = hasBinary ? ` data-bin="${c.binaryCount}"` : '';
         const tagAttr = c.tags && c.tags.length > 0 ? ` data-tags="${escapeHtml(c.tags.join(', '))}"` : '';
+        const timeAttr = c.time ? ` data-time="${escapeHtml(c.time)}"` : '';
 
-        svg += `<g class="churn-bar-group" data-date="${c.date}" data-row-id="${c.rowId}" data-subject="${safeSubj}" data-author="${safeAuthor}" data-ins="${c.insertions}" data-del="${c.deletions}"${binAttr}${tagAttr}>\n`;
+        svg += `<g class="churn-bar-group" data-date="${c.date}"${timeAttr} data-row-id="${c.rowId}" data-subject="${safeSubj}" data-author="${safeAuthor}" data-ins="${c.insertions}" data-del="${c.deletions}"${binAttr}${tagAttr}>\n`;
         svg += `  <rect x="${slotX.toFixed(2)}" y="${PAD_TOP}" width="${SLOT_WIDTH.toFixed(2)}" height="${plotHeight}" class="churn-hit-area" />\n`;
 
         if (insH > 0) {
@@ -927,6 +954,7 @@ function renderChurnTimelineHTML(groupedByDate) {
             const c = dayCommits[i];
             chronologicalCommits.push({
                 date,
+                time: c.time ? c.time.slice(0, 8) : '',
                 rowId: `commit-${date}-${i}`,
                 subject: c.subject,
                 author: c.author,
@@ -957,6 +985,7 @@ function renderChurnTimelineHTML(groupedByDate) {
           <div class="churn-legend">
             <span class="churn-legend-item"><i class="churn-dot churn-dot--ins"></i> Insertions</span>
             <span class="churn-legend-item"><i class="churn-dot churn-dot--del"></i> Deletions</span>
+            <span class="churn-legend-item"><i class="churn-dot churn-dot--bin"></i> Binaries</span>
           </div>
           <div class="card-tabs" role="tablist">
             <button type="button" class="card-tab active" data-tab="linear" title="Linear vertical scale">📏 Linear</button>
@@ -1054,7 +1083,7 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
         '💪',
         'Largest commit',
         `<span class="positive">+${fmt(largestCommit?.insertions || 0)}</span> / <span class="negative">-${fmt(largestCommit?.deletions || 0)}</span>`,
-        largestCommit ? `${escapeHtml(largestCommit.subject)}<br>${largestCommit.date}` : '',
+        largestCommit ? `${escapeHtml(largestCommit.subject)}<br>on ${largestCommit.date}` : '',
         largestCommit ? `${largestCommit.subject} (${largestCommit.date}) — click to filter & view` : '',
         largestCommit ? largestCommit.date : '',
         largestCommit ? largestCommit.subject : ''
@@ -1063,7 +1092,7 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
         '🚚',
         'Widest commit',
         widestCommit ? pluralize(widestCommit.filesCount, 'file') : 'N/A',
-        widestCommit ? `${escapeHtml(widestCommit.subject)}<br>${widestCommit.date}` : '',
+        widestCommit ? `${escapeHtml(widestCommit.subject)}<br>on ${widestCommit.date}` : '',
         widestCommit ? `${widestCommit.subject} (${widestCommit.date}) — click to filter & view` : '',
         widestCommit ? widestCommit.date : '',
         widestCommit ? widestCommit.subject : ''
@@ -1078,7 +1107,7 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
     html += `</div>`;
 
     // 6. Section: Activity Patterns (4 KPI cards + 3 Histograms)
-    html += `<div id="sec-patterns" class="section-title">📊 Activity Patterns</div>`;
+    html += `<div id="sec-patterns" class="section-title">📅 Activity Patterns</div>`;
     html += `<div class="grid grid-4">`;
     html += renderKPICard(
         '🎂',
@@ -1098,7 +1127,7 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
     const isFiltered = Boolean(args?.since || args?.until);
     const activeDaysSub = `${stats.activityPercent}% of ${isFiltered ? 'filtered' : 'full'} period (${stats.firstDate} — ${stats.lastDate})`;
     html += renderKPICard(
-        '📅',
+        '📆',
         'Active days',
         `${stats.activeDays} / ${stats.totalCalendarDays}`,
         activeDaysSub
@@ -1162,7 +1191,7 @@ function renderReleasesHTML(releases) {
     if (!releases || releases.length === 0) return '';
 
     const fmt = formatNumber;
-    let html = '<div id="sec-releases" class="section-title">🏷️ Releases & Tags</div>\n';
+    let html = '<div id="sec-releases" class="section-title">🔖 Releases & Tags</div>\n';
 
     releases.forEach((rel) => {
         const badgeHtml = rel.isUnreleased
