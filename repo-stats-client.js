@@ -563,6 +563,49 @@
         });
     }
 
+    /**
+     * Expands parent <details> and scrolls to target element when URL has a hash
+     * (e.g. #day-2026-11-20, #commit-2026-11-20-0, #release-v1-0-0-2026-11-20).
+     */
+    function initDeepLinks() {
+        function handleHash() {
+            const rawHash = window.location.hash;
+            if (!rawHash || rawHash.length < 2) return;
+
+            let targetId;
+            try {
+                targetId = decodeURIComponent(rawHash.slice(1));
+            } catch {
+                targetId = rawHash.slice(1);
+            }
+
+            const target = document.getElementById(targetId);
+            if (!target) return;
+
+            const parentDetails = target.tagName === 'DETAILS' ? target : target.closest('details');
+            if (parentDetails) {
+                document.documentElement.classList.add('is-jumping');
+                parentDetails.setAttribute('open', '');
+                void parentDetails.offsetHeight;
+            }
+
+            requestAnimationFrame(() => {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (parentDetails || target.classList.contains('commit-row')) {
+                    flashHighlight(target);
+                }
+                if (parentDetails) {
+                    setTimeout(() => {
+                        document.documentElement.classList.remove('is-jumping');
+                    }, 800);
+                }
+            });
+        }
+
+        handleHash();
+        window.addEventListener('hashchange', handleHash);
+    }
+
     // === Bootstrap ===
     initThemeToggle();
     const searchApi = initSearch();
@@ -579,4 +622,5 @@
     scrollChurnTimelinesToEnd();
     initReleaseJumpNavigation(searchApi);
     initPrintExpansion();
+    initDeepLinks();
 })();

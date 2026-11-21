@@ -203,23 +203,26 @@ Options:
 
 The following features or changes were explicitly evaluated and rejected to preserve the project's core philosophy (zero-dependency, offline-first, simple architecture).
 
-- **Filtering changelog by tag name on pill click** (#2)
+- **Filtering changelog by tag name on pill click**
   - Searching by tag string (e.g., `v1.0.0`) would hide all untagged commits belonging to that release. The current direct navigation to the release card (`#release-...`) is much more logical and comprehensive.
 
-- **Preserving expanded `<details>` state on "Back"** (#10)
+- **Preserving expanded `<details>` state on "Back"**
   - Standard browser behavior applies on local `file://` reload. Storing the state of hundreds of blocks in `sessionStorage` would overcomplicate the code with no real user benefit.
 
-- **Exporting individual `.md` files per release** (#17)
+- **Exporting individual `.md` files per release**
   - Clutters the user's output directory. The `📋 Copy` button in the HTML dashboard and the consolidated `Releases` section in `repo-stats.md` are more than sufficient.
 
-- **Streaming `git log` parsing via `spawn` + `readline`** (#20.2)
+- **Streaming `git log` parsing via `spawn` + `readline`**
   - Heavy architectural complication needed only for Chromium-level monorepos. Raising `MAX_BUFFER` to 200 MB is more than enough for 99.9% of use cases.
 
-- **First-response time metric by PR** (#16)
+- **First-response time metric by PR**
   - Requires external GitHub/GitLab API data, which directly breaks the core concept of an offline, zero-dependency utility.
 
-- **Separate ESLint config for `repo-stats-client.js`** (#22)
+- **Separate ESLint config for `repo-stats-client.js`**
   - Unnecessary. It is already configured correctly — the file is linted in a separate block with `globals.browser` in `eslint.config.js`.
+
+- **Cmd+K / Ctrl+K shortcut is not needed**
+  - Unnecessary. Intercepting the standard browser shortcut `Ctrl+K` (address bar/browser search) on a local HTML page is often annoying.
 
 ---
 
