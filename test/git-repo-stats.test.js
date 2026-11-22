@@ -14,6 +14,7 @@ describe('parseArgs', () => {
             until: null,
             html: false,
             md: false,
+            changelog: false,
             out: null,
             help: false,
             open: false,
@@ -119,14 +120,14 @@ describe('parseArgs', () => {
 });
 
 describe('getGenerationMode', () => {
-    test('defaults to HTML only when neither --html nor --md is passed', () => {
-        assert.deepEqual(getGenerationMode({ html: false, md: false }), { html: true, md: false });
+    test('defaults to HTML only when no format flags are passed', () => {
+        assert.deepEqual(getGenerationMode({ html: false, md: false, changelog: false }), { html: true, md: false, changelog: false });
     });
 
-    test('respects explicit --md, --html, and combined flags', () => {
-        assert.deepEqual(getGenerationMode({ html: false, md: true }), { html: false, md: true });
-        assert.deepEqual(getGenerationMode({ html: true, md: false }), { html: true, md: false });
-        assert.deepEqual(getGenerationMode({ html: true, md: true }), { html: true, md: true });
+    test('respects explicit --md, --html, --changelog, and combined flags', () => {
+        assert.deepEqual(getGenerationMode({ html: false, md: true, changelog: false }), { html: false, md: true, changelog: false });
+        assert.deepEqual(getGenerationMode({ html: false, md: false, changelog: true }), { html: false, md: false, changelog: true });
+        assert.deepEqual(getGenerationMode({ html: true, md: true, changelog: true }), { html: true, md: true, changelog: true });
     });
 });
 

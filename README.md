@@ -49,6 +49,9 @@ node git-repo-stats.js
 repo-stats --md
 repo-stats --html --md
 
+# Generate release changelog (repo-stats-changelog.md)
+repo-stats --changelog
+
 # Filter by date range, set custom output folder, and open in browser
 repo-stats --since=2026-01-01 --until=2026-12-31 --out=reports --open
 repo-stats --since 2026-01-01 --out reports

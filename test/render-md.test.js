@@ -21,6 +21,7 @@ const {
     renderOverview,
     renderReleases,
     renderChangelog,
+    renderChangelogFile,
     renderFooter,
 } = require('../render-md');
 const { version } = require('../package.json');
@@ -101,6 +102,22 @@ describe('render-md', () => {
 
     test('renders Markdown footer with timestamp and version link', () => {
         const footer = renderFooter('2026-11-23 01:30:00 (UTC+3)');
-        assert.ok(footer.includes(`*Generated 2026-11-23 01:30:00 (UTC+3) by [Git Repository Statistics v${version}](https://github.com/dmibbb/git-repo-stats)*`));
+        assert.ok(footer.includes(`_Generated 2026-11-23 01:30:00 (UTC+3) by [Git Repository Statistics v${version}](https://github.com/dmibbb/git-repo-stats)_`));
+    });
+});
+
+describe('render-changelog', () => {
+    test('renders standalone repo-stats-changelog.md with release dates, separators, and footer', () => {
+        const commits = [
+            makeCommit({ date: '2026-11-22', subject: 'wip: upcoming change', tags: [] }),
+            makeCommit({ date: '2026-11-20', subject: 'feat: release v1.0.2', tags: ['v1.0.2'] }),
+            makeCommit({ date: '2026-11-18', subject: 'fix: bug in v1.0.2', tags: [] }),
+            makeCommit({ date: '2026-11-10', subject: 'feat: initial v1.0.0', tags: ['v1.0.0'] }),
+        ];
+        const releases = calculateReleases(groupCommitsByDate(commits));
+        const out = renderChangelogFile(releases, '2026-11-23 02:15:00 (UTC+3)');
+        assert.ok(out.includes('## Unreleased\n\nChanges:\n\n- wip: upcoming change\n\n---\n\n## v1.0.2\n\n**Released on 2026/11/20**\n\nChanges:\n\n- feat: release v1.0.2\n- fix: bug in v1.0.2\n\n---\n\n## v1.0.0\n\n**Released on 2026/11/10**'));
+        assert.ok(!out.endsWith('---\n'));
+        assert.ok(out.includes(`_Generated 2026-11-23 02:15:00 (UTC+3) by [Git Repository Statistics v${version}]`));
     });
 });

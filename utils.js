@@ -172,6 +172,7 @@ Arguments:
 Options:
   --html               Generate HTML dashboard (repo-stats.html) [default]
   --md                 Generate Markdown report (repo-stats.md)
+  --changelog          Generate release changelog (repo-stats-changelog.md)
   --since=YYYY-MM-DD   Filter commits starting from this date
   --until=YYYY-MM-DD   Filter commits up to this date
   --out=DIR            Custom output directory for generated reports

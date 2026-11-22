@@ -21,6 +21,7 @@
  *   node git-repo-stats.js                    # Analyze current dir (HTML only by default)
  *   node git-repo-stats.js --md               # Markdown only
  *   node git-repo-stats.js --html --md        # Both formats
+ *   node git-repo-stats.js --changelog        # Generates repo-stats-changelog.md
  *   node git-repo-stats.js --since=2026-01-01 --until=2026-11-17
  *   node git-repo-stats.js --out=reports      # Save to ./reports/
  *   node git-repo-stats.js --open             # Open generated HTML in default browser
@@ -74,6 +75,7 @@ const {
     renderOverview,
     renderReleases,
     renderChangelog,
+    renderChangelogFile,
     renderFooter
 } = require('./render-md');
 const {
@@ -94,6 +96,7 @@ const isValidDate = (s) => {
 
 const OUTPUT_FILE_MARKDOWN = 'repo-stats.md';
 const OUTPUT_FILE_HTML = 'repo-stats.html';
+const OUTPUT_FILE_CHANGELOG = 'repo-stats-changelog.md';
 
 /**
  * Parses CLI arguments (supports --flag=value, --flag value, and positional repo path).
@@ -105,6 +108,7 @@ function parseArgs(argv) {
         until: null,
         html: false,
         md: false,
+        changelog: false,
         out: null,
         help: false,
         open: false,
@@ -156,6 +160,9 @@ function parseArgs(argv) {
                 case 'md':
                     args.md = true;
                     break;
+                case 'changelog':
+                    args.changelog = true;
+                    break;
                 case 'out':
                     if (!value) {
                         console.warn('⚠️  Ignoring --out: no directory path provided.');
@@ -197,8 +204,9 @@ function parseArgs(argv) {
  */
 function getGenerationMode(args) {
     return {
-        html: args.html || (!args.html && !args.md),
+        html: args.html || (!args.html && !args.md && !args.changelog),
         md: args.md,
+        changelog: Boolean(args.changelog),
     };
 }
 
@@ -295,6 +303,7 @@ function generateOutputs(args, repoPath, data, repoName) {
     }
 
     if (mode.md) generateMarkdown(outputDir, data, args, repoName, generatedAt);
+    if (mode.changelog) generateChangelogFile(outputDir, data, generatedAt);
     if (mode.html) generateHtml(outputDir, data, args, repoName, generatedAt);
 }
 
@@ -319,6 +328,15 @@ function generateMarkdown(outputDir, data, args, repoName, generatedAt) {
     const mdPath = path.join(outputDir, OUTPUT_FILE_MARKDOWN);
     fs.writeFileSync(mdPath, md, 'utf-8');
     endStep(`→ ${mdPath} (${formatBytes(Buffer.byteLength(md, 'utf-8'))})`);
+}
+
+function generateChangelogFile(outputDir, data, generatedAt) {
+    startStep(`📋 Rendering and saving ${OUTPUT_FILE_CHANGELOG}...`);
+    const changelogMd = renderChangelogFile(data.releases, generatedAt);
+
+    const changelogPath = path.join(outputDir, OUTPUT_FILE_CHANGELOG);
+    fs.writeFileSync(changelogPath, changelogMd, 'utf-8');
+    endStep(`→ ${changelogPath} (${formatBytes(Buffer.byteLength(changelogMd, 'utf-8'))})`);
 }
 
 function generateHtml(outputDir, data, args, repoName, generatedAt) {

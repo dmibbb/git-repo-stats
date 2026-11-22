@@ -439,16 +439,46 @@ function renderChangelog(groupedByDate) {
 }
 
 /**
+ * Renders standalone repo-stats-changelog.md content from release buckets.
+ */
+function renderChangelogFile(releases, generatedAt) {
+    if (!releases || releases.length === 0) {
+        return `No releases or commits found.\n\n${renderFooter(generatedAt)}`;
+    }
+
+    const blocks = releases.map((rel) => {
+        const lines = [`## ${rel.name}`];
+
+        if (!rel.isUnreleased) {
+            const rawDate = rel.lastDate || rel.date || '';
+            if (rawDate) {
+                lines.push(`\n**Released on ${rawDate.replace(/-/g, '/')}**`);
+            }
+        }
+
+        lines.push('', 'Changes:\n');
+        rel.commits.forEach((c) => {
+            lines.push(`- ${c.subject}`);
+        });
+
+        return lines.join('\n');
+    });
+
+    return `${blocks.join('\n\n---\n\n')}\n\n${renderFooter(generatedAt)}`;
+}
+
+/**
  * Renders the report footer with generation timestamp and project link.
  */
 function renderFooter(generatedAt) {
     const timestampPart = generatedAt ? `${generatedAt} ` : '';
-    return `---\n\n*Generated ${timestampPart}by [Git Repository Statistics v${version}](${REPO_URL})*\n`;
+    return `---\n\n_Generated ${timestampPart}by [Git Repository Statistics v${version}](${REPO_URL})_\n`;
 }
 
 module.exports = {
     renderOverview,
     renderReleases,
     renderChangelog,
+    renderChangelogFile,
     renderFooter,
 };
