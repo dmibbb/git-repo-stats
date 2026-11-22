@@ -224,11 +224,11 @@ function renderFileLifecycleLine(lifecycle, fmt) {
     const rows = [
         { icon: '➕', label: 'Added', key: 'added' },
         { icon: '✏️', label: 'Modified', key: 'modified' },
-        { icon: '📛', label: 'Renamed', key: 'renamed' },
+        { icon: '↪️', label: 'Renamed', key: 'renamed' },
         { icon: '🗑️', label: 'Deleted', key: 'deleted' },
     ];
 
-    let md = `* 🔄 **File lifecycle (${pluralize(all.total, 'operation')}):**\n`;
+    let md = `* ♻️ **File lifecycle (${pluralize(all.total, 'operation')}):**\n`;
     for (const r of rows) {
         const totalOp = all[r.key] || 0;
         if (totalOp === 0) continue;
@@ -253,7 +253,7 @@ function renderTimeOfDayHistogram(timeOfDayStats) {
         ? ` (peak hour: ${timeOfDayStats.peakHour.range} — ${timeOfDayStats.peakHour.count})`
         : '';
 
-    let md = `* ⏰ **Activity by time of day${peakNote}:**\n`;
+    let md = `* 🕐 **Activity by time of day${peakNote}:**\n`;
     for (const period of timeOfDayStats.periods) {
         const bar = renderBar(period.count, maxCount);
         const line = `${period.icon} ${period.label} (${period.range}): \`${bar}\` ${period.percent}% (${period.count})`;
@@ -286,7 +286,7 @@ function renderTechStackLine(stack) {
 function renderContributorsLine(contributors, fmt) {
     if (!contributors || contributors.length === 0) return '';
 
-    let md = `* 👥 **Contributors:**\n`;
+    let md = `* 👫 **Contributors:**\n`;
     contributors.forEach(c => {
         md += `  - **${c.name}** — **${c.percent}%** (${pluralize(c.commits, 'commit')}, +${fmt(c.insertions)} / -${fmt(c.deletions)})\n`;
     });
@@ -309,7 +309,7 @@ function renderWeekdayHistogram(weekdayCounts) {
         const bar = renderBar(count, maxCount);
 
         if (count === maxCount && maxCount > 0) {
-            md += `  - **${day}: \`${bar}\` ${percent}% (${count})** 😩\n`;
+            md += `  - **${day}: \`${bar}\` ${percent}% (${count})**\n`;
         } else {
             md += `  - **${day}**: \`${bar}\` ${percent}% (${count})\n`;
         }
@@ -325,7 +325,7 @@ function renderMonthHistogram(monthCounts) {
 
     const maxCount = Math.max(...monthCounts.map(m => m[1]));
 
-    let md = `* 📅 **Activity by month:**\n`;
+    let md = `* 🗓️ **Activity by month:**\n`;
     for (const [month, count] of monthCounts) {
         const bar = renderBar(count, maxCount);
         md += `  - ${month}: \`${bar}\` ${count}\n`;
@@ -359,14 +359,14 @@ function renderOverview(repoName, stats, topFiles, largestCommit, techStack, wee
     let md = `# 👨‍💻 Repository Statistics: ${repoName}\n\n`;
     md += '## 📊 Overview\n\n';
     md += `* 🎂 **Repo age:** **${pluralize(stats.repoAge, 'day')}** (since ${stats.trueFirstDate || stats.firstDate})\n`;
-    md += `* 📅 **Period (${periodTag}):** ${stats.firstDate} — ${stats.lastDate} (active days: **${stats.activeDays}** out of ${stats.totalCalendarDays} — ${stats.activityPercent}%${fullRepoSuffix})\n`;
+    md += `* 📆 **Period (${periodTag}):** ${stats.firstDate} — ${stats.lastDate} (active days: **${stats.activeDays}** out of ${stats.totalCalendarDays} — ${stats.activityPercent}%${fullRepoSuffix})\n`;
     md += `* 📦 **Total commits:** ${fmt(stats.totalCommits)} (avg **${stats.avgCommitsPerActiveDay}** commits per active day)\n`;
     md += `* 📏 **Volume of changes:** +${fmt(stats.totalInsertions)} / -${fmt(stats.totalDeletions)} lines (net change: **${netSign}${fmt(stats.netChange)}** lines)\n`;
     md += `* 🗂️ **Unique files:** **${fmt(stats.totalUniqueFiles)}** tracked files\n`;
     md += `* 📐 **Average per commit:** +${stats.avgPerCommitIns} / -${stats.avgPerCommitDel} lines | **${stats.avgFilesPerCommit}** files\n`;
-    md += `* 📈 **Average per active day:** +${fmt(stats.avgPerActiveDayIns)} / -${fmt(stats.avgPerActiveDayDel)} lines\n`;
-    md += `* 🏆 **Record by commits:** ${stats.recordCommitsDate} (**${pluralize(stats.recordCommitsCount, 'commit')}**)\n`;
-    md += `* 🔨 **Record by code churn:** ${stats.recordCodeDate} (**+${fmt(stats.recordCodeIns)} / -${fmt(stats.recordCodeDel)}** lines)\n`;
+    md += `* ⚡ **Average per active day:** +${fmt(stats.avgPerActiveDayIns)} / -${fmt(stats.avgPerActiveDayDel)} lines\n`;
+    md += `* 🥇 **Record by commits:** ${stats.recordCommitsDate} (**${pluralize(stats.recordCommitsCount, 'commit')}**)\n`;
+    md += `* 💥 **Record by code churn:** ${stats.recordCodeDate} (**+${fmt(stats.recordCodeIns)} / -${fmt(stats.recordCodeDel)}** lines)\n`;
     md += renderStreaksLine(stats);
     md += renderLongestGapLine(stats);
     md += renderLargestCommitLine(largestCommit, fmt);
@@ -425,7 +425,7 @@ function renderReleases(releases) {
 * Renders the full changelog section.
 */
 function renderChangelog(groupedByDate) {
-    let md = '## Changelog Details\n\n';
+    let md = '## 📝 Changelog Details\n\n';
     md += '> \\* — file is excluded from statistics (lock files, dist, minified, etc.)\n\n';
 
     const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));

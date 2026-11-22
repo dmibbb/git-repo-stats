@@ -93,7 +93,7 @@ describe('render-md', () => {
 
     test('renders empty changelog gracefully', () => {
         const md = renderChangelog({});
-        assert.match(md, /## Changelog Details/);
+        assert.match(md, /## 📝 Changelog Details/);
         assert.ok(!md.includes('undefined'));
     });
 });

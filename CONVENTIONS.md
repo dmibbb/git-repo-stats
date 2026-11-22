@@ -200,7 +200,7 @@ Options:
 
 ---
 
-## ❌ 10.5. Consciously Rejected / Out of Scope
+## ❌ 11. Consciously Rejected / Out of Scope
 
 The following features or changes were explicitly evaluated and rejected to preserve the project's core philosophy (zero-dependency, offline-first, simple architecture).
 
@@ -227,7 +227,7 @@ The following features or changes were explicitly evaluated and rejected to pres
 
 ---
 
-## 🔧 11. When Modifying X, Remember Y
+## 🔧 12. When Modifying X, Remember Y
 
 | If you change…                 | Also check…                                                           |
 | ------------------------------ | --------------------------------------------------------------------- |
@@ -241,7 +241,7 @@ The following features or changes were explicitly evaluated and rejected to pres
 
 ---
 
-## 🎁 12. Key Features to Preserve
+## 🎁 13. Key Features to Preserve
 
 When refactoring, **do not regress** these user-visible features:
 
@@ -257,9 +257,17 @@ When refactoring, **do not regress** these user-visible features:
 - 📂 Click-to-filter navigation (click any file badge, extension, lifecycle bar, or contributor row → jumps to changelog filtered by that query)
 - 🔗 Hash deep links (`#day-YYYY-MM-DD`, `#commit-...`, `#release-...`) that auto-expand parent `<details>` and highlight the target on page load / `hashchange`
 
+### Icon & Emoji Rules
+
+- **Section titles (`.section-title`):** emoji on the **left**, must match 1:1 with the corresponding Sticky TOC link.
+- **Cards without header controls (KPI cards, histograms, Contributors):** large emoji (`1.7rem`) on the **right** via `.card-icon`; `.card-title` contains plain text only.
+- **Cards with header controls (tabs, `<select>`, chart legend):** inline emoji on the **left** inside `.card-title` (may echo its parent section's emoji, must not duplicate a neighboring card's emoji in the same row).
+- **HTML ↔ Markdown parity:** keep section and metric icons synchronized between `render-html.js` and `render-md.js`.
+- **Search-sensitive labels:** NEVER add emojis inside `.delta-breakdown` (`Added:`, `Modified:`, `Renamed:`, `Deleted:`) or `.commit-author` (`Author:`), because click-to-filter navigation matches against `row.textContent`.
+
 ---
 
-## 📦 13. Build / Release Checklist
+## 📦 14. Build / Release Checklist
 
 Before tagging a release:
 

@@ -128,12 +128,12 @@ ${css}
 <nav class="sticky-toc" aria-label="Table of contents">
   <a href="#" class="toc-title" title="Back to top">Navigation</a>
   <ul class="toc-list">
-    <li><a href="#sec-tech" class="toc-link" data-target="sec-tech">🗂️ Files & Tech Stack</a></li>
+    <li><a href="#sec-tech" class="toc-link" data-target="sec-tech">🗃️ Files & Tech Stack</a></li>
     <li><a href="#sec-records" class="toc-link" data-target="sec-records">🏆 Records</a></li>
-    <li><a href="#sec-contribution" class="toc-link" data-target="sec-contribution">👨‍👩‍👧‍👦 Contribution</a></li>
+    <li><a href="#sec-contribution" class="toc-link" data-target="sec-contribution">👥 Contribution</a></li>
     <li><a href="#sec-patterns" class="toc-link" data-target="sec-patterns">📅 Activity Patterns</a></li>
     <li><a href="#sec-timeline" class="toc-link" data-target="sec-timeline">📉 Code Timeline</a></li>
-    <li><a href="#sec-releases" class="toc-link" data-target="sec-releases">🔖 Releases & Tags</a></li>
+    <li><a href="#sec-releases" class="toc-link" data-target="sec-releases">🏷️ Releases & Tags</a></li>
     <li><a href="#sec-changelog" class="toc-link" data-target="sec-changelog">📝 Changelog Details</a></li>
   </ul>
 </nav>
@@ -397,11 +397,11 @@ function renderTimeOfDayHistogramHTML(timeOfDayStats) {
     if (!timeOfDayStats || !timeOfDayStats.periods || timeOfDayStats.total === 0) return '';
 
     const maxCount = Math.max(...timeOfDayStats.periods.map(p => p.count));
-    const peakBadge = timeOfDayStats.peakHour
-        ? `<span class="card-badge" title="Most active hour">⏰ Peak: ${timeOfDayStats.peakHour.range} (${timeOfDayStats.peakHour.count})</span>`
+    const peakFooter = timeOfDayStats.peakHour
+        ? `<div class="card-sub-footer" title="Most active hour">⏰ Peak hour: <strong>${timeOfDayStats.peakHour.range}</strong> (${pluralize(timeOfDayStats.peakHour.count, 'commit')})</div>`
         : '';
 
-    let html = `<div class="card"><div class="card-header"><span class="card-title">Activity by time of day</span>${peakBadge}</div><ul class="histogram-list">\n`;
+    let html = `<div class="card"><div class="card-header"><span class="card-title">Activity by time of day</span><span class="card-icon">🕐</span></div><ul class="histogram-list">\n`;
     for (const period of timeOfDayStats.periods) {
         const barWidth = maxCount > 0 ? ((period.count / maxCount) * 100).toFixed(1) : 0;
         const isPeak = period.count === maxCount && maxCount > 0;
@@ -412,7 +412,7 @@ function renderTimeOfDayHistogramHTML(timeOfDayStats) {
       <span class="bar-value">${period.percent}% (${period.count})</span>
     </li>\n`;
     }
-    html += `</ul></div>`;
+    html += `</ul>${peakFooter}</div>`;
 
     return html;
 }
@@ -425,7 +425,7 @@ function renderWeekdayHistogramHTML(weekdayCounts) {
     if (total === 0) return '';
 
     const maxCount = Math.max(...Object.values(weekdayCounts));
-    let html = `<div class="card"><div class="card-header"><span class="card-title">Activity by day of week</span></div><ul class="histogram-list">\n`;
+    let html = `<div class="card"><div class="card-header"><span class="card-title">Activity by day of week</span><span class="card-icon">📅</span></div><ul class="histogram-list">\n`;
     for (const day of WEEKDAY_NAMES) {
         const count = weekdayCounts[day] || 0;
         const percent = ((count / total) * 100).toFixed(0);
@@ -452,7 +452,7 @@ function renderMonthHistogramHTML(monthCounts) {
     const isTwoCol = monthCounts.length > 6;
     const listClass = isTwoCol ? 'histogram-list histogram-list--2col' : 'histogram-list';
 
-    let html = `<div class="card"><div class="card-header"><span class="card-title">Activity by month</span></div><ul class="${listClass}">\n`;
+    let html = `<div class="card"><div class="card-header"><span class="card-title">Activity by month</span><span class="card-icon">🗓️</span></div><ul class="${listClass}">\n`;
     for (const [month, count] of monthCounts) {
         const barWidth = maxCount > 0 ? ((count / maxCount) * 100).toFixed(1) : 0;
         const isPeak = count === maxCount && maxCount > 0;
@@ -511,7 +511,7 @@ function renderFilesCard(filesData) {
       <span class="card-title">📂 Files</span>
       <div class="card-tabs" role="tablist">
         <button type="button" class="card-tab active" data-tab="frequent" title="Top 5 most frequently changed files">🔄 Frequent</button>
-        <button type="button" class="card-tab" data-tab="hotspots" title="Top 5 files with highest total lines changed">⚡ Hotspots</button>
+        <button type="button" class="card-tab" data-tab="hotspots" title="Top 5 files with highest total lines changed">🚀 Hotspots</button>
         <button type="button" class="card-tab" data-tab="legacy" title="Top 5 files untouched for the longest time">🕰️ Legacy</button>
       </div>
     </div>
@@ -583,7 +583,7 @@ function renderFileLifecycleCard(lifecycle) {
     const rowsConfig = [
         { key: 'added', icon: '➕', label: 'Added', query: 'Added:', barClass: 'lifecycle-bar--added' },
         { key: 'modified', icon: '✏️', label: 'Modified', query: 'Modified:', barClass: 'lifecycle-bar--modified' },
-        { key: 'renamed', icon: '📛', label: 'Renamed', query: 'Renamed:', barClass: 'lifecycle-bar--renamed' },
+        { key: 'renamed', icon: '↪️', label: 'Renamed', query: 'Renamed:', barClass: 'lifecycle-bar--renamed' },
         { key: 'deleted', icon: '🗑️', label: 'Deleted', query: 'Deleted:', barClass: 'lifecycle-bar--deleted' },
     ];
 
@@ -611,10 +611,10 @@ function renderFileLifecycleCard(lifecycle) {
 
     return `<div class="card" data-tab-card>
     <div class="card-header">
-      <span class="card-title">🔄 File lifecycle</span>
+      <span class="card-title">♻️ File lifecycle</span>
       <div class="card-tabs" role="tablist">
         <button type="button" class="card-tab active" data-tab="all" title="All tracked file operations">📦 All</button>
-        <button type="button" class="card-tab" data-tab="text" title="Text file operations only">📄 Text</button>
+        <button type="button" class="card-tab" data-tab="text" title="Text file operations only">📝 Text</button>
         <button type="button" class="card-tab" data-tab="binary" title="Binary file operations only">🖼️ Binary</button>
       </div>
     </div>
@@ -977,10 +977,10 @@ function renderChurnTimelineHTML(groupedByDate) {
     const linearChart = buildChurnTimelineHTML(chronologicalCommits, maxVal, 'linear');
     const logChart = buildChurnTimelineHTML(chronologicalCommits, maxVal, 'log');
 
-    return `<div id="sec-timeline" class="section-title">📉 Code Churn Timeline</div>
+    return `<div id="sec-timeline" class="section-title">📉 Code Timeline</div>
     <div class="card" data-tab-card style="margin-bottom: 1.5rem;">
       <div class="card-header">
-        <span class="card-title">Per-commit insertions & deletions (${formatNumber(chronologicalCommits.length)} commits)</span>
+        <span class="card-title">👨‍💻 Per-commit insertions & deletions (${formatNumber(chronologicalCommits.length)} commits)</span>
         <div class="churn-controls">
           <div class="churn-legend">
             <span class="churn-legend-item"><i class="churn-dot churn-dot--ins"></i> Insertions</span>
@@ -1005,7 +1005,7 @@ function renderContributorsCard(contributors) {
     if (!contributors || contributors.length === 0) return '';
 
     const fmt = formatNumber;
-    let html = `<div class="card"><div class="card-header"><span class="card-title">👥 Contributors</span></div><ul class="details-list" style="display:block">\n`;
+    let html = `<div class="card"><div class="card-header"><span class="card-title">Contributors</span><span class="card-icon">👫</span></div><ul class="details-list" style="display:block">\n`;
     contributors.forEach((c) => {
         const safeName = escapeHtml(c.name);
         const filterQuery = escapeHtml(`Author: ${c.name}`);
@@ -1035,7 +1035,7 @@ function renderSearchBarHTML() {
     html += '<button type="button" class="search-clear" aria-label="Clear search" title="Clear (Esc)">✕</button>\n';
     html += '</div>\n';
     html += '<span class="search-counter"></span>\n';
-    html += '<button class="btn btn-collapse" data-action="collapse-all">📂 Collapse All</button>\n';
+    html += '<button class="btn btn-collapse" data-action="collapse-all">📔 Collapse All</button>\n';
     html += '<button class="btn btn-expand" data-action="expand-all">📖 Expand All</button>\n';
     html += '</div>\n';
     return html;
@@ -1055,7 +1055,7 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
     html += renderVolumeBanner(stats, fmt);
 
     // 3. Section: Files & Tech Stack (3 columns)
-    html += `<div id="sec-tech" class="section-title">🗂️ Files & Tech Stack</div>`;
+    html += `<div id="sec-tech" class="section-title">🗃️ Files & Tech Stack</div>`;
     html += `<div class="grid grid-3">`;
     html += renderFilesCard(filesData);
     html += renderTabbedTechStackCard(techStack, techStackByLines);
@@ -1066,7 +1066,7 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
     html += `<div id="sec-records" class="section-title">🏆 Records</div>`;
     html += `<div class="grid grid-4">`;
     html += renderKPICard(
-        '🏆',
+        '🥇',
         'Record by commits',
         pluralize(stats.recordCommitsCount, 'commit'),
         `on ${stats.recordCommitsDate}`,
@@ -1074,7 +1074,7 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
         stats.recordCommitsDate
     );
     html += renderKPICard(
-        '🔨',
+        '💥',
         'Record by churn',
         `<span class="positive">+${fmt(stats.recordCodeIns)}</span> / <span class="negative">-${fmt(stats.recordCodeDel)}</span>`,
         `on ${stats.recordCodeDate}`,
@@ -1102,7 +1102,7 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
     html += `</div>`;
 
     // 5. Section: Contribution (80% Heatmap + 20% Contributors)
-    html += `<div id="sec-contribution" class="section-title">👨‍👩‍👧‍👦 Contribution</div>`;
+    html += `<div id="sec-contribution" class="section-title">👥 Contribution</div>`;
     html += `<div class="grid grid-heatmap-contrib">`;
     html += renderHeatmapHTML(groupedByDate);
     html += renderContributorsCard(contributors);
@@ -1135,7 +1135,7 @@ function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCom
         activeDaysSub
     );
     html += renderKPICard(
-        '📈',
+        '⚡',
         'Avg per active day',
         `<span class="positive">+${fmt(stats.avgPerActiveDayIns)}</span> / <span class="negative">-${fmt(stats.avgPerActiveDayDel)}</span>`,
         `avg ${stats.avgCommitsPerActiveDay} commits / day`
@@ -1193,7 +1193,7 @@ function renderReleasesHTML(releases) {
     if (!releases || releases.length === 0) return '';
 
     const fmt = formatNumber;
-    let html = '<div id="sec-releases" class="section-title">🔖 Releases & Tags</div>\n';
+    let html = '<div id="sec-releases" class="section-title">🏷️ Releases & Tags</div>\n';
 
     releases.forEach((rel) => {
         const badgeHtml = rel.isUnreleased

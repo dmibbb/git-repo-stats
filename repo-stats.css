@@ -329,6 +329,20 @@ em {
   font-variant-numeric: tabular-nums;
 }
 
+.card-sub-footer {
+  margin-top: 0.75rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.card-sub-footer strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
 .kpi-value {
   font-size: 1.75rem;
   font-weight: 700;
