@@ -1,12 +1,11 @@
-# 📊 git-repo-stats — AI Context
+# 📊 git-repo-stats — Agent & Developer Context
 
-> **Project version:** 1.0.0 · **Last updated:** 2026-11-22
-> **Audience:** LLM agents (Claude, GPT, Cursor, Copilot, Qwen, etc.)
-> **Purpose:** Give an AI assistant full context to modify, extend, or debug this project without re-reading the whole codebase.
+> **Audience:** LLM agents & contributors
+> **Purpose:** Full architectural context and project invariants to modify, extend, or debug this codebase safely.
 
 ---
 
-## 🎯 1. Project Identity
+## 🎯 1. Project Identity & Mission
 
 **`git-repo-stats`** is a zero-runtime-dependency Node.js CLI that analyzes a Git repository's commit history and produces:
 
@@ -14,16 +13,6 @@
 2. **`repo-stats.md`** — a Markdown changelog with ASCII histograms
 
 It runs **completely offline**, requires **no `npm install`** for end users, and outputs a single portable HTML file that can be shared by email, committed to a repo, or opened locally.
-
-### Target users
-
-- Solo developers wanting a "GitHub-style" stats page for their own repo
-- Teams doing retrospectives or release notes
-- OSS maintainers generating public contribution dashboards
-
----
-
-## 🧭 2. Mission & Philosophy
 
 | Principle                     | Meaning                                                                                                                             |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
@@ -36,7 +25,7 @@ It runs **completely offline**, requires **no `npm install`** for end users, and
 
 ---
 
-## 🏗️ 3. Architecture Overview
+## 🏗️ 2. Architecture & File Map
 
 ```
 ┌──────────────────┐ git CLI       ┌──────────────┐
@@ -64,35 +53,33 @@ It runs **completely offline**, requires **no `npm install`** for end users, and
 utils.js, lang-icons.js (shared helpers)
 ```
 
-### 🏂 Data flow
+### Data flow
 
 1. `git log --pretty=... --raw --numstat` → raw string
 2. `parseRawLog()` splits by `COMMIT_SEP` (`\x1e===COMMIT===\x1e`) → commit objects
 3. `groupCommitsByDate()` → `{ 'YYYY-MM-DD': { commits, totalInsertions, ... } }`
-4. 19 aggregation functions in `stats.js` compute KPIs
+4. Pure aggregation functions in `stats.js` compute KPIs, streaks, releases, and distributions
 5. Renderers produce HTML/MD strings
 6. `wrapInHTMLTemplate()` injects CSS + client JS inline
 
----
+### File Map
 
-## 📁 4. File Map
-
-| File                   | Role                                                       | Lines      |
-| ---------------------- | ---------------------------------------------------------- | ---------- |
-| `git-repo-stats.js`    | CLI entry, arg parsing, orchestration                      | ~280       |
-| `git-client.js`        | Shells out to `git`, parses raw log                        | ~180       |
-| `stats.js`             | Pure aggregation functions (no I/O)                        | ~500       |
-| `render-html.js`       | HTML dashboard renderer                                    | ~900       |
-| `render-md.js`         | Markdown renderer                                          | ~350       |
-| `repo-stats-client.js` | Browser-side JS (theme, search, tabs, tooltips)            | ~450       |
-| `repo-stats.css`       | All dashboard styles (light/dark/print)                    | ~900       |
-| `utils.js`             | Shared helpers (formatting, dates, path normalization)     | ~250       |
-| `lang-icons.js`        | Inline SVG icons for 21 languages (+ 31 extension aliases) | ~120       |
-| `test/*.test.js`       | Node's built-in test runner (`node:test`)                  | ~900 total |
+| File                   | Role                                                       |
+| ---------------------- | ---------------------------------------------------------- |
+| `git-repo-stats.js`    | CLI entry, arg parsing, orchestration                      |
+| `git-client.js`        | Shells out to `git`, parses raw log                        |
+| `stats.js`             | Pure aggregation functions (no I/O)                        |
+| `render-html.js`       | HTML dashboard renderer                                    |
+| `render-md.js`         | Markdown renderer                                          |
+| `repo-stats-client.js` | Browser-side JS (theme, search, tabs, tooltips)            |
+| `repo-stats.css`       | All dashboard styles (light/dark/print)                    |
+| `utils.js`             | Shared helpers (formatting, dates, path normalization)     |
+| `lang-icons.js`        | Inline SVG icons for 21 languages (+ 31 extension aliases) |
+| `test/*.test.js`       | Node's built-in test runner (`node:test`)                  |
 
 ---
 
-## 🔒 5. Core Constraints (HARD RULES)
+## 🔒 3. Core Constraints (HARD RULES)
 
 These are **non-negotiable**. Violating any of them breaks the project's value proposition.
 
@@ -104,35 +91,34 @@ These are **non-negotiable**. Violating any of them breaks the project's value p
 6. **No `eval`, no `Function()`, no dynamic code execution.**
 7. **Preserve `--no-merges` semantics.** Merge commits are intentionally excluded from all stats.
 8. **Keep the "ignored files" contract.** Lock files (`package-lock.json`, `yarn.lock`, etc.), `dist/`, `build/`, `*.min.js` are excluded from statistics but MUST remain visible in commit tables (marked with `*` in MD, `(ignored)` in HTML).
+9. **Respect `TODO.md` boundaries.** `TODO.md` is the author's backlog — do not implement upcoming features from it unless explicitly asked.
 
 ---
 
-## 🎨 6. Code Style
+## 🎨 4. Code Style
 
-- **ESLint** with `@eslint/js` recommended config. Run `npm run lint` before committing.
+- **ESLint** configured in `eslint.config.js` (`@eslint/js` recommended, separate browser globals block for `repo-stats-client.js`). Run `npm run lint` before committing.
 - **JSDoc comments** on every exported function. Keep them short and accurate.
 - **Named exports** preferred over default exports.
 - **`const` by default**, `let` only when reassignment is needed, never `var`.
-- **No semicolon-less style** — semicolons are mandatory.
-- **Single quotes** for strings, template literals for interpolation.
-- **`argsIgnorePattern: '^_'`** for unused function arguments (ESLint rule).
-- **`repo-stats-client.js` is linted separately** with `globals.browser` — do NOT add Node globals to it.
+- **Semicolons are mandatory**; use **single quotes** for strings and template literals for interpolation.
 - **Magic numbers belong in named constants** at the top of the file (see `SVG_HEIGHT`, `Y_AXIS_WIDTH`, `MAX_FILES_PER_COMMIT`, etc.).
 
 ---
 
-## ⌨️ 7. CLI Interface
+## ⌨️ 5. CLI Interface
 
 ```
 repo-stats [path] [options]
+
 Options:
---since=YYYY-MM-DD Filter commits starting from this date
---until=YYYY-MM-DD Filter commits up to this date
---out=DIR Custom output directory
---html Generate HTML (default if no flags)
---md Generate Markdown
---open Open HTML in default browser
--h, --help Show help
+--since=YYYY-MM-DD   Filter commits starting from this date
+--until=YYYY-MM-DD   Filter commits up to this date
+--out=DIR            Custom output directory
+--html               Generate HTML (default if no flags)
+--md                 Generate Markdown
+--open               Open HTML in default browser
+-h, --help           Show help
 ```
 
 **Default behavior:** no flags → HTML only, output in repo root.
@@ -146,25 +132,22 @@ Options:
 
 ---
 
-## 🧪 8. Testing Strategy
+## 🧪 6. Testing Strategy
 
-- **Test runner:** Node's built-in `node:test` (no Jest, no Mocha).
-- **Run:** `npm test`
+- **Test runner:** Node's built-in `node:test` (no Jest, no Mocha). Run with `npm test`.
 - **Coverage target:** every exported function in `utils.js`, `stats.js`, `git-client.js` has at least one test.
-- **Edge cases are first-class citizens.** Existing tests cover:
+- **Edge cases are first-class citizens:**
   - Empty repos, empty commits (`--allow-empty`)
   - Missing authors → `'Unknown'`
   - XSS payloads in subjects/authors/tags
   - Git rename syntax: `old => new`, `src/{old => new}.js`, `{a => b}/c.js`
   - Binary files (`-\t-\tfile.png`)
-  - Very long file paths
-  - CRLF line endings
-  - Unicode / emoji in subjects
+  - Very long file paths, CRLF line endings, Unicode / emoji in subjects
 - **When adding a feature, add 3+ tests:** happy path, edge case, empty/null input.
 
 ---
 
-## 🚫 9. Do's and Don'ts
+## 🚫 7. Do's and Don'ts
 
 ### ✅ Do
 
@@ -172,22 +155,23 @@ Options:
 - Normalize git paths with `normalizeGitPath()` before using them as Map keys.
 - Use UTC dates internally (`Date.UTC`, `getUTCFullYear`) to avoid DST bugs.
 - Keep `render-html.js` functions pure (input → HTML string, no side effects).
+- Use the `--release` CSS variable for release/tag pills, badges, timeline markers, and tagged commit highlights instead of hardcoding `--accent`.
 - Test with `makeCommit()` helper from `test/stats.test.js` when adding stat tests.
-- Pass `{ cause: err }` when re-throwing wrapped errors inside `catch (err)` blocks (enforced by ESLint 10 `preserve-caught-error` rule).
+- Pass `{ cause: err }` when re-throwing wrapped errors inside `catch (err)` blocks.
 
 ### ❌ Don't
 
 - Don't add a dependency "just for convenience" (no `chalk`, no `commander`, no `dayjs`, no `lodash`).
 - Don't use `innerHTML` on the client side without `escapeHtml()` — even for "trusted" data.
 - Don't hardcode file counts (use `TOP_FILES_COUNT = 5`, `MAX_FILES_PER_COMMIT = 10`).
-- Don't break the `data-*` attribute contract — the client JS relies on `data-date`, `data-time`, `data-row-id`, `data-filter-file` (used for files, extensions, lifecycle statuses, and `Author: <name>`), `data-release-id`, `data-tab`, `data-panel`, `data-heatmap-view`.
+- Don't break the `data-*` attribute contract — client JS relies on `data-date`, `data-time`, `data-row-id`, `data-filter-file` (used for files, extensions, lifecycle statuses, and `Author: <name>`), `data-release-id`, `data-tab`, `data-panel`, `data-heatmap-view`.
 - Don't hijack native browser keyboard shortcuts (like `Ctrl+K` / `Cmd+K` or `Ctrl+F`) — only handle `Escape` inside `.search-input`.
 - Don't remove the `content-visibility: auto` optimization on `.changelog-day` — it's critical for rendering large dashboards.
 - Don't change `COMMIT_SEP` / `FIELD_SEP` without updating the parser AND tests.
 
 ---
 
-## ⚠️ 10. Known Limitations
+## ⚠️ 8. Known Limitations
 
 | Limitation                       | Reason                                                                       | Workaround                           |
 | -------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------ |
@@ -200,34 +184,18 @@ Options:
 
 ---
 
-## ❌ 11. Consciously Rejected / Out of Scope
+## ❌ 9. Consciously Rejected / Out of Scope
 
-The following features or changes were explicitly evaluated and rejected to preserve the project's core philosophy (zero-dependency, offline-first, simple architecture).
-
-- **Filtering changelog by tag name on pill click**
-  - Searching by tag string (e.g., `v1.0.0`) would hide all untagged commits belonging to that release. The current direct navigation to the release card (`#release-...`) is much more logical and comprehensive.
-
-- **Preserving expanded `<details>` state on "Back"**
-  - Standard browser behavior applies on local `file://` reload. Storing the state of hundreds of blocks in `sessionStorage` would overcomplicate the code with no real user benefit.
-
-- **Exporting individual `.md` files per release**
-  - Clutters the user's output directory. The `📋 Copy` button in the HTML dashboard and the consolidated `Releases` section in `repo-stats.md` are more than sufficient.
-
-- **Streaming `git log` parsing via `spawn` + `readline`**
-  - Heavy architectural complication needed only for Chromium-level monorepos. Raising `MAX_BUFFER` to 200 MB is more than enough for 99.9% of use cases.
-
-- **First-response time metric by PR**
-  - Requires external GitHub/GitLab API data, which directly breaks the core concept of an offline, zero-dependency utility.
-
-- **Separate ESLint config for `repo-stats-client.js`**
-  - Unnecessary. It is already configured correctly — the file is linted in a separate block with `globals.browser` in `eslint.config.js`.
-
-- **Custom `Ctrl+K` / `Cmd+K` search shortcut**
-  - Hijacks the browser's built-in address/search bar shortcut on local `file://` pages, causing jarring UX. Keeping keyboard handling strictly scoped to `Escape` inside `.search-input` is cleaner and non-intrusive.
+- **Filtering changelog by tag name on pill click:** searching by tag string (e.g., `v1.0.0`) hides all untagged commits belonging to that release. Direct navigation to the release card (`#release-...`) is more logical and comprehensive.
+- **Preserving expanded `<details>` state on "Back":** standard browser behavior applies on local `file://` reload; storing hundreds of block states in `sessionStorage` adds complexity with minimal benefit.
+- **Exporting individual `.md` files per release:** clutters the output directory. The `📋 Copy` button in HTML and the `Releases` section in `repo-stats.md` are sufficient.
+- **Streaming `git log` parsing via `spawn` + `readline`:** heavy architectural complication needed only for Chromium-level monorepos. The 200 MB `MAX_BUFFER` cap covers 99.9% of use cases.
+- **First-response time metric by PR:** requires external GitHub/GitLab API data, breaking the offline, zero-dependency philosophy.
+- **Custom `Ctrl+K` / `Cmd+K` search shortcut:** hijacks native browser address/search bar shortcuts on local `file://` pages. Keep keyboard handling scoped to `Escape` inside `.search-input`.
 
 ---
 
-## 🔧 12. When Modifying X, Remember Y
+## 🔧 10. When Modifying X, Remember Y
 
 | If you change…                 | Also check…                                                           |
 | ------------------------------ | --------------------------------------------------------------------- |
@@ -241,16 +209,15 @@ The following features or changes were explicitly evaluated and rejected to pres
 
 ---
 
-## 🎁 13. Key Features to Preserve
+## 🎁 11. Key Features & UI Rules to Preserve
 
 When refactoring, **do not regress** these user-visible features:
 
 - 🌓 3-state theme toggle (System → Dark → Light), persisted in `localStorage['repo-stats-theme']`
-- 🔍 Debounced search (150ms) with clear button, Esc to reset, result counter
+- 🔍 Debounced search (150ms) with clear button, `Esc` to reset, result counter
 - 🗓️ GitHub-style contribution heatmap with year selector
 - 📉 SVG churn timeline with Linear/Log toggle and hover tooltips
 - 🏷️ One-click "Copy release notes" button (with `navigator.clipboard` + `execCommand` fallback)
-- 📂 File filter navigation (click any file badge → jumps to changelog filtered by that file)
 - 🖨️ Print styles that auto-expand all `<details>` before printing
 - ⌨️ Sticky TOC with active-section highlighting
 - 🎯 Clickable KPI cards that jump to the record day/commit
@@ -267,19 +234,11 @@ When refactoring, **do not regress** these user-visible features:
 
 ---
 
-## 📦 14. Build / Release Checklist
+## 📦 12. Release Checklist
 
 Before tagging a release:
 
 - [ ] `npm run lint` — clean
 - [ ] `npm test` — all green
-- [ ] Run `node git-repo-stats.js` on 3+ real repos (small, medium, huge)
-- [ ] Open `repo-stats.html` in Chrome, Firefox, Safari
-- [ ] Print to PDF — verify all sections expanded
-- [ ] Verify `--md` output renders on GitHub
 - [ ] Update `version` in `package.json` and `README.md`
-- [ ] Add entry to `CHANGELOG.md` (when it exists)
-
----
-
-_End of AI context. Keep this file updated as the project evolves._
+- [ ] Generate / update `CHANGELOG.md`
