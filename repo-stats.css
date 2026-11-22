@@ -12,6 +12,7 @@
   --accent-light: #4493f8;
   --added: #2da44e;
   --added-light: #3fb950;
+  --release: var(--accent);
   --removed: #cf222e;
   --warning: #9a6700;
   --warning-bg: #fff8c5;
@@ -1574,7 +1575,7 @@ html.is-jumping .changelog-day {
 }
 
 .churn-release-line {
-  stroke: var(--accent);
+  stroke: var(--release);
   stroke-width: 1.2;
   stroke-dasharray: 3 3;
   opacity: 0.75;
@@ -1583,18 +1584,18 @@ html.is-jumping .changelog-day {
 .churn-release-label {
   font-size: 9.5px;
   font-weight: 700;
-  fill: var(--accent);
+  fill: var(--release);
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
 .churn-release-pill-bg {
   fill: var(--bg);
-  stroke: var(--accent);
+  stroke: var(--release);
   stroke-width: 1;
 }
 
 .churn-release-pill-group:hover .churn-release-pill-bg {
-  fill: var(--accent);
+  fill: var(--release);
 }
 
 .churn-release-pill-group:hover .churn-release-label {
@@ -1714,9 +1715,9 @@ html.is-jumping .changelog-day {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 0.74rem;
   font-weight: 700;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-soft));
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  color: var(--release);
+  background: color-mix(in srgb, var(--release) 12%, var(--bg-soft));
+  border: 1px solid color-mix(in srgb, var(--release) 35%, var(--border));
   border-radius: 999px;
   padding: 0.05rem 0.45rem;
   margin-bottom: 0.25rem;
@@ -1842,9 +1843,9 @@ html.is-jumping .changelog-day {
   gap: 0.3rem;
   padding: 0.25rem 0.65rem;
   border-radius: 999px;
-  border: 1px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
-  color: var(--accent);
+  border: 1px solid var(--release);
+  background: color-mix(in srgb, var(--release) 10%, var(--bg));
+  color: var(--release);
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 0.8rem;
   font-weight: 600;
@@ -1853,7 +1854,7 @@ html.is-jumping .changelog-day {
 }
 
 .tag-pill:hover {
-  background: var(--accent);
+  background: var(--release);
   color: #ffffff;
 }
 
@@ -1873,26 +1874,26 @@ html.is-jumping .changelog-day {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-soft));
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  color: var(--release);
+  background: color-mix(in srgb, var(--release) 12%, var(--bg-soft));
+  border: 1px solid color-mix(in srgb, var(--release) 35%, var(--border));
 }
 
 .commit-row--tagged {
-  background-color: color-mix(in srgb, var(--accent) 15%, transparent) !important;
+  background-color: color-mix(in srgb, var(--release) 15%, transparent) !important;
 }
 
 .commit-row--tagged td {
-  border-top: 2px solid var(--accent);
-  border-bottom: 2px solid var(--accent);
+  border-top: 2px solid var(--release);
+  border-bottom: 2px solid var(--release);
 }
 
 .commit-row--tagged td:first-child {
-  border-left: 2px solid var(--accent);
+  border-left: 2px solid var(--release);
 }
 
 .commit-row--tagged td:last-child {
-  border-right: 2px solid var(--accent);
+  border-right: 2px solid var(--release);
 }
 
 /* === Releases & Tags (Release Notes) === */
