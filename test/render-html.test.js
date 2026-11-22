@@ -145,6 +145,20 @@ describe('render-html', () => {
             renderChangelogHTML({}, []);
         }, 'renderChangelogHTML should not throw on empty data');
     });
+
+    test('includes accessibility attributes on search counter, heatmap cells, and timeline release pills', () => {
+        const d = buildSampleData({ tags: ['v1.0.0'] });
+        const html = renderOverviewHTML(
+            'demo', d.stats, d.filesData, d.largestCommit, d.widestCommit,
+            d.techStack, d.fileLifecycle, d.weekdayCounts, d.monthCounts,
+            d.groupedByDate, d.timeOfDayStats, d.techStackByLines, d.contributors,
+            d.releases, '2026-11-21', {}
+        ) + renderChangelogHTML(d.groupedByDate, d.tagsList);
+
+        assert.match(html, /class="search-counter" aria-live="polite"/);
+        assert.match(html, /class="heatmap-cell [^"]*" data-date="2026-11-20" data-active="true" role="button" tabindex="0" aria-label="/);
+        assert.match(html, /class="churn-release-pill-group" data-release-id="[^"]+" role="button" tabindex="0" aria-label="Jump to release v1\.0\.0"/);
+    });
 });
 
 describe('renderFileLinkHTML', () => {

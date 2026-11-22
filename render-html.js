@@ -709,7 +709,9 @@ function buildHeatmapViewHTML(groupedByDate, startDate, endDate, viewKey, isActi
             const title = !hasCommits
                 ? `No commits on ${day.dateStr}`
                 : `${pluralize(day.commitsCount, 'commit')} on ${day.dateStr} (click to view)`;
-            const activeAttrs = hasCommits ? ` data-date="${day.dateStr}" data-active="true"` : '';
+            const activeAttrs = hasCommits
+                ? ` data-date="${day.dateStr}" data-active="true" role="button" tabindex="0" aria-label="${title}"`
+                : '';
             html += `<div class="heatmap-cell ${level}"${activeAttrs} style="grid-column: ${weekIndex + 2}; grid-row: ${dayIndex + 1}" title="${title}"></div>\n`;
         });
     });
@@ -889,7 +891,7 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
         const pillY = 4;
         const pillH = 18;
         const textCenterX = marker.pillX + marker.pillWidth / 2;
-        svg += `<g class="churn-release-pill-group" data-release-id="${marker.releaseId}" style="cursor: pointer;">\n`;
+        svg += `<g class="churn-release-pill-group" data-release-id="${marker.releaseId}" role="button" tabindex="0" aria-label="Jump to release ${marker.tagText}" style="cursor: pointer;">\n`;
         svg += `  <title>Jump to release ${marker.tagText}</title>\n`;
         svg += `  <rect x="${marker.pillX.toFixed(1)}" y="${pillY}" width="${marker.pillWidth.toFixed(1)}" height="${pillH}" rx="9" class="churn-release-pill-bg" />\n`;
         svg += `  <text x="${textCenterX.toFixed(1)}" y="${pillY + 12.5}" class="churn-release-label" text-anchor="middle">🏷️ ${marker.tagText}</text>\n`;
@@ -1034,7 +1036,7 @@ function renderSearchBarHTML() {
     html += '<input type="text" class="search-input" placeholder="🔍 Search commits, files, authors...">\n';
     html += '<button type="button" class="search-clear" aria-label="Clear search" title="Clear (Esc)">✕</button>\n';
     html += '</div>\n';
-    html += '<span class="search-counter"></span>\n';
+    html += '<span class="search-counter" aria-live="polite"></span>\n';
     html += '<button class="btn btn-collapse" data-action="collapse-all">📔 Collapse All</button>\n';
     html += '<button class="btn btn-expand" data-action="expand-all">📖 Expand All</button>\n';
     html += '</div>\n';

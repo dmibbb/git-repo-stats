@@ -606,6 +606,20 @@
         window.addEventListener('hashchange', handleHash);
     }
 
+    /**
+    * Enables Enter/Space keyboard activation for custom [role="button"] elements
+    * (heatmap cells, timeline release pills).
+    */
+    function initKeyboardButtons() {
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const btn = e.target.closest('[role="button"][tabindex="0"]');
+            if (!btn) return;
+            e.preventDefault();
+            btn.click();
+        });
+    }
+
     // === Bootstrap ===
     initThemeToggle();
     const searchApi = initSearch();
@@ -623,4 +637,5 @@
     initReleaseJumpNavigation(searchApi);
     initPrintExpansion();
     initDeepLinks();
+    initKeyboardButtons();
 })();

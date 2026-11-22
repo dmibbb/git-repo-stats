@@ -28,7 +28,9 @@
 
 ### 🤷‍♂️ Known Limitations
 
-- **REPO_STATS_MAX_BUFFER** — environment variable to override the default `200 MB` git log buffer limit for huge monorepos.
+- **Merge commits are excluded:** `--no-merges` is always applied so merge commits do not duplicate line churn or skew contributor statistics.
+- **Local timezone for streaks:** `Current streak`, `Repo age`, and `Legacy` file ages are calculated relative to the local calendar date of the machine running the CLI, while commit timestamps preserve each author's original timezone (`--date=iso`).
+- **Git log buffer limit (`200 MB`):** The entire `git log` output is buffered in memory (sufficient for ~100k commits). For massive monorepos, either narrow the range with `--since=YYYY-MM-DD` or override the limit via `REPO_STATS_MAX_BUFFER` (in bytes, e.g. `REPO_STATS_MAX_BUFFER=524288000`).
 
 ### 🚀 Usage
 
