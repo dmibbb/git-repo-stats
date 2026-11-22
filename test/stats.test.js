@@ -105,6 +105,18 @@ describe('Grouping, Tags & Releases', () => {
         assert.equal(releases[0].name, 'v2.0.0');
         assert.equal(releases[0].isUnreleased, false);
     });
+
+    test('findLegacyFiles respects custom topN limit', () => {
+        const commits = Array.from({ length: 10 }, (_, idx) =>
+            makeCommit({
+                date: `2026-11-${String(idx + 1).padStart(2, '0')}`,
+                fileDeltas: new Map([[`src/file-${idx}.js`, { ins: 5, del: 0, binary: false, status: 'A' }]]),
+            })
+        );
+        const grouped = groupCommitsByDate(commits);
+        assert.equal(findLegacyFiles(grouped).length, 10);
+        assert.equal(findLegacyFiles(grouped, 8).length, 8);
+    });
 });
 
 describe('Streaks & Gaps', () => {

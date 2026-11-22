@@ -659,6 +659,12 @@ em {
   border-bottom: none;
 }
 
+.details-list--scrollable {
+  max-height: 12.25rem;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+}
+
 .file-name {
   display: inline-flex;
   align-items: center;
@@ -1504,6 +1510,11 @@ html.is-jumping .changelog-day {
   a, .file-link {
     color: var(--fg);
     text-decoration: none;
+  }
+
+  .details-list--scrollable {
+    max-height: none !important;
+    overflow: visible !important;
   }
 }
 

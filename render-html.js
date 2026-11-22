@@ -3,6 +3,7 @@ const path = require('path');
 const {
     MAX_FILES_PER_COMMIT,
     OPEN_DAYS_COUNT,
+    LEGACY_FILES_COUNT,
     WEEKDAY_NAMES,
     MONTH_NAMES,
     formatNumber,
@@ -295,8 +296,11 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
         const tagsHtml = hasTags
             ? `<div class="commit-tags">${commit.tags.map(t => `<span class="tag-badge">🏷️ ${escapeHtml(t)}</span>`).join(' ')}</div>`
             : '';
+        const filesAttr = commit.trackedFiles && commit.trackedFiles.length > 0
+            ? ` data-files="${escapeHtml(commit.trackedFiles.join('\n'))}"`
+            : '';
 
-        html += `<tr id="commit-${date}-${index}" class="${rowClass}"><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}${authorHtml}${tagsHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
+        html += `<tr id="commit-${date}-${index}" class="${rowClass}"${filesAttr}><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}${authorHtml}${tagsHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
     });
 
     html += '</tbody>\n</table>\n</details>\n';
@@ -477,11 +481,12 @@ function renderFilesCard(filesData) {
     const { frequent = [], hotspots = [], legacy = [] } = filesData || {};
     if (frequent.length === 0 && hotspots.length === 0 && legacy.length === 0) return '';
 
-    const renderList = (items, formatter) => {
+    const renderList = (items, formatter, extraClass = '') => {
         if (!items || items.length === 0) {
             return '<div style="color: var(--fg-muted); font-size: 0.85rem; padding: 0.5rem 0;">No data</div>';
         }
-        return `<ul class="details-list">\n${items.map(formatter).join('\n')}\n</ul>`;
+        const listClass = extraClass ? `details-list ${extraClass}` : 'details-list';
+        return `<ul class="${listClass}">\n${items.map(formatter).join('\n')}\n</ul>`;
     };
 
     const renderFileBadge = (file) => {
@@ -506,7 +511,8 @@ function renderFilesCard(filesData) {
 
     const legacyHtml = renderList(
         legacy,
-        (f) => `<li>${renderFileBadge(f.file)}<span class="count" title="Last modified on ${f.lastDate} (${pluralize(f.daysAgo, 'day')} ago)">${pluralize(f.daysAgo, 'day')} ago</span></li>`
+        (f) => `<li>${renderFileBadge(f.file)}<span class="count" title="Last modified on ${f.lastDate} (${pluralize(f.daysAgo, 'day')} ago)">${pluralize(f.daysAgo, 'day')} ago</span></li>`,
+        'details-list--scrollable'
     );
 
     return `<div class="card" data-tab-card>
@@ -515,7 +521,7 @@ function renderFilesCard(filesData) {
       <div class="card-tabs" role="tablist">
         <button type="button" class="card-tab active" data-tab="frequent" title="Top 5 most frequently changed files">🔄 Frequent</button>
         <button type="button" class="card-tab" data-tab="hotspots" title="Top 5 files with highest total lines changed">🚀 Hotspots</button>
-        <button type="button" class="card-tab" data-tab="legacy" title="Top 5 files untouched for the longest time">🕰️ Legacy</button>
+        <button type="button" class="card-tab" data-tab="legacy" title="Top ${LEGACY_FILES_COUNT} files untouched for the longest time">🕰️ Legacy</button>
       </div>
     </div>
     <div class="tab-panel active" data-panel="frequent">${frequentHtml}</div>

@@ -164,7 +164,7 @@ Options:
 - Don't add a dependency "just for convenience" (no `chalk`, no `commander`, no `dayjs`, no `lodash`).
 - Don't use `innerHTML` on the client side without `escapeHtml()` — even for "trusted" data.
 - Don't hardcode file counts (use `TOP_FILES_COUNT = 5`, `MAX_FILES_PER_COMMIT = 10`).
-- Don't break the `data-*` attribute contract — client JS relies on `data-date`, `data-time`, `data-row-id`, `data-filter-file` (used for files, extensions, lifecycle statuses, and `Author: <name>`), `data-release-id`, `data-tab`, `data-panel`, `data-heatmap-view`.
+- Don't break the `data-*` attribute contract — client JS relies on `data-date`, `data-time`, `data-row-id`, `data-files` (newline-separated normalized file paths on `.commit-row` so search matches renamed files like `src/{old => new}.js` by their normalized path), `data-filter-file` (used for files, extensions, lifecycle statuses, and `Author: <name>`), `data-release-id`, `data-tab`, `data-panel`, `data-heatmap-view`.
 - Don't hijack native browser keyboard shortcuts (like `Ctrl+K` / `Cmd+K` or `Ctrl+F`) — only handle `Escape` inside `.search-input`.
 - Don't remove the `content-visibility: auto` optimization on `.changelog-day` — it's critical for rendering large dashboards.
 - Don't change `COMMIT_SEP` / `FIELD_SEP` without updating the parser AND tests.

@@ -82,7 +82,10 @@
             let visibleCount = 0;
 
             rows.forEach(row => {
-                const match = !query || row.textContent.toLowerCase().includes(query);
+                const textMatch = row.textContent.toLowerCase().includes(query);
+                const filesAttr = row.getAttribute('data-files');
+                const fileMatch = filesAttr ? filesAttr.toLowerCase().includes(query) : false;
+                const match = !query || textMatch || fileMatch;
                 row.classList.toggle('hidden', !match);
                 if (match) visibleCount++;
             });

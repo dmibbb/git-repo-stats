@@ -160,6 +160,31 @@ describe('render-html', () => {
         assert.match(html, /class="heatmap-cell [^"]*" data-date="2026-11-20" data-active="true" role="button" tabindex="0" aria-label="/);
         assert.match(html, /class="churn-release-pill-group" data-release-id="[^"]+" role="button" tabindex="0" aria-label="Jump to release v1\.0\.0"/);
     });
+
+    test('renders scrollable list class for Legacy files tab', () => {
+        const d = buildSampleData();
+        const html = renderOverviewHTML(
+            'demo', d.stats, d.filesData, d.largestCommit, d.widestCommit,
+            d.techStack, d.fileLifecycle, d.weekdayCounts, d.monthCounts,
+            d.groupedByDate, d.timeOfDayStats, d.techStackByLines, d.contributors,
+            d.releases, '2026-11-21', {}
+        );
+        assert.match(html, /class="details-list details-list--scrollable"/);
+    });
+
+    test('adds normalized data-files attribute to commit rows for renamed file search', () => {
+        const d = buildSampleData({
+            files: ['src/{old => new}.js', 'src/a&b.js'],
+            trackedFiles: ['src/new.js', 'src/a&b.js'],
+        });
+        const html = renderChangelogHTML(d.groupedByDate, d.tagsList);
+
+        assert.ok(html.includes('data-files="src/new.js\nsrc/a&amp;b.js"'));
+
+        const emptyCommitData = buildSampleData({ files: [], trackedFiles: [] });
+        const emptyHtml = renderChangelogHTML(emptyCommitData.groupedByDate, []);
+        assert.ok(!emptyHtml.includes('data-files='));
+    });
 });
 
 describe('renderFileLinkHTML', () => {

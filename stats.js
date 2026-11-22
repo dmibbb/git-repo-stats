@@ -2,6 +2,7 @@ const {
     WEEKDAY_NAMES,
     MONTH_NAMES,
     TOP_FILES_COUNT,
+    LEGACY_FILES_COUNT,
     TOP_EXTENSIONS_COUNT,
     parseDate,
     getTodayLocalDate,
@@ -678,7 +679,7 @@ function extractOldGitPath(rawPath) {
  * Finds top untouched/legacy files that have not been modified for the longest time.
  * Excludes files that were deleted in their latest commit.
  */
-function findLegacyFiles(groupedByDate, topN = TOP_FILES_COUNT) {
+function findLegacyFiles(groupedByDate, topN = LEGACY_FILES_COUNT) {
     const fileLastSeen = new Map(); // normFile -> { date, deleted }
     const sortedDates = Object.keys(groupedByDate).sort((a, b) => a.localeCompare(b));
 
