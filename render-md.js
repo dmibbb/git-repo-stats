@@ -6,6 +6,9 @@ const {
     renderBar,
     WEEKDAY_NAMES,
 } = require('./utils');
+const { version, homepage } = require('./package.json');
+
+const REPO_URL = (homepage || 'https://github.com/dmibbb/git-repo-stats').replace(/#readme$/, '');
 
 /**
  * Wraps text in inline Markdown code span, safely handling embedded backticks.
@@ -435,8 +438,17 @@ function renderChangelog(groupedByDate) {
     return md;
 }
 
+/**
+ * Renders the report footer with generation timestamp and project link.
+ */
+function renderFooter(generatedAt) {
+    const timestampPart = generatedAt ? `${generatedAt} ` : '';
+    return `---\n\n*Generated ${timestampPart}by [Git Repository Statistics v${version}](${REPO_URL})*\n`;
+}
+
 module.exports = {
     renderOverview,
     renderReleases,
     renderChangelog,
+    renderFooter,
 };

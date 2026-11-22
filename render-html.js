@@ -15,6 +15,9 @@ const {
     normalizeGitPath
 } = require('./utils');
 const { getLanguageIcon } = require('./lang-icons');
+const { version, homepage } = require('./package.json');
+
+const REPO_URL = (homepage || 'https://github.com/dmibbb/git-repo-stats').replace(/#readme$/, '');
 
 // Churn widget hardcoded values
 const SVG_HEIGHT = 244;
@@ -140,7 +143,7 @@ ${css}
 <div class="dashboard-container">
 ${content}
 <footer class="dashboard-footer">
-  Generated: ${generatedAt} · Repository Statistics
+  Generated ${generatedAt} by <a href="${escapeHtml(REPO_URL)}" target="_blank" rel="noopener noreferrer">Git Repository Statistics v${escapeHtml(version)}</a>
 </footer>
 </div>
 <button class="back-to-top" aria-label="Back to top" title="Back to top">↑</button>

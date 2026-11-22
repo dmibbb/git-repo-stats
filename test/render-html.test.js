@@ -27,6 +27,7 @@ const {
     renderHeader
 } = require('../render-html');
 const { makeCommit } = require('./stats.test')
+const { version } = require('../package.json');
 
 function buildSampleData(overrides = {}) {
     const groupedByDate = groupCommitsByDate([makeCommit(overrides)]);
@@ -210,14 +211,14 @@ describe('renderHeader', () => {
 });
 
 describe('wrapInHTMLTemplate', () => {
-    test('includes CSS and client JS in output', () => {
+    test('includes CSS, client JS, and footer link with package version in output', () => {
         const html = wrapInHTMLTemplate('<p>Test</p>', 'Test Title', '2026-11-21');
         assert.match(html, /<!DOCTYPE html>/);
         assert.match(html, /<\/html>$/);
         assert.match(html, /<style>/);
         assert.match(html, /<script>/);
         assert.match(html, /Test Title/);
-        assert.match(html, /Generated: 2026-11-21/);
+        assert.ok(html.includes(`Generated 2026-11-21 by <a href="https://github.com/dmibbb/git-repo-stats" target="_blank" rel="noopener noreferrer">Git Repository Statistics v${version}</a>`));
     });
 
     test('escapes title', () => {

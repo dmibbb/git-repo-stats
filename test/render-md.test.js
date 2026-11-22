@@ -21,7 +21,9 @@ const {
     renderOverview,
     renderReleases,
     renderChangelog,
+    renderFooter,
 } = require('../render-md');
+const { version } = require('../package.json');
 const { makeCommit } = require('./stats.test');
 
 describe('render-md', () => {
@@ -95,5 +97,10 @@ describe('render-md', () => {
         const md = renderChangelog({});
         assert.match(md, /## 📝 Changelog Details/);
         assert.ok(!md.includes('undefined'));
+    });
+
+    test('renders Markdown footer with timestamp and version link', () => {
+        const footer = renderFooter('2026-11-23 01:30:00 (UTC+3)');
+        assert.ok(footer.includes(`*Generated 2026-11-23 01:30:00 (UTC+3) by [Git Repository Statistics v${version}](https://github.com/dmibbb/git-repo-stats)*`));
     });
 });

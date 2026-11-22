@@ -73,7 +73,8 @@ const {
 const {
     renderOverview,
     renderReleases,
-    renderChangelog
+    renderChangelog,
+    renderFooter
 } = require('./render-md');
 const {
     renderOverviewHTML,
@@ -283,6 +284,7 @@ function collectStatistics(commits, repoPath) {
 function generateOutputs(args, repoPath, data, repoName) {
     const mode = getGenerationMode(args);
     const outputDir = resolveOutputDir(args.out, repoPath);
+    const generatedAt = formatGeneratedAt();
 
     if (fs.existsSync(outputDir)) {
         if (!fs.statSync(outputDir).isDirectory()) {
@@ -292,11 +294,11 @@ function generateOutputs(args, repoPath, data, repoName) {
         fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    if (mode.md) generateMarkdown(outputDir, data, args, repoName);
-    if (mode.html) generateHtml(outputDir, data, args, repoName);
+    if (mode.md) generateMarkdown(outputDir, data, args, repoName, generatedAt);
+    if (mode.html) generateHtml(outputDir, data, args, repoName, generatedAt);
 }
 
-function generateMarkdown(outputDir, data, args, repoName) {
+function generateMarkdown(outputDir, data, args, repoName, generatedAt) {
     startStep('📝 Rendering and saving Markdown report...');
     const {
         stats, topFiles, hotspotFiles, legacyFiles,
@@ -312,15 +314,15 @@ function generateMarkdown(outputDir, data, args, repoName) {
     );
     md += renderReleases(data.releases);
     md += renderChangelog(groupedByDate);
+    md += renderFooter(generatedAt);
 
     const mdPath = path.join(outputDir, OUTPUT_FILE_MARKDOWN);
     fs.writeFileSync(mdPath, md, 'utf-8');
     endStep(`→ ${mdPath} (${formatBytes(Buffer.byteLength(md, 'utf-8'))})`);
 }
 
-function generateHtml(outputDir, data, args, repoName) {
+function generateHtml(outputDir, data, args, repoName, generatedAt) {
     startStep('🎨 Rendering and saving HTML dashboard...');
-    const generatedAt = formatGeneratedAt();
     const { stats, groupedByDate, tagsList, releases, topFiles, hotspotFiles, legacyFiles,
         largestCommit, widestCommit, techStack, techStackByLines, fileLifecycle,
         weekdayCounts, monthCounts, timeOfDayStats, contributors } = data;
