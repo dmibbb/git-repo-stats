@@ -56,7 +56,7 @@ function parseCommitEntry(entry) {
 
   const tags = [];
   if (refsRaw) {
-    refsRaw.split(',').forEach(ref => {
+    refsRaw.split(', ').forEach(ref => {
       const trimmed = ref.trim();
       if (trimmed.startsWith('tag: ')) {
         tags.push(trimmed.slice(5).trim());

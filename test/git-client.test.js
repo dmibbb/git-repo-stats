@@ -173,6 +173,17 @@ describe('parseCommitEntry', () => {
         assert.deepEqual(commit.tags, ['v1.0.0-🎉']);
         assert.deepEqual(commit.trackedFiles, ['src/папка/файл-🚀.js']);
     });
+
+    test('preserves git tags containing commas without spaces', () => {
+        const entry = [
+            `2026-11-20 14:35:10 +0300${FIELD_SEP}dmibbb${FIELD_SEP}HEAD -> main, tag: v1.0,rc1, tag: v1.0.0${FIELD_SEP}chore: tag test`,
+            ':100644 100644 abc1111 def2222 M\tsrc/index.js',
+            '1\t1\tsrc/index.js',
+        ].join('\n');
+
+        const commit = parseCommitEntry(entry);
+        assert.deepEqual(commit.tags, ['v1.0,rc1', 'v1.0.0']);
+    });
 });
 
 describe('parseRawLog', () => {
