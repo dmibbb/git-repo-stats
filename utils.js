@@ -308,6 +308,21 @@ function endStep(extraSuffix = '') {
   }
 }
 
+/**
+ * Builds a deterministic DOM anchor ID for a commit row.
+ */
+function makeCommitRowId(date, index) {
+  return `commit-${date}-${index}`;
+}
+
+/**
+ * Builds a deterministic DOM anchor ID for a release card.
+ */
+function makeReleaseId(tag, date) {
+  const safeTag = String(tag || 'unreleased').trim().replace(/[^a-zA-Z0-9_-]/g, '-');
+  return `release-${safeTag}-${date || 'nodate'}`;
+}
+
 module.exports = {
   MAX_FILES_PER_COMMIT,
   MAX_BUFFER,
@@ -338,5 +353,7 @@ module.exports = {
   formatGeneratedAt,
   logStep,
   startStep,
-  endStep
+  endStep,
+  makeCommitRowId,
+  makeReleaseId
 };

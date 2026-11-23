@@ -16,7 +16,9 @@ const {
     formatGeneratedAt,
     startStep,
     endStep,
-    logStep
+    logStep,
+    makeReleaseId,
+    makeCommitRowId
 } = require('../utils');
 
 describe('Formatting helpers', () => {
@@ -173,5 +175,13 @@ describe('Step logger helpers', () => {
         assert.match(joined, /Step 1\.\.\./);
         assert.match(joined, /— done \(took \d+ms\)/);
         assert.match(joined, /Interleaved log closes active step/);
+    });
+});
+
+describe('Anchor ID helpers', () => {
+    test('makeCommitRowId and makeReleaseId generate deterministic DOM IDs', () => {
+        assert.equal(makeCommitRowId('2026-11-20', 0), 'commit-2026-11-20-0');
+        assert.equal(makeReleaseId('v1.0.0-beta.1+build', '2026-11-20'), 'release-v1-0-0-beta-1-build-2026-11-20');
+        assert.equal(makeReleaseId('', ''), 'release-unreleased-nodate');
     });
 });

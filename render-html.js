@@ -15,7 +15,9 @@ const {
     parseDate,
     getTodayLocalDate,
     toMondayFirstIndex,
-    normalizeGitPath
+    normalizeGitPath,
+    makeCommitRowId,
+    makeReleaseId
 } = require('./utils');
 const { getLanguageIcon } = require('./lang-icons');
 const { version, homepage } = require('./package.json');
@@ -300,7 +302,7 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
             ? ` data-files="${escapeHtml(commit.trackedFiles.join('\n'))}"`
             : '';
 
-        html += `<tr id="commit-${date}-${index}" class="${rowClass}"${filesAttr}><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}${authorHtml}${tagsHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
+        html += `<tr id="${makeCommitRowId(date, index)}" class="${rowClass}"${filesAttr}><td><div class="commit-subject">${escapeHtml(commit.subject)}</div>${timeHtml}${authorHtml}${tagsHtml}</td><td>${renderFilesCellHTML(commit.files, commit.ignoredFiles, commit.fileDeltas)}</td><td class="delta-cell">${renderDeltaCellHTML(commit)}</td></tr>\n`;
     });
 
     html += '</tbody>\n</table>\n</details>\n';
@@ -886,7 +888,7 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
         const pillWidth = rawText.length * 6 + 26;
         const rawCx = PAD_LEFT + idx * SLOT_WIDTH + SLOT_WIDTH / 2;
         const pillX = Math.max(2, Math.min(svgWidth - pillWidth - 2, rawCx - pillWidth / 2));
-        const releaseId = `release-${c.tags[0].trim().replace(/[^a-zA-Z0-9_-]/g, '-')}-${c.date}`;
+        const releaseId = makeReleaseId(c.tags[0], c.date);
 
         tagMarkers.push({
             cx: rawCx,
@@ -1221,8 +1223,7 @@ function renderReleasesHTML(releases) {
 
         // Take the first tag by ID (rel.name may contain a few comma-separated tags)
         const primaryTag = rel.isUnreleased ? 'unreleased' : rel.name.split(',')[0].trim();
-        const relDate = rel.date || 'nodate';
-        const releaseId = `release-${primaryTag.replace(/[^a-zA-Z0-9_-]/g, '-')}-${relDate}`;
+        const releaseId = makeReleaseId(primaryTag, rel.date);
 
         const authorsSummary = formatAuthorsSummary(rel.commits);
         const authorsHtml = authorsSummary

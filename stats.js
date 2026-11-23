@@ -10,7 +10,8 @@ const {
     toMondayFirstIndex,
     getExtension,
     normalizeGitPath,
-    isIgnoredFile
+    isIgnoredFile,
+    makeCommitRowId
 } = require('./utils');
 
 /**
@@ -71,7 +72,7 @@ function extractTagsList(groupedByDate) {
                         tag,
                         date,
                         subject: commit.subject,
-                        rowId: `commit-${date}-${index}`,
+                        rowId: makeCommitRowId(date, index),
                     });
                 }
             }
@@ -94,7 +95,7 @@ function calculateReleases(groupedByDate) {
             orderedCommits.push({
                 ...commit,
                 date,
-                rowId: `commit-${date}-${index}`,
+                rowId: makeCommitRowId(date, index),
             });
         });
     }
