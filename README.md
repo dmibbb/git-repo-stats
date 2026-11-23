@@ -35,7 +35,7 @@
 
 ### 🚀 Usage
 
-> Customize default flags, output filenames, limits, and ignore rules in \config.js`.
+> Customize default flags, output filenames, limits, and ignore rules in `config.js`.
 
 Run directly with Node.js or link globally via `npm link` to use the `repo-stats` command anywhere:
 

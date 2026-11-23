@@ -1,6 +1,9 @@
 node_modules/
 package-lock.json
 .vscode
+
+# Project dump and auto-generated files
 project_dump.md
 repo-stats.html
 repo-stats.md
+repo-stats-changelog.md

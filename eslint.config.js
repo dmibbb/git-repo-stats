@@ -3,7 +3,7 @@ const globals = require('globals');
 const { globalIgnores } = require('eslint/config');
 
 module.exports = [
-  globalIgnores(['node_modules', 'repo-stats.html', 'repo-stats.md']),
+  globalIgnores(['node_modules', 'repo-stats.html', 'repo-stats.md', 'repo-stats-changelog.md']),
   js.configs.recommended,
   {
     files: ['**/*.{js,cjs,mjs}'],

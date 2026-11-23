@@ -118,6 +118,7 @@ Options:
 --out=DIR            Custom output directory
 --html               Generate HTML (default if no flags)
 --md                 Generate Markdown
+--changelog          Generate standalone release changelog (repo-stats-changelog.md)
 --open               Open HTML in default browser
 -h, --help           Show help
 ```
@@ -176,7 +177,7 @@ Options:
 
 | Limitation                       | Reason                                                                       | Workaround                           |
 | -------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------ |
-| 200 MB git log buffer            | Default cap in `utils.js`; protects memory                                   | Set `REPO_STATS_MAX_BUFFER` env var  |
+| 200 MB git log buffer            | Default cap in `config.js`; protects memory                                  | Set `REPO_STATS_MAX_BUFFER` env var  |
 | No merge commits                 | `--no-merges` is hardcoded                                                   | By design — merge commits skew stats |
 | Timezone for "today"             | Uses local calendar date; commits use author's local timezone (`--date=iso`) | Documented; acceptable for CLI tool  |
 | No streaming parser              | Whole log loaded into memory                                                 | Fine up to ~100k commits             |
