@@ -414,8 +414,9 @@ function renderTimeOfDayHistogramHTML(timeOfDayStats) {
     for (const period of timeOfDayStats.periods) {
         const barWidth = maxCount > 0 ? ((period.count / maxCount) * 100).toFixed(1) : 0;
         const isPeak = period.count === maxCount && maxCount > 0;
+        const rowTitle = `${period.label} (${period.range}): ${pluralize(period.count, 'commit')} (${period.percent}%)`;
 
-        html += `<li class="bar-row${isPeak ? ' bar-row--peak' : ''}" title="${period.range}">
+        html += `<li class="bar-row${isPeak ? ' bar-row--peak' : ''}" title="${rowTitle}">
       <span class="bar-label bar-label--wide">${period.icon} ${period.label}</span>
       <div class="bar-container"><div class="bar" style="width: ${barWidth}%"></div></div>
       <span class="bar-value">${period.percent}% (${period.count})</span>

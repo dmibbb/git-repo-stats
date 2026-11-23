@@ -193,6 +193,12 @@ describe('render-html', () => {
         const emptyHtml = renderChangelogHTML(emptyCommitData.groupedByDate, []);
         assert.ok(!emptyHtml.includes('data-files='));
     });
+
+    test('includes detailed commit count and percentage tooltip in Activity by time of day', () => {
+        const d = buildSampleData({ date: '2026-11-23', time: '09:30:00' });
+        const html = renderOverviewHTML({ repoName: 'demo', ...d, generatedAt: '2026-11-23' });
+        assert.match(html, /title="Morning \(06:00–11:59\): 1 commit \(100%\)"/);
+    });
 });
 
 describe('renderFileLinkHTML', () => {
