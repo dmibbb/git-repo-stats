@@ -56,24 +56,24 @@ function buildSampleData(overrides = {}) {
 describe('render-html', () => {
     test('renders complete self-contained HTML dashboard without undefined or NaN', () => {
         const d = buildSampleData();
-        const overview = renderOverviewHTML(
-            'demo-repo',
-            d.stats,
-            d.filesData,
-            d.largestCommit,
-            d.widestCommit,
-            d.techStack,
-            d.fileLifecycle,
-            d.weekdayCounts,
-            d.monthCounts,
-            d.groupedByDate,
-            d.timeOfDayStats,
-            d.techStackByLines,
-            d.contributors,
-            d.releases,
-            '2026-11-21 12:00:00 (UTC+3)',
-            {}
-        );
+        const overview = renderOverviewHTML({
+            repoName: 'demo-repo',
+            stats: d.stats,
+            filesData: d.filesData,
+            largestCommit: d.largestCommit,
+            widestCommit: d.widestCommit,
+            techStack: d.techStack,
+            fileLifecycle: d.fileLifecycle,
+            weekdayCounts: d.weekdayCounts,
+            monthCounts: d.monthCounts,
+            groupedByDate: d.groupedByDate,
+            timeOfDayStats: d.timeOfDayStats,
+            techStackByLines: d.techStackByLines,
+            contributors: d.contributors,
+            releases: d.releases,
+            generatedAt: '2026-11-21 12:00:00 (UTC+3)',
+            args: {},
+        });
         const changelog = renderChangelogHTML(d.groupedByDate, d.tagsList);
         const fullHtml = wrapInHTMLTemplate(overview + changelog, 'Repository Statistics: demo-repo', '2026-11-21 12:00:00 (UTC+3)');
 
@@ -91,24 +91,24 @@ describe('render-html', () => {
             files: ['src/my file.js', 'src/{old => new}.js'],
             trackedFiles: ['src/my file.js', 'src/new.js']
         });
-        const html = renderOverviewHTML(
-            'repo<script>',
-            d.stats,
-            d.filesData,
-            d.largestCommit,
-            d.widestCommit,
-            d.techStack,
-            d.fileLifecycle,
-            d.weekdayCounts,
-            d.monthCounts,
-            d.groupedByDate,
-            d.timeOfDayStats,
-            d.techStackByLines,
-            d.contributors,
-            d.releases,
-            '2026-11-21 12:00:00 (UTC+3)',
-            { since: '2026-01-01' }
-        ) + renderChangelogHTML(d.groupedByDate, d.tagsList);
+        const html = renderOverviewHTML({
+            repoName: 'repo<script>',
+            stats: d.stats,
+            filesData: d.filesData,
+            largestCommit: d.largestCommit,
+            widestCommit: d.widestCommit,
+            techStack: d.techStack,
+            fileLifecycle: d.fileLifecycle,
+            weekdayCounts: d.weekdayCounts,
+            monthCounts: d.monthCounts,
+            groupedByDate: d.groupedByDate,
+            timeOfDayStats: d.timeOfDayStats,
+            techStackByLines: d.techStackByLines,
+            contributors: d.contributors,
+            releases: d.releases,
+            generatedAt: '2026-11-21 12:00:00 (UTC+3)',
+            args: { since: '2026-01-01' },
+        }) + renderChangelogHTML(d.groupedByDate, d.tagsList);
 
         assert.ok(!html.includes('<script>alert("xss")</script>'));
         assert.ok(!html.includes('<img src=x onerror=alert(1)>'));
@@ -120,12 +120,24 @@ describe('render-html', () => {
 
     test('renders churn timeline and heatmap sections', () => {
         const d = buildSampleData({ tags: ['v1.0.0'] });
-        const html = renderOverviewHTML(
-            'demo', d.stats, d.filesData, d.largestCommit, d.widestCommit,
-            d.techStack, d.fileLifecycle, d.weekdayCounts, d.monthCounts,
-            d.groupedByDate, d.timeOfDayStats, d.techStackByLines, d.contributors,
-            d.releases, '2026-11-21', {}
-        );
+        const html = renderOverviewHTML({
+            repoName: 'demo',
+            stats: d.stats,
+            filesData: d.filesData,
+            largestCommit: d.largestCommit,
+            widestCommit: d.widestCommit,
+            techStack: d.techStack,
+            fileLifecycle: d.fileLifecycle,
+            weekdayCounts: d.weekdayCounts,
+            monthCounts: d.monthCounts,
+            groupedByDate: d.groupedByDate,
+            timeOfDayStats: d.timeOfDayStats,
+            techStackByLines: d.techStackByLines,
+            contributors: d.contributors,
+            releases: d.releases,
+            generatedAt: '2026-11-21',
+            args: {},
+        });
         assert.match(html, /<svg class="churn-svg"/);
         assert.match(html, /class="heatmap-select"/);
         assert.match(html, /data-release-id="release-v1-0-0"|data-release-id="release-/);
@@ -134,13 +146,8 @@ describe('render-html', () => {
     });
 
     test('handles null/empty data gracefully', () => {
-        const empty = { /* ... */ };
         assert.doesNotThrow(() => {
-            renderOverviewHTML(
-                'empty-repo', empty, { frequent: [], hotspots: [], legacy: [] },
-                null, null, [], { all: { total: 0 } }, {}, [], {},
-                null, [], [], [], '2026-11-21', {}
-            );
+            renderOverviewHTML({ repoName: 'empty-repo', generatedAt: '2026-11-21' });
         }, 'renderOverviewHTML should not throw on empty data');
 
         assert.doesNotThrow(() => {
@@ -150,12 +157,8 @@ describe('render-html', () => {
 
     test('includes accessibility attributes on search counter, heatmap cells, and timeline release pills', () => {
         const d = buildSampleData({ tags: ['v1.0.0'] });
-        const html = renderOverviewHTML(
-            'demo', d.stats, d.filesData, d.largestCommit, d.widestCommit,
-            d.techStack, d.fileLifecycle, d.weekdayCounts, d.monthCounts,
-            d.groupedByDate, d.timeOfDayStats, d.techStackByLines, d.contributors,
-            d.releases, '2026-11-21', {}
-        ) + renderChangelogHTML(d.groupedByDate, d.tagsList);
+        const html = renderOverviewHTML({ repoName: 'demo', ...d, generatedAt: '2026-11-21' })
+            + renderChangelogHTML(d.groupedByDate, d.tagsList);
 
         assert.match(html, /class="search-counter" aria-live="polite"/);
         assert.match(html, /class="heatmap-cell [^"]*" data-date="2026-11-20" data-active="true" role="button" tabindex="0" aria-label="/);
@@ -167,12 +170,7 @@ describe('render-html', () => {
 
     test('renders scrollable list class for Legacy files tab', () => {
         const d = buildSampleData();
-        const html = renderOverviewHTML(
-            'demo', d.stats, d.filesData, d.largestCommit, d.widestCommit,
-            d.techStack, d.fileLifecycle, d.weekdayCounts, d.monthCounts,
-            d.groupedByDate, d.timeOfDayStats, d.techStackByLines, d.contributors,
-            d.releases, '2026-11-21', {}
-        );
+        const html = renderOverviewHTML({ repoName: 'demo', ...d, generatedAt: '2026-11-21' });
         assert.match(html, /class="details-list details-list--scrollable"/);
     });
 

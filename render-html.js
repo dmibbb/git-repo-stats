@@ -1060,7 +1060,24 @@ function renderSearchBarHTML() {
 /**
  * Renders the full dashboard overview.
  */
-function renderOverviewHTML(repoName, stats, filesData, largestCommit, widestCommit, techStack, fileLifecycle, weekdayCounts, monthCounts, groupedByDate, timeOfDayStats, techStackByLines, contributors, releases, generatedAt, args) {
+function renderOverviewHTML({
+    repoName,
+    stats = {},
+    filesData = { frequent: [], hotspots: [], legacy: [] },
+    largestCommit = null,
+    widestCommit = null,
+    techStack = [],
+    fileLifecycle = null,
+    weekdayCounts = {},
+    monthCounts = [],
+    groupedByDate = {},
+    timeOfDayStats = null,
+    techStackByLines = [],
+    contributors = [],
+    releases = [],
+    generatedAt = '',
+    args = {},
+} = {}) {
     const fmt = formatNumber;
     let html = '';
 

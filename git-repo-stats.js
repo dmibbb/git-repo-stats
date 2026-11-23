@@ -342,16 +342,31 @@ function generateChangelogFile(outputDir, data, generatedAt) {
 
 function generateHtml(outputDir, data, args, repoName, generatedAt) {
     startStep('🎨 Rendering and saving HTML dashboard...');
-    const { stats, groupedByDate, tagsList, releases, topFiles, hotspotFiles, legacyFiles,
+    const {
+        stats, groupedByDate, tagsList, releases, topFiles, hotspotFiles, legacyFiles,
         largestCommit, widestCommit, techStack, techStackByLines, fileLifecycle,
-        weekdayCounts, monthCounts, timeOfDayStats, contributors } = data;
+        weekdayCounts, monthCounts, timeOfDayStats, contributors
+    } = data;
     const filesData = { frequent: topFiles, hotspots: hotspotFiles, legacy: legacyFiles };
 
-    let htmlContent = renderOverviewHTML(
-        repoName, stats, filesData, largestCommit, widestCommit,
-        techStack, fileLifecycle, weekdayCounts, monthCounts, groupedByDate,
-        timeOfDayStats, techStackByLines, contributors, releases, generatedAt, args
-    );
+    let htmlContent = renderOverviewHTML({
+        repoName,
+        stats,
+        filesData,
+        largestCommit,
+        widestCommit,
+        techStack,
+        fileLifecycle,
+        weekdayCounts,
+        monthCounts,
+        groupedByDate,
+        timeOfDayStats,
+        techStackByLines,
+        contributors,
+        releases,
+        generatedAt,
+        args,
+    });
     htmlContent += renderChangelogHTML(groupedByDate, tagsList);
 
     const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`, generatedAt);
