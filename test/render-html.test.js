@@ -297,6 +297,14 @@ describe('Edge cases', () => {
     });
 });
 
+describe('render code timeline', () => {
+    test('scales peak commit bar in churn timeline flush to the top boundary line', () => {
+        const d = buildSampleData({ insertions: 1025, deletions: 0 });
+        const html = renderOverviewHTML({ repoName: 'demo', ...d, generatedAt: '2026-11-23' });
+        assert.match(html, /<rect x="[^"]+" y="28\.00" width="8\.00" height="94\.00" rx="1" class="churn-bar-ins"/);
+    });
+});
+
 describe('renderChangelogHTML', () => {
     test('formats day summary metadata without duplicating unique files count', () => {
         const singleFileData = buildSampleData({

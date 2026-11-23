@@ -811,9 +811,9 @@ function buildChurnTimelineHTML(commits, maxVal, scaleMode) {
     const scaleFn = (v) => {
         if (v <= 0 || maxVal <= 0) return 0;
         if (scaleMode === 'log') {
-            return (Math.log10(v + 1) / Math.log10(maxVal + 1)) * (halfHeight - 4);
+            return (Math.log10(v + 1) / Math.log10(maxVal + 1)) * halfHeight;
         }
-        return (v / maxVal) * (halfHeight - 4);
+        return (v / maxVal) * halfHeight;
     };
 
     const topTickLabel = `+${formatNumber(maxVal)}`;
