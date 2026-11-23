@@ -11,6 +11,8 @@
   <img src="https://img.shields.io/badge/Version-1.0.0-green" alt="Version 1.0.0"/>
 </p>
 
+[![Demo](https://img.shields.io/badge/GitHub-Demo-green?logo=github)](https://dmibbb.github.io/git-repo-stats/repo-stats.html)
+
 </div>
 
 ### ✨ Key Features
@@ -84,6 +86,22 @@ npm test
 # Run ESLint
 npm run lint
 ```
+
+### 📷 Demo & Screenshots
+
+Sample **Markdown report** (live demo): [**https://dmibbb.github.io/git-repo-stats/repo-stats.md**](https://dmibbb.github.io/git-repo-stats/repo-stats.md)
+
+Sample **HTML report** (live demo): [**https://dmibbb.github.io/git-repo-stats/repo-stats.html**](https://dmibbb.github.io/git-repo-stats/repo-stats.html)
+
+<div align="center">
+  <img src="misc/git-repo-stats_01.png" alt="Header and Files/Tech stack" width="850"><br>
+  <details><summary>More screenshots</summary>
+  <img src="misc/git-repo-stats_02.png" alt="Records and Contribution" width="850"><br>
+  <img src="misc/git-repo-stats_03.png" alt="Activity patterns" width="850"><br>
+  <img src="misc/git-repo-stats_04.png" alt="Code timeline and Releases" width="850"><br>
+  <img src="misc/git-repo-stats_05.png" alt="Changelog details" width="850"><br>
+  </details>
+</div>
 
 ### 📄 License
 
