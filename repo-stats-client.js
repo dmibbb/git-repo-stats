@@ -388,12 +388,16 @@
 
             if (subjects.length === 0) return;
 
-            const headerLines = [versionName];
-            if (formattedDate) {
-                headerLines.push(`Released on ${formattedDate}`);
+            let headerLines;
+            const isUnreleased = titleRaw.includes('Unreleased') || versionName.toLowerCase() === 'unreleased';
+            if (!isUnreleased && formattedDate) {
+                headerLines = [versionName];
+                headerLines.push('', `Released on ${formattedDate}\n\nChanges:\n\n`);
+            } else {
+                headerLines = ['Unreleased changes:\n\n'];
             }
 
-            const payload = `${headerLines.join('\n')}\n\nChanges:\n${subjects.join('\n')}`;
+            const payload = `${headerLines.join('\n')}${subjects.join('\n')}`;
 
             const showCopiedFeedback = () => {
                 const prevText = copyBtn.textContent;
