@@ -752,9 +752,9 @@ function renderHeatmapHTML(groupedByDate) {
         new Set(Object.keys(groupedByDate).map(d => d.slice(0, 4)))
     ).sort((a, b) => b.localeCompare(a));
 
-    const optionsHtml = [
-        `<option value="last-365" selected>Last 365 days</option>`,
-        ...years.map(y => `<option value="${y}">${y}</option>`)
+    const menuItemsHtml = [
+        `<button type="button" class="heatmap-option active" role="option" aria-selected="true" data-value="last-365">Last 365 days</option>`,
+        ...years.map(y => `<button type="button" class="heatmap-option" role="option" aria-selected="false" data-value="${y}">${y}</option>`)
     ].join('\n');
 
     let viewsHtml = buildHeatmapViewHTML(groupedByDate, start365, today, 'last-365', true);
@@ -768,9 +768,15 @@ function renderHeatmapHTML(groupedByDate) {
     let html = `<div class="card" data-heatmap-card>
     <div class="card-header">
       <span class="card-title">🧩 Contribution Heatmap</span>
-      <select class="heatmap-select" aria-label="Select heatmap period">
-        ${optionsHtml}
-      </select>
+      <div class="heatmap-dropdown">
+        <button type="button" class="heatmap-select" aria-haspopup="listbox" aria-expanded="false" aria-label="Select heatmap period">
+          <span class="heatmap-select-label">Last 365 days</span>
+          <span class="heatmap-select-arrow" aria-hidden="true">▾</span>
+        </button>
+        <div class="heatmap-menu" role="listbox" aria-label="Heatmap period">
+          ${menuItemsHtml}
+        </div>
+      </div>
     </div>
     <div class="heatmap-container">
       ${viewsHtml}

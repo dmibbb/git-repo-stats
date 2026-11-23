@@ -418,18 +418,54 @@
     }
 
     /**
-    * Switches visible heatmap period when changing the dropdown in the card header.
-    */
+     * Switches visible heatmap period when selecting an option in the custom dropdown.
+     */
     function initHeatmapPeriodSelect() {
-        const select = document.querySelector('.heatmap-select');
-        const card = select?.closest('[data-heatmap-card]');
-        if (!select || !card) return;
+        const dropdown = document.querySelector('.heatmap-dropdown');
+        const trigger = dropdown?.querySelector('.heatmap-select');
+        const label = dropdown?.querySelector('.heatmap-select-label');
+        const card = dropdown?.closest('[data-heatmap-card]');
+        if (!dropdown || !trigger || !card) return;
 
-        select.addEventListener('change', function () {
-            const targetView = this.value;
-            card.querySelectorAll('.heatmap-view').forEach(view => {
-                view.classList.toggle('active', view.getAttribute('data-heatmap-view') === targetView);
+        const closeMenu = () => {
+            dropdown.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+        };
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = dropdown.classList.toggle('open');
+            trigger.setAttribute('aria-expanded', String(isOpen));
+        });
+
+        dropdown.querySelectorAll('.heatmap-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                const targetView = opt.getAttribute('data-value');
+                if (label) label.textContent = opt.textContent.trim();
+
+                dropdown.querySelectorAll('.heatmap-option').forEach(btn => {
+                    const isSelected = btn === opt;
+                    btn.classList.toggle('active', isSelected);
+                    btn.setAttribute('aria-selected', String(isSelected));
+                });
+
+                card.querySelectorAll('.heatmap-view').forEach(view => {
+                    view.classList.toggle('active', view.getAttribute('data-heatmap-view') === targetView);
+                });
+
+                closeMenu();
             });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target)) closeMenu();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && dropdown.classList.contains('open')) {
+                closeMenu();
+                trigger.focus();
+            }
         });
     }
 

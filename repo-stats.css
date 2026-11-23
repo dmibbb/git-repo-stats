@@ -907,7 +907,15 @@ em {
   border: 1px solid var(--border);
 }
 
+.heatmap-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
 .heatmap-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: 600;
@@ -915,15 +923,72 @@ em {
   background: var(--bg-soft);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 0.2rem 0.65rem;
+  padding: 0.22rem 0.75rem;
+  line-height: 1.3;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
 
 .heatmap-select:hover,
-.heatmap-select:focus {
-  outline: none;
+.heatmap-dropdown.open .heatmap-select {
   border-color: var(--accent);
+}
+
+.heatmap-select-arrow {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  transition: transform 0.15s ease;
+}
+
+.heatmap-dropdown.open .heatmap-select-arrow {
+  transform: rotate(180deg);
+}
+
+.heatmap-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  min-width: 140px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 0.3rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  display: none;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.heatmap-dropdown.open .heatmap-menu {
+  display: flex;
+}
+
+.heatmap-option {
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: left;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+
+.heatmap-option:hover {
+  background: var(--bg-soft);
+}
+
+.heatmap-option.active {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .heatmap-view {
@@ -1438,6 +1503,7 @@ html.is-jumping .changelog-day {
   /* Hide interactive controls and placeholders */
   .theme-toggle,
   .search-bar,
+  .heatmap-dropdown,
   .back-to-top,
   .sticky-toc,
   .tags-bar,
