@@ -196,7 +196,7 @@ function renderHotspotFilesLine(hotspots) {
 function renderLegacyFilesLine(legacy) {
     if (!legacy || legacy.length === 0) return '';
 
-    let md = `* 🕰️ **Legacy files (longest untouched):**\n`;
+    let md = `* 🕰️ **Legacy files (untouched for at least 1 day):**\n`;
     legacy.forEach(f => {
         md += `  - ${wrapInlineCode(f.file)} (**${pluralize(f.daysAgo, 'day')}** ago, last: ${f.lastDate})\n`;
     });

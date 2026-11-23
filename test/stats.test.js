@@ -358,6 +358,22 @@ describe('Files, Contributors, Tech Stack & Lifecycle', () => {
         const legacy = findLegacyFiles(groupCommitsByDate(commits));
         assert.deepEqual(legacy.map(f => f.file), ['src/old.js']);
     });
+
+    test('findLegacyFiles excludes files modified today (0 days ago) by default', () => {
+        const todayStr = getTodayLocalDate().toISOString().slice(0, 10);
+        const commits = [
+            makeCommit({
+                date: todayStr,
+                fileDeltas: new Map([['src/fresh.js', { ins: 5, del: 0, binary: false, status: 'A' }]]),
+            }),
+            makeCommit({
+                date: '2026-11-01',
+                fileDeltas: new Map([['src/old.js', { ins: 5, del: 0, binary: false, status: 'A' }]]),
+            }),
+        ];
+        const legacy = findLegacyFiles(groupCommitsByDate(commits));
+        assert.deepEqual(legacy.map(f => f.file), ['src/old.js']);
+    });
 });
 
 describe('Edge Cases & Empty Input', () => {

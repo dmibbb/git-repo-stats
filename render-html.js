@@ -523,7 +523,7 @@ function renderFilesCard(filesData) {
       <div class="card-tabs" role="tablist">
         <button type="button" class="card-tab active" role="tab" aria-selected="true" data-tab="frequent" title="Top ${TOP_FILES_COUNT} most frequently changed files">🔄 Frequent</button>
         <button type="button" class="card-tab" role="tab" aria-selected="false" data-tab="hotspots" title="Top ${TOP_FILES_COUNT} files with highest total lines changed">🚀 Hotspots</button>
-        <button type="button" class="card-tab" role="tab" aria-selected="false" data-tab="legacy" title="Top ${LEGACY_FILES_COUNT} files untouched for the longest time">🕰️ Legacy</button>
+        <button type="button" class="card-tab" role="tab" aria-selected="false" data-tab="legacy" title="Top ${LEGACY_FILES_COUNT} files untouched for at least 1 day">🕰️ Legacy</button>
       </div>
     </div>
     <div class="tab-panel active" data-panel="frequent">${frequentHtml}</div>
