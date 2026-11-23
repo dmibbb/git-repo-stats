@@ -651,9 +651,12 @@ function buildHeatmapViewHTML(groupedByDate, startDate, endDate, viewKey, isActi
     const days = [];
     while (cursor <= endDate) {
         const dateStr = formatDateUTC(cursor);
-        const commitsCount = groupedByDate[dateStr]?.commits.length || 0;
+        const dayEntry = groupedByDate[dateStr];
+        const commitsCount = dayEntry?.commits.length || 0;
+        const insertions = dayEntry?.totalInsertions || 0;
+        const deletions = dayEntry?.totalDeletions || 0;
         const inRange = cursor >= startDate && cursor <= endDate;
-        days.push({ date: new Date(cursor), dateStr, commitsCount, inRange });
+        days.push({ date: new Date(cursor), dateStr, commitsCount, insertions, deletions, inRange });
         cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
 
@@ -717,7 +720,7 @@ function buildHeatmapViewHTML(groupedByDate, startDate, endDate, viewKey, isActi
             const hasCommits = day.commitsCount > 0;
             const title = !hasCommits
                 ? `No commits on ${day.dateStr}`
-                : `${pluralize(day.commitsCount, 'commit')} on ${day.dateStr} (click to view)`;
+                : `${pluralize(day.commitsCount, 'commit')} (+${formatNumber(day.insertions)} / -${formatNumber(day.deletions)}) on ${day.dateStr} (click to view)`;
             const activeAttrs = hasCommits
                 ? ` data-date="${day.dateStr}" data-active="true" role="button" tabindex="0" aria-label="${title}"`
                 : '';

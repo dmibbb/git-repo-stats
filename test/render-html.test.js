@@ -130,6 +130,7 @@ describe('render-html', () => {
         assert.match(html, /class="heatmap-select"/);
         assert.match(html, /data-release-id="release-v1-0-0"|data-release-id="release-/);
         assert.match(html, /data-time="12:00:00"/);
+        assert.match(html, /title="1 commit \(\+10 \/ -2\) on 2026-11-20 \(click to view\)"/);
     });
 
     test('handles null/empty data gracefully', () => {
