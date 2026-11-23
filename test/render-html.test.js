@@ -174,6 +174,12 @@ describe('render-html', () => {
         assert.match(html, /class="details-list details-list--scrollable"/);
     });
 
+    test('renders scrollable list class for Contributors card', () => {
+        const d = buildSampleData();
+        const html = renderOverviewHTML({ repoName: 'demo', ...d, generatedAt: '2026-11-23' });
+        assert.match(html, /class="details-list contrib-list--scrollable"/);
+    });
+
     test('adds normalized data-files attribute to commit rows for renamed file search', () => {
         const d = buildSampleData({
             files: ['src/{old => new}.js', 'src/a&b.js'],

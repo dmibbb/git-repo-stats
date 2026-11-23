@@ -1021,7 +1021,7 @@ function renderContributorsCard(contributors) {
     if (!contributors || contributors.length === 0) return '';
 
     const fmt = formatNumber;
-    let html = `<div class="card"><div class="card-header"><span class="card-title">Contributors</span><span class="card-icon">👫</span></div><ul class="details-list" style="display:block">\n`;
+    let html = `<div class="card"><div class="card-header"><span class="card-title">Contributors</span><span class="card-icon">👫</span></div><ul class="details-list contrib-list--scrollable">\n`;
     contributors.forEach((c) => {
         const safeName = escapeHtml(c.name);
         const filterQuery = escapeHtml(`Author: ${c.name}`);

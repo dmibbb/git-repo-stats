@@ -665,6 +665,12 @@ em {
   padding-right: 0.35rem;
 }
 
+.contrib-list--scrollable {
+  max-height: 14rem;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+}
+
 .file-name {
   display: inline-flex;
   align-items: center;
@@ -719,7 +725,6 @@ em {
 
 .contrib-item--clickable {
   cursor: pointer;
-  margin: 0 -0.45rem;
   padding-left: 0.45rem;
   padding-right: 0.45rem;
   border-radius: 6px;
@@ -1512,7 +1517,8 @@ html.is-jumping .changelog-day {
     text-decoration: none;
   }
 
-  .details-list--scrollable {
+  .details-list--scrollable,
+  .contrib-list--scrollable {
     max-height: none !important;
     overflow: visible !important;
   }
