@@ -400,12 +400,12 @@ function calculateOverallStats(groupedByDate, repoBounds = null) {
             totalInsertions: 0,
             totalDeletions: 0,
             netChange: 0,
-            avgPerCommitIns: '0.0',
-            avgPerCommitDel: '0.0',
-            avgFilesPerCommit: '0.0',
+            avgPerCommitIns: '0',
+            avgPerCommitDel: '0',
+            avgFilesPerCommit: '0',
             avgPerActiveDayIns: 0,
             avgPerActiveDayDel: 0,
-            avgCommitsPerActiveDay: '0.0',
+            avgCommitsPerActiveDay: '0',
             recordCommitsDate: '',
             recordCommitsCount: 0,
             recordCodeDate: '',
@@ -485,14 +485,16 @@ function calculateOverallStats(groupedByDate, repoBounds = null) {
         }
     }
 
+    const formatAvg = (num) => num.toFixed(1).replace(/\.0$/, '');
+
     const netChange = totalInsertions - totalDeletions;
-    const avgPerCommitIns = totalCommits ? (totalInsertions / totalCommits).toFixed(1) : '0.0';
-    const avgPerCommitDel = totalCommits ? (totalDeletions / totalCommits).toFixed(1) : '0.0';
-    const avgFilesPerCommit = totalCommits ? (totalFilesInCommits / totalCommits).toFixed(1) : '0.0';
+    const avgPerCommitIns = totalCommits ? formatAvg(totalInsertions / totalCommits) : '0';
+    const avgPerCommitDel = totalCommits ? formatAvg(totalDeletions / totalCommits) : '0';
+    const avgFilesPerCommit = totalCommits ? formatAvg(totalFilesInCommits / totalCommits) : '0';
 
     const avgPerActiveDayIns = activeDays ? Math.round(totalInsertions / activeDays) : 0;
     const avgPerActiveDayDel = activeDays ? Math.round(totalDeletions / activeDays) : 0;
-    const avgCommitsPerActiveDay = activeDays ? (totalCommits / activeDays).toFixed(1) : '0.0';
+    const avgCommitsPerActiveDay = activeDays ? formatAvg(totalCommits / activeDays) : '0';
 
     const maxStreakInfo = calculateMaxStreak(allDates);
     const currentStreak = calculateCurrentStreak(allDates);

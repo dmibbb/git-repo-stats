@@ -212,6 +212,10 @@ describe('Activity & Records', () => {
         assert.equal(overall.trueFirstDate, '2026-01-01');
         assert.equal(overall.trueLastDate, '2026-11-12');
         assert.equal(overall.totalUniqueFiles, 3);
+        assert.equal(overall.avgPerCommitIns, '102.5');
+        assert.equal(overall.avgPerCommitDel, '50.5');
+        assert.equal(overall.avgFilesPerCommit, '2');
+        assert.equal(overall.avgCommitsPerActiveDay, '1');
     });
 });
 
