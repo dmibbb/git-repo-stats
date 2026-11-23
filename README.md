@@ -31,6 +31,7 @@
 - **Merge commits are excluded:** `--no-merges` is always applied so merge commits do not duplicate line churn or skew contributor statistics.
 - **Local timezone for streaks:** `Current streak`, `Repo age`, and `Legacy` file ages are calculated relative to the local calendar date of the machine running the CLI, while commit timestamps preserve each author's original timezone (`--date=iso`).
 - **Git log buffer limit (`200 MB`):** The entire `git log` output is buffered in memory (sufficient for ~100k commits). For massive monorepos, either narrow the range with `--since=YYYY-MM-DD` or override the limit via `REPO_STATS_MAX_BUFFER` (in bytes, e.g. `REPO_STATS_MAX_BUFFER=524288000`).
+- **Performance on large repositories:** Computing file diffs (`--raw --numstat`) across tens of thousands of commits can take several seconds. To speed up Git history traversal, precompute the commit graph once in the target repository with `git commit-graph write --reachable` (or narrow the range via `--since=YYYY-MM-DD`).
 
 ### 🚀 Usage
 

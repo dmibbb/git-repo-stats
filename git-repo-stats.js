@@ -265,8 +265,9 @@ function fetchAndParseCommits(repoPath, args) {
     return commits;
 }
 
-function collectStatistics(commits, repoPath) {
-    const repoBounds = fetchRepoDateBounds(repoPath);
+function collectStatistics(commits, repoPath, args = {}) {
+    const isFiltered = Boolean(args.since || args.until);
+    const repoBounds = isFiltered ? fetchRepoDateBounds(repoPath) : null;
     const groupedByDate = groupCommitsByDate(commits);
 
     return {
@@ -386,7 +387,7 @@ function main() {
         }
 
         startStep('📊 Calculating repository statistics...');
-        const stats = collectStatistics(commits, absoluteRepoPath);
+        const stats = collectStatistics(commits, absoluteRepoPath, args);
         endStep();
 
         generateOutputs(args, absoluteRepoPath, stats, repoName);

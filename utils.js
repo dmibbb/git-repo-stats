@@ -1,5 +1,5 @@
 const path = require('path');
-const { execSync, execFile } = require('child_process');
+const { execFileSync, execFile } = require('child_process');
 
 // === Configuration ===
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -30,7 +30,7 @@ const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
  */
 function getRepoName(repoPath) {
   try {
-    const topLevel = execSync('git rev-parse --show-toplevel', {
+    const topLevel = execFileSync('git', ['rev-parse', '--show-toplevel'], {
       encoding: 'utf-8',
       cwd: repoPath,
       stdio: 'pipe'
@@ -38,7 +38,7 @@ function getRepoName(repoPath) {
     return path.basename(topLevel);
   } catch (e) {
     // Fallback to original repo
-    let originalRepo = path.basename(path.resolve(repoPath));
+    const originalRepo = path.basename(path.resolve(repoPath));
     console.warn(`⚠️  Could not resolve repo root via git (${e.code || 'error'}); falling back to folder name "${originalRepo}".`);
     return originalRepo;
   }

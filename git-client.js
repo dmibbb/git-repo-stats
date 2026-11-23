@@ -14,6 +14,7 @@ function fetchRawGitLog(repoPath, since, until) {
     'core.quotepath=false',
     'log',
     '--no-merges',
+    '--decorate-refs=refs/tags/*',
     '--date=iso',
     `--pretty=format:${COMMIT_SEP}%ad${FIELD_SEP}%an${FIELD_SEP}%D${FIELD_SEP}%s`,
     '--raw',
@@ -189,15 +190,33 @@ function parseRawLog(rawLog) {
  * ignoring any --since or --until filters.
  */
 function fetchRepoDateBounds(repoPath) {
+  const execOpts = { encoding: 'utf-8', maxBuffer: MAX_BUFFER, cwd: repoPath, stdio: 'pipe' };
+
   try {
-    const out = execFileSync(
+    const rootsOut = execFileSync(
       'git',
-      ['log', '--no-merges', '--date=short', '--pretty=format:%ad'],
-      { encoding: 'utf-8', maxBuffer: MAX_BUFFER, cwd: repoPath }
+      ['log', '--no-merges', '--no-decorate', '--max-parents=0', '--date=short', '--pretty=format:%ad'],
+      execOpts
     ).trim();
 
-    if (!out) return null;
-    const dates = out.split('\n').map(d => d.trim()).filter(Boolean).sort(); // sort in case of broken timestamps
+    if (!rootsOut) return null;
+
+    const latestOut = execFileSync(
+      'git',
+      ['log', '--no-merges', '--no-decorate', '--max-count=5', '--date=short', '--pretty=format:%ad'],
+      execOpts
+    ).trim();
+
+    if (!latestOut) return null;
+
+    const dates = [
+      ...rootsOut.split('\n'),
+      ...latestOut.split('\n'),
+    ]
+      .map(d => d.trim())
+      .filter(Boolean)
+      .sort();
+
     if (dates.length === 0) return null;
 
     return {

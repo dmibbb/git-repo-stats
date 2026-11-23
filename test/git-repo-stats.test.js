@@ -3,9 +3,9 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('node:os');
 const path = require('node:path');
-const { parseArgs, getGenerationMode, resolveOutputDir, validateRepoPath } = require('../git-repo-stats');
+const { parseArgs, getGenerationMode, resolveOutputDir, validateRepoPath, collectStatistics, main } = require('../git-repo-stats');
 const { execFileSync } = require('node:child_process');
-const { main } = require('../git-repo-stats');
+const { makeCommit } = require('./stats.test');
 
 describe('parseArgs', () => {
     test('returns default options when argv is empty', () => {
@@ -222,3 +222,13 @@ describe('main() end-to-end integration', () => {
         }
     });
 });
+
+describe('collectStatistics', () => {
+    test('skips git bounds lookup when no date filters are active', () => {
+        const commits = [makeCommit({ date: '2026-11-20' })];
+        // Passing a non-existent repoPath proves fetchRepoDateBounds is not invoked without filters
+        const result = collectStatistics(commits, '/non-existent-path-for-test', {});
+        assert.equal(result.stats.trueFirstDate, '2026-11-20');
+        assert.equal(result.stats.trueLastDate, '2026-11-20');
+    });
+})
