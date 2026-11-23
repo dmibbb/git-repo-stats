@@ -3,6 +3,8 @@ const path = require('path');
 const {
     MAX_FILES_PER_COMMIT,
     OPEN_DAYS_COUNT,
+    TOP_FILES_COUNT,
+    TOP_EXTENSIONS_COUNT,
     LEGACY_FILES_COUNT,
     WEEKDAY_NAMES,
     MONTH_NAMES,
@@ -42,7 +44,7 @@ const TICK_COUNT_MIN = 2;
  * Throws an error if the stylesheet asset cannot be read.
  */
 function loadCSS() {
-        const cssPath = path.join(__dirname, 'repo-stats.css');
+    const cssPath = path.join(__dirname, 'repo-stats.css');
     try {
         return fs.readFileSync(cssPath, 'utf-8');
     } catch (err) {
@@ -55,7 +57,7 @@ function loadCSS() {
  * Throws an error if the client script asset cannot be read.
  */
 function loadClientJS() {
-        const jsPath = path.join(__dirname, 'repo-stats-client.js');
+    const jsPath = path.join(__dirname, 'repo-stats-client.js');
     try {
         return fs.readFileSync(jsPath, 'utf-8');
     } catch (err) {
@@ -517,9 +519,9 @@ function renderFilesCard(filesData) {
     <div class="card-header">
       <span class="card-title">📂 Files</span>
       <div class="card-tabs" role="tablist">
-        <button type="button" class="card-tab active" data-tab="frequent" title="Top 5 most frequently changed files">🔄 Frequent</button>
-        <button type="button" class="card-tab" data-tab="hotspots" title="Top 5 files with highest total lines changed">🚀 Hotspots</button>
-        <button type="button" class="card-tab" data-tab="legacy" title="Top ${LEGACY_FILES_COUNT} files untouched for the longest time">🕰️ Legacy</button>
+        <button type="button" class="card-tab active" role="tab" aria-selected="true" data-tab="frequent" title="Top ${TOP_FILES_COUNT} most frequently changed files">🔄 Frequent</button>
+        <button type="button" class="card-tab" role="tab" aria-selected="false" data-tab="hotspots" title="Top ${TOP_FILES_COUNT} files with highest total lines changed">🚀 Hotspots</button>
+        <button type="button" class="card-tab" role="tab" aria-selected="false" data-tab="legacy" title="Top ${LEGACY_FILES_COUNT} files untouched for the longest time">🕰️ Legacy</button>
       </div>
     </div>
     <div class="tab-panel active" data-panel="frequent">${frequentHtml}</div>
@@ -572,8 +574,8 @@ function renderTabbedTechStackCard(techStackByFiles, techStackByLines) {
     <div class="card-header">
       <span class="card-title">🧰 Tech stack</span>
       <div class="card-tabs" role="tablist">
-        <button type="button" class="card-tab active" data-tab="by-files" title="Top 5 extensions by number of file touches">📄 By Files</button>
-        <button type="button" class="card-tab" data-tab="by-lines" title="Top 5 extensions by lines changed (insertions + deletions)">📏 By Lines</button>
+        <button type="button" class="card-tab active" role="tab" aria-selected="true" data-tab="by-files" title="Top ${TOP_EXTENSIONS_COUNT} extensions by number of file touches">📄 By Files</button>
+        <button type="button" class="card-tab" role="tab" aria-selected="false" data-tab="by-lines" title="Top ${TOP_EXTENSIONS_COUNT} extensions by lines changed (insertions + deletions)">📏 By Lines</button>
       </div>
     </div>
     <div class="tab-panel active" data-panel="by-files">${renderTechStackListHTML(techStackByFiles)}</div>
@@ -620,9 +622,9 @@ function renderFileLifecycleCard(lifecycle) {
     <div class="card-header">
       <span class="card-title">♻️ File lifecycle</span>
       <div class="card-tabs" role="tablist">
-        <button type="button" class="card-tab active" data-tab="all" title="All tracked file operations">📦 All</button>
-        <button type="button" class="card-tab" data-tab="text" title="Text file operations only">📝 Text</button>
-        <button type="button" class="card-tab" data-tab="binary" title="Binary file operations only">🖼️ Binary</button>
+        <button type="button" class="card-tab active" role="tab" aria-selected="true" data-tab="all" title="All tracked file operations">📦 All</button>
+        <button type="button" class="card-tab" role="tab" aria-selected="false" data-tab="text" title="Text file operations only">📝 Text</button>
+        <button type="button" class="card-tab" role="tab" aria-selected="false" data-tab="binary" title="Binary file operations only">🖼️ Binary</button>
       </div>
     </div>
     <div class="tab-panel active" data-panel="all">${renderPanel(lifecycle.all)}</div>
@@ -997,8 +999,8 @@ function renderChurnTimelineHTML(groupedByDate) {
             <span class="churn-legend-item"><i class="churn-dot churn-dot--bin"></i> Binaries</span>
           </div>
           <div class="card-tabs" role="tablist">
-            <button type="button" class="card-tab active" data-tab="linear" title="Linear vertical scale">📏 Linear</button>
-            <button type="button" class="card-tab" data-tab="log" title="Logarithmic scale (easier to see small commits next to huge ones)">📐 Log</button>
+            <button type="button" class="card-tab active" role="tab" aria-selected="true" data-tab="linear" title="Linear vertical scale">📏 Linear</button>
+            <button type="button" class="card-tab" role="tab" aria-selected="false" data-tab="log" title="Logarithmic scale (easier to see small commits next to huge ones)">📐 Log</button>
           </div>
         </div>
       </div>
@@ -1040,7 +1042,7 @@ function renderContributorsCard(contributors) {
 function renderSearchBarHTML() {
     let html = '<div class="search-bar">\n';
     html += '<div class="search-input-wrapper">\n';
-    html += '<input type="text" class="search-input" placeholder="🔍 Search commits, files, authors...">\n';
+    html += '<input type="text" class="search-input" aria-label="Search commits, files, authors" placeholder="🔍 Search commits, files, authors...">\n';
     html += '<button type="button" class="search-clear" aria-label="Clear search" title="Clear (Esc)">✕</button>\n';
     html += '</div>\n';
     html += '<span class="search-counter" aria-live="polite"></span>\n';

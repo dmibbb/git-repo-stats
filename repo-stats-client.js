@@ -288,7 +288,9 @@
             const targetTab = tabBtn.getAttribute('data-tab');
 
             card.querySelectorAll('.card-tab').forEach(btn => {
-                btn.classList.toggle('active', btn === tabBtn);
+                const isSelected = btn === tabBtn;
+                btn.classList.toggle('active', isSelected);
+                btn.setAttribute('aria-selected', String(isSelected));
             });
 
             card.querySelectorAll('.tab-panel').forEach(panel => {

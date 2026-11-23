@@ -159,6 +159,9 @@ describe('render-html', () => {
         assert.match(html, /class="search-counter" aria-live="polite"/);
         assert.match(html, /class="heatmap-cell [^"]*" data-date="2026-11-20" data-active="true" role="button" tabindex="0" aria-label="/);
         assert.match(html, /class="churn-release-pill-group" data-release-id="[^"]+" role="button" tabindex="0" aria-label="Jump to release v1\.0\.0"/);
+        assert.match(html, /class="search-input" aria-label="Search commits, files, authors"/);
+        assert.match(html, /class="card-tab active" role="tab" aria-selected="true"/);
+        assert.match(html, /class="card-tab" role="tab" aria-selected="false"/);
     });
 
     test('renders scrollable list class for Legacy files tab', () => {
