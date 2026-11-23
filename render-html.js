@@ -39,29 +39,27 @@ const TICK_COUNT_MIN = 2;
 
 /**
  * Reads CSS file from repo-stats.css.
- * Falls back to empty string if file not found.
+ * Throws an error if the stylesheet asset cannot be read.
  */
 function loadCSS() {
-    try {
         const cssPath = path.join(__dirname, 'repo-stats.css');
+    try {
         return fs.readFileSync(cssPath, 'utf-8');
-    } catch {
-        console.warn('⚠️ Could not load repo-stats.css, using empty styles.');
-        return '';
+    } catch (err) {
+        throw new Error(`Failed to load required stylesheet: ${cssPath}`, { cause: err });
     }
 }
 
 /**
  * Reads client-side JS file from repo-stats-client.js.
- * Falls back to empty string if file not found.
+ * Throws an error if the client script asset cannot be read.
  */
 function loadClientJS() {
-    try {
         const jsPath = path.join(__dirname, 'repo-stats-client.js');
+    try {
         return fs.readFileSync(jsPath, 'utf-8');
-    } catch {
-        console.warn('⚠️ Could not load repo-stats-client.js, using empty script.');
-        return '';
+    } catch (err) {
+        throw new Error(`Failed to load required client script: ${jsPath}`, { cause: err });
     }
 }
 
