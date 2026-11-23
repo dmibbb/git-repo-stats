@@ -114,7 +114,7 @@ describe('render-html', () => {
         assert.ok(!html.includes('<img src=x onerror=alert(1)>'));
         assert.ok(html.includes('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'));
         assert.ok(html.includes('href="src/my%20file.js"'));
-        assert.ok(html.includes('<code>src/{old =&gt; <a href="src/new.js" class="file-link">new</a>}.js</code>'));
+        assert.ok(html.includes('<code>src/{old =&gt; <a href="src/new.js" class="file-link" target="_blank" rel="noopener noreferrer" title="Open file in new tab">new</a>}.js</code>'));
         assert.ok(html.includes('Filtered (since 2026-01-01)'));
     });
 
@@ -202,9 +202,9 @@ describe('render-html', () => {
 });
 
 describe('renderFileLinkHTML', () => {
-    test('renders regular file as link', () => {
+    test('renders regular file as link opening in a new tab', () => {
         const html = renderFileLinkHTML('src/index.js');
-        assert.match(html, /<a href="src\/index\.js"/);
+        assert.equal(html, '<a href="src/index.js" class="file-link" target="_blank" rel="noopener noreferrer" title="Open file in new tab">src/index.js</a>');
     });
 
     test('respects explicit isRename parameter', () => {
@@ -214,10 +214,10 @@ describe('renderFileLinkHTML', () => {
 
     test('renders renamed file with clickable link on new path', () => {
         const html = renderFileLinkHTML('src/{old => new}.js');
-        assert.equal(html, '<code>src/{old =&gt; <a href="src/new.js" class="file-link">new</a>}.js</code>');
+        assert.equal(html, '<code>src/{old =&gt; <a href="src/new.js" class="file-link" target="_blank" rel="noopener noreferrer" title="Open file in new tab">new</a>}.js</code>');
 
         const flatHtml = renderFileLinkHTML('old.js => new.js');
-        assert.equal(flatHtml, '<code>old.js =&gt; <a href="new.js" class="file-link">new.js</a></code>');
+        assert.equal(flatHtml, '<code>old.js =&gt; <a href="new.js" class="file-link" target="_blank" rel="noopener noreferrer" title="Open file in new tab">new.js</a></code>');
     });
 });
 

@@ -74,6 +74,7 @@ function loadClientJS() {
  */
 function renderFileLinkHTML(filename, isRename = filename.includes(' => ')) {
     const buildHref = (targetPath) => targetPath.split('/').map(encodeURIComponent).join('/');
+    const linkAttrs = 'class="file-link" target="_blank" rel="noopener noreferrer" title="Open file in new tab"';
 
     if (isRename && filename.includes(' => ')) {
         const newFullPath = normalizeGitPath(filename);
@@ -83,14 +84,14 @@ function renderFileLinkHTML(filename, isRename = filename.includes(' => ')) {
         if (braceMatch) {
             const [, prefix, oldPart, newPart, suffix] = braceMatch;
             const linkLabel = newPart || newFullPath;
-            return `<code>${escapeHtml(prefix)}{${escapeHtml(oldPart)} =&gt; <a href="${href}" class="file-link">${escapeHtml(linkLabel)}</a>}${escapeHtml(suffix)}</code>`;
+            return `<code>${escapeHtml(prefix)}{${escapeHtml(oldPart)} =&gt; <a href="${href}" ${linkAttrs}>${escapeHtml(linkLabel)}</a>}${escapeHtml(suffix)}</code>`;
         }
 
         const arrowIdx = filename.lastIndexOf(' => ');
         if (arrowIdx !== -1) {
             const oldPart = filename.slice(0, arrowIdx);
             const newPart = filename.slice(arrowIdx + 4);
-            return `<code>${escapeHtml(oldPart)} =&gt; <a href="${href}" class="file-link">${escapeHtml(newPart)}</a></code>`;
+            return `<code>${escapeHtml(oldPart)} =&gt; <a href="${href}" ${linkAttrs}>${escapeHtml(newPart)}</a></code>`;
         }
 
         return `<code>${escapeHtml(filename)}</code>`;
@@ -101,7 +102,7 @@ function renderFileLinkHTML(filename, isRename = filename.includes(' => ')) {
     }
 
     const encoded = buildHref(filename);
-    return `<a href="${encoded}" class="file-link">${escapeHtml(filename)}</a>`;
+    return `<a href="${encoded}" ${linkAttrs}>${escapeHtml(filename)}</a>`;
 }
 
 /**

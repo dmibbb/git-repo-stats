@@ -1348,6 +1348,8 @@ html.is-jumping .changelog-day {
   font-size: 0.8rem;
   line-height: 1.45;
   color: var(--fg-muted);
+  border-top: 1px solid var(--border);
+  padding-top: 0.4rem;
 }
 
 .file-status {
