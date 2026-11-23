@@ -66,6 +66,7 @@ utils.js, lang-icons.js (shared helpers)
 
 | File                   | Role                                                       |
 | ---------------------- | ---------------------------------------------------------- |
+| `config.js`            | Configuration file with all defaults                       |
 | `git-repo-stats.js`    | CLI entry, arg parsing, orchestration                      |
 | `git-client.js`        | Shells out to `git`, parses raw log                        |
 | `stats.js`             | Pure aggregation functions (no I/O)                        |
@@ -206,6 +207,7 @@ Options:
 | `utils.js` exports             | All files import from it — check for breaking changes                 |
 | `COMMIT_SEP` / `FIELD_SEP`     | `parseRawLog`, `parseCommitEntry`, and all tests                      |
 | `package.json` engines         | CI matrix, README, `printHelp()` output                               |
+| `config.js` defaults           | `test/git-repo-stats.test.js` and `utils.js` re-exports               |
 
 ---
 

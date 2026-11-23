@@ -6,18 +6,19 @@ const path = require('node:path');
 const { parseArgs, getGenerationMode, resolveOutputDir, validateRepoPath, collectStatistics, main } = require('../git-repo-stats');
 const { execFileSync } = require('node:child_process');
 const { makeCommit } = require('./stats.test');
+const config = require('../config');
 
 describe('parseArgs', () => {
     test('returns default options when argv is empty', () => {
         assert.deepEqual(parseArgs([]), {
             since: null,
             until: null,
-            html: false,
-            md: false,
-            changelog: false,
-            out: null,
+            html: config.defaults.html,
+            md: config.defaults.md,
+            changelog: config.defaults.changelog,
+            out: config.defaults.out,
             help: false,
-            open: false,
+            open: config.defaults.open,
             repoPath: null,
         });
     });
@@ -120,14 +121,18 @@ describe('parseArgs', () => {
 });
 
 describe('getGenerationMode', () => {
-    test('defaults to HTML only when no format flags are passed', () => {
-        assert.deepEqual(getGenerationMode({ html: false, md: false, changelog: false }), { html: true, md: false, changelog: false });
+    test('uses config defaults when no format flags are passed to parseArgs', () => {
+        assert.deepEqual(getGenerationMode(parseArgs([])), {
+            html: config.defaults.html,
+            md: config.defaults.md,
+            changelog: config.defaults.changelog,
+        });
     });
 
     test('respects explicit --md, --html, --changelog, and combined flags', () => {
-        assert.deepEqual(getGenerationMode({ html: false, md: true, changelog: false }), { html: false, md: true, changelog: false });
-        assert.deepEqual(getGenerationMode({ html: false, md: false, changelog: true }), { html: false, md: false, changelog: true });
-        assert.deepEqual(getGenerationMode({ html: true, md: true, changelog: true }), { html: true, md: true, changelog: true });
+        assert.deepEqual(getGenerationMode(parseArgs(['--md'])), { html: false, md: true, changelog: false });
+        assert.deepEqual(getGenerationMode(parseArgs(['--changelog'])), { html: false, md: false, changelog: true });
+        assert.deepEqual(getGenerationMode(parseArgs(['--html', '--md', '--changelog'])), { html: true, md: true, changelog: true });
     });
 });
 

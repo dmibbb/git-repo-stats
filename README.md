@@ -35,6 +35,8 @@
 
 ### 🚀 Usage
 
+> Customize default flags, output filenames, limits, and ignore rules in \config.js`.
+
 Run directly with Node.js or link globally via `npm link` to use the `repo-stats` command anywhere:
 
 ```bash
@@ -64,6 +66,7 @@ repo-stats /path/to/target-repo
 ### 🏗️ Project Structure
 
 - `git-repo-stats.js` — CLI entry point, argument parser, and pipeline orchestrator
+- `config.js` — Default CLI flags, output filenames, aggregation limits, and ignore patterns
 - `git-client.js` — Git subprocess runner (`execFileSync`) and `--raw` / `--numstat` log parser
 - `stats.js` — Statistical aggregations, streaks, releases, tech stack, and file lifecycle metrics
 - `render-html.js` — Self-contained HTML dashboard and SVG chart generator

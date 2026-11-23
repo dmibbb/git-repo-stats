@@ -1,27 +1,19 @@
 const path = require('path');
 const { execFileSync, execFile } = require('child_process');
+const { limits, ignoredPatterns } = require('./config');
 
 // === Configuration ===
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
-const MAX_FILES_PER_COMMIT = 10;
+const MAX_FILES_PER_COMMIT = limits.maxFilesPerCommit;
 const RAW_MAX = parseInt(process.env.REPO_STATS_MAX_BUFFER, 10);
-const DEFAULT_MAX_BUFFER_MB = 200;
+const DEFAULT_MAX_BUFFER_MB = limits.defaultMaxBufferMb;
 const MAX_BUFFER = Number.isFinite(RAW_MAX) && RAW_MAX > 0 ? RAW_MAX : 1024 * 1024 * DEFAULT_MAX_BUFFER_MB;
-const TOP_FILES_COUNT = 5;
-const TOP_EXTENSIONS_COUNT = 5;
-const LEGACY_FILES_COUNT = 25;
-const HISTOGRAM_WIDTH = 25;
-const OPEN_DAYS_COUNT = 0;
-
-// Files to exclude from statistics (but still shown in commit tables)
-const IGNORED_PATTERNS = [
-  /(^|\/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb)$/,
-  /(^|\/)(Cargo\.lock|Gemfile\.lock|poetry\.lock|composer\.lock|Pipfile\.lock|go\.sum)$/,
-  /(^|\/)(dist|build|vendor|third_party|coverage|\.next|\.nuxt)\//,
-  /\.min\.(js|css)$/,
-  /\.(map|bundle\.js|chunk\.js)$/,
-];
-
+const TOP_FILES_COUNT = limits.topFilesCount;
+const TOP_EXTENSIONS_COUNT = limits.topExtensionsCount;
+const LEGACY_FILES_COUNT = limits.legacyFilesCount;
+const HISTOGRAM_WIDTH = limits.histogramWidth;
+const OPEN_DAYS_COUNT = limits.openDaysCount;
+const IGNORED_PATTERNS = ignoredPatterns;
 const WEEKDAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 

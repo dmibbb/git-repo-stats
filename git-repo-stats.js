@@ -83,6 +83,7 @@ const {
     renderChangelogHTML,
     wrapInHTMLTemplate
 } = require('./render-html');
+const config = require('./config');
 
 const VALUE_FLAGS = new Set(['since', 'until', 'out']);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -94,24 +95,21 @@ const isValidDate = (s) => {
     return dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
 };
 
-const OUTPUT_FILE_MARKDOWN = 'repo-stats.md';
-const OUTPUT_FILE_HTML = 'repo-stats.html';
-const OUTPUT_FILE_CHANGELOG = 'repo-stats-changelog.md';
-
 /**
  * Parses CLI arguments (supports --flag=value, --flag value, and positional repo path).
- * Returns { since, until, html, md, out, help, repoPath, open }
+ * Explicit format flags (--html, --md, --changelog) override defaults in config.js.
  */
 function parseArgs(argv) {
+    const explicitFormat = { html: false, md: false, changelog: false };
     const args = {
         since: null,
         until: null,
-        html: false,
-        md: false,
-        changelog: false,
-        out: null,
+        html: config.defaults.html,
+        md: config.defaults.md,
+        changelog: config.defaults.changelog,
+        out: config.defaults.out,
         help: false,
-        open: false,
+        open: config.defaults.open,
         repoPath: null,
     };
 
@@ -155,13 +153,13 @@ function parseArgs(argv) {
                     if (value === 'false') {
                         console.warn('⚠️  --html=false is not supported; use --md alone to generate Markdown only.');
                     }
-                    args.html = true;
+                    explicitFormat.html = true;
                     break;
                 case 'md':
-                    args.md = true;
+                    explicitFormat.md = true;
                     break;
                 case 'changelog':
-                    args.changelog = true;
+                    explicitFormat.changelog = true;
                     break;
                 case 'out':
                     if (!value) {
@@ -191,6 +189,13 @@ function parseArgs(argv) {
         }
     }
 
+    const hasExplicitFormat = explicitFormat.html || explicitFormat.md || explicitFormat.changelog;
+    if (hasExplicitFormat) {
+        args.html = explicitFormat.html;
+        args.md = explicitFormat.md;
+        args.changelog = explicitFormat.changelog;
+    }
+
     if (args.since && args.until && args.since > args.until) {
         console.warn(`⚠️  --since (${args.since}) is later than --until (${args.until}); result may be empty.`);
     }
@@ -199,13 +204,12 @@ function parseArgs(argv) {
 }
 
 /**
- * Determines what to generate based on flags.
- * Default (no flags) → HTML only.
+ * Determines what to generate based on resolved args.
  */
 function getGenerationMode(args) {
     return {
-        html: args.html || (!args.html && !args.md && !args.changelog),
-        md: args.md,
+        html: Boolean(args.html),
+        md: Boolean(args.md),
         changelog: Boolean(args.changelog),
     };
 }
@@ -326,16 +330,16 @@ function generateMarkdown(outputDir, data, args, repoName, generatedAt) {
     md += renderChangelog(groupedByDate);
     md += renderFooter(generatedAt);
 
-    const mdPath = path.join(outputDir, OUTPUT_FILE_MARKDOWN);
+    const mdPath = path.join(outputDir, config.files.mdFile);
     fs.writeFileSync(mdPath, md, 'utf-8');
     endStep(`→ ${mdPath} (${formatBytes(Buffer.byteLength(md, 'utf-8'))})`);
 }
 
 function generateChangelogFile(outputDir, data, generatedAt) {
-    startStep(`📋 Rendering and saving ${OUTPUT_FILE_CHANGELOG}...`);
+    startStep(`📋 Rendering and saving ${config.files.changelogFile}...`);
     const changelogMd = renderChangelogFile(data.releases, generatedAt);
 
-    const changelogPath = path.join(outputDir, OUTPUT_FILE_CHANGELOG);
+    const changelogPath = path.join(outputDir, config.files.changelogFile);
     fs.writeFileSync(changelogPath, changelogMd, 'utf-8');
     endStep(`→ ${changelogPath} (${formatBytes(Buffer.byteLength(changelogMd, 'utf-8'))})`);
 }
@@ -370,7 +374,7 @@ function generateHtml(outputDir, data, args, repoName, generatedAt) {
     htmlContent += renderChangelogHTML(groupedByDate, tagsList);
 
     const fullHTML = wrapInHTMLTemplate(htmlContent, `Repository Statistics: ${repoName}`, generatedAt);
-    const htmlPath = path.join(outputDir, OUTPUT_FILE_HTML);
+    const htmlPath = path.join(outputDir, config.files.htmlFile);
     fs.writeFileSync(htmlPath, fullHTML, 'utf-8');
     endStep(`→ ${htmlPath} (${formatBytes(Buffer.byteLength(fullHTML, 'utf-8'))})`);
 

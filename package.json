@@ -16,6 +16,7 @@
     "node": "^20.19.0 || ^22.13.0 || >=24"
   },
   "files": [
+    "config.js",
     "git-client.js",
     "git-repo-stats.js",
     "lang-icons.js",
