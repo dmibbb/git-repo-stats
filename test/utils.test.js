@@ -121,6 +121,11 @@ describe('File path & Extension helpers', () => {
 
         assert.equal(isIgnoredFile('src/utils.js'), false);
         assert.equal(isIgnoredFile('package.json'), false);
+
+        assert.equal(isIgnoredFile('repo-stats.html'), true);
+        assert.equal(isIgnoredFile('misc/repo-stats.html'), true);
+        assert.equal(isIgnoredFile('reports/repo-stats.md'), true);
+        assert.equal(isIgnoredFile('repo-stats-changelog.md'), true);
     });
 
     test('getExtension extracts lowercase extensions and handles dotfiles/no-ext', () => {

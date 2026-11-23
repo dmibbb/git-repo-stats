@@ -79,5 +79,8 @@ module.exports = {
 
         // Source maps and bundled/chunked JS assets
         /\.(map|bundle\.js|chunk\.js)$/,
+
+        // Generated git-repo-stats reports (mainly needed for this repo only)
+        /(^|\/)(repo-stats\.html|repo-stats\.md|repo-stats-changelog\.md)$/,
     ],
 };

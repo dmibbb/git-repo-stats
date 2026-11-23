@@ -284,3 +284,46 @@ describe('Edge cases', () => {
         assert.ok(html.includes('release/2026.11.20'));
     });
 });
+
+describe('renderChangelogHTML', () => {
+    test('formats day summary metadata without duplicating unique files count', () => {
+        const singleFileData = buildSampleData({
+            date: '2026-11-23',
+            author: 'DB',
+            tags: ['v1.0.0'],
+            trackedFiles: ['src/app.js'],
+            insertions: 10,
+            deletions: 2,
+        });
+        const singleHtml = renderChangelogHTML(singleFileData.groupedByDate, singleFileData.tagsList);
+
+        assert.ok(singleHtml.includes('<strong>1 commit</strong>'));
+        assert.ok(singleHtml.includes('<strong>1</strong> unique file</span>'));
+        assert.ok(!singleHtml.includes('1 1 unique file'));
+        assert.ok(singleHtml.includes('<span class="summary-authors">DB</span>'));
+
+        const multiFileCommits = [
+            makeCommit({
+                date: '2026-11-23',
+                author: 'DB',
+                trackedFiles: ['src/a.js', 'src/b.js'],
+                insertions: 400,
+                deletions: 200,
+            }),
+            makeCommit({
+                date: '2026-11-23',
+                author: 'Alice',
+                trackedFiles: ['src/b.js', 'src/c.js'],
+                insertions: 240,
+                deletions: 112,
+            }),
+        ];
+        const multiGrouped = groupCommitsByDate(multiFileCommits);
+        const multiHtml = renderChangelogHTML(multiGrouped, []);
+
+        assert.ok(multiHtml.includes('<strong>2 commits</strong>'));
+        assert.ok(multiHtml.includes('<strong>3</strong> unique files</span>'));
+        assert.ok(!multiHtml.includes('3 3 unique files'));
+        assert.ok(multiHtml.includes('<span class="summary-authors">DB · Alice</span>'));
+    });
+});

@@ -283,7 +283,7 @@ function renderDaySectionHTML(date, dayData, isOpen = true) {
           <span class="meta-sep">|</span>
           <span><strong class="positive">+${fmt(dayData.totalInsertions)}</strong> / <strong class="negative">-${fmt(dayData.totalDeletions)}</strong></span>
           <span class="meta-sep">|</span>
-          <span><strong>${fmt(uniqueFilesCount)}</strong> ${pluralize(uniqueFilesCount, 'unique file')}</span>
+          <span><strong>${fmt(uniqueFilesCount)}</strong> ${uniqueFilesCount === 1 ? 'unique file' : 'unique files'}</span>
           ${authorsHtml}
         </div>
       </div>
