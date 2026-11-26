@@ -199,6 +199,16 @@ describe('render-html', () => {
         const html = renderOverviewHTML({ repoName: 'demo', ...d, generatedAt: '2026-11-23' });
         assert.match(html, /title="Morning \(06:00–11:59\): 1 commit \(100%\)"/);
     });
+
+    test('wraps long commit subjects in KPI cards with ellipsis class so the date stays visible', () => {
+        const d = buildSampleData({
+            date: '2026-11-23',
+            subject: 'feat: ' + 'very long commit subject '.repeat(10),
+        });
+        const html = renderOverviewHTML({ repoName: 'demo', ...d, generatedAt: '2026-11-23' });
+        assert.match(html, /<span class="kpi-sub-subject">feat: very long commit subject/);
+        assert.match(html, /<span class="kpi-sub-date">on 2026-11-23<\/span>/);
+    });
 });
 
 describe('renderFileLinkHTML', () => {

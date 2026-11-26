@@ -272,6 +272,7 @@ em {
 
 /* === Cards === */
 .card {
+  min-width: 0;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -360,6 +361,17 @@ em {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.kpi-sub-subject {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-sub-date {
+  display: block;
 }
 
 .kpi-value .positive { color: var(--added); }

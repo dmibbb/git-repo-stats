@@ -1126,19 +1126,27 @@ function renderOverviewHTML({
         '💪',
         'Largest commit',
         `<span class="positive">+${fmt(largestCommit?.insertions || 0)}</span> / <span class="negative">-${fmt(largestCommit?.deletions || 0)}</span>`,
-        largestCommit ? `${escapeHtml(largestCommit.subject)}<br>on ${largestCommit.date}` : '',
-        largestCommit ? `${largestCommit.subject} (${largestCommit.date}) — click to filter & view` : '',
+        largestCommit
+            ? `<span class="kpi-sub-subject">${escapeHtml(largestCommit.subject)}</span><span class="kpi-sub-date">on ${largestCommit.date}</span>`
+            : '',
+        largestCommit
+            ? `${largestCommit.subject} (${largestCommit.date}) — click to filter & view`
+            : '',
         largestCommit ? largestCommit.date : '',
-        largestCommit ? largestCommit.subject : ''
+        largestCommit ? largestCommit.subject : '',
     );
     html += renderKPICard(
         '🚚',
         'Widest commit',
         widestCommit ? pluralize(widestCommit.filesCount, 'file') : 'N/A',
-        widestCommit ? `${escapeHtml(widestCommit.subject)}<br>on ${widestCommit.date}` : '',
-        widestCommit ? `${widestCommit.subject} (${widestCommit.date}) — click to filter & view` : '',
+        widestCommit
+            ? `<span class="kpi-sub-subject">${escapeHtml(widestCommit.subject)}</span><span class="kpi-sub-date">on ${widestCommit.date}</span>`
+            : '',
+        widestCommit
+            ? `${widestCommit.subject} (${widestCommit.date}) — click to filter & view`
+            : '',
         widestCommit ? widestCommit.date : '',
-        widestCommit ? widestCommit.subject : ''
+        widestCommit ? widestCommit.subject : '',
     );
     html += `</div>`;
 
