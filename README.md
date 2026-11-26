@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000" alt="javaScript"/>
   <img src="https://img.shields.io/badge/Node.js-6DA55F?logo=node.js&logoColor=white" alt="Node.js"/>
   <img src="https://img.shields.io/badge/License-GPLv3-blue" alt="License GPL-3.0"/>
-  <img src="https://img.shields.io/badge/Version-1.0.0-green" alt="Version 1.0.0"/>
+  <img src="https://img.shields.io/badge/Version-1.0.1-green" alt="Version 1.0.1"/>
 </p>
 
 [![Demo](https://img.shields.io/badge/GitHub-Demo-green?logo=github)](https://dmibbb.github.io/git-repo-stats/repo-stats.html)
@@ -89,9 +89,9 @@ npm run lint
 
 ### 📷 Demo & Screenshots
 
-Sample **Markdown report** (live demo): [**https://dmibbb.github.io/git-repo-stats/repo-stats.md**](https://dmibbb.github.io/git-repo-stats/repo-stats.md)
+Sample **Markdown report** (live demo of this repo): [**https://dmibbb.github.io/git-repo-stats/repo-stats.md**](https://dmibbb.github.io/git-repo-stats/repo-stats.md)
 
-Sample **HTML report** (live demo): [**https://dmibbb.github.io/git-repo-stats/repo-stats.html**](https://dmibbb.github.io/git-repo-stats/repo-stats.html)
+Sample **HTML report** (live demo of this repo): [**https://dmibbb.github.io/git-repo-stats/repo-stats.html**](https://dmibbb.github.io/git-repo-stats/repo-stats.html)
 
 <div align="center">
   <img src="misc/git-repo-stats_01.png" alt="Header and Files/Tech stack" width="850"><br>

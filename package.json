@@ -1,6 +1,6 @@
 {
   "name": "git-repo-stats",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Zero-runtime-dependency Git repository statistics and changelog generator",
   "main": "git-repo-stats.js",

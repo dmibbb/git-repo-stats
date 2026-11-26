@@ -1,3 +1,27 @@
+## v1.0.1
+
+**Released on 2026/11/26**
+
+### Fixes & Edge Cases
+
+- **Empty repository support:** Gracefully handle initialized Git repositories with zero commits instead of crashing on `git log`.
+- **KPI cards truncation:** Prevent long commit subjects in `Largest commit` and `Widest commit` from stretching grid columns or hiding the commit date.
+- **Legacy files filtering:** Exclude files modified today (`0 days ago`) from the `Legacy` files ranking.
+- **Average metrics formatting:** Strip trailing `.0` from whole average values (e.g., `+130 / -29` instead of `+130.0 / -29.0`).
+- **Changelog day summary:** Fix duplicate unique files count in daily summary headers.
+- **Release notes clipboard format:** Add blank lines after release header, release date, and `Changes:`, and use `Unreleased changes:` header for unreleased commits.
+
+### UI & Visualization Polish
+
+- **Custom Heatmap period dropdown:** Replace native `<select>` with a styled, rounded custom dropdown menu (`Last 365 days` + active years).
+- **Code Churn Timeline scaling:** Scale peak commit bars flush to the top and bottom boundary lines (`+maxVal` / `-maxVal`).
+- **Activity by time of day tooltips:** Show full commit count and percentage share on period row hover.
+- **Scrollable Contributors card:** Cap max height with vertical scroll so large contributor lists do not stretch the Heatmap row.
+- **Changelog table improvements:** Open changed file links in a new tab (`target="_blank"`) and add a top border separator above the file status breakdown in the `Delta` column.
+- **Header layout:** Tighten top header spacing and align the theme toggle button with the repository title.
+
+---
+
 ## v1.0.0
 
 **Released on 2026/11/23**
