@@ -20,7 +20,7 @@ It runs **completely offline**, requires **no `npm install`** for end users, and
 | **Self-contained output**     | The HTML file must work when opened directly via `file://` — no server, no CDN, no external assets.                                 |
 | **Offline-first**             | No network calls, no telemetry, no analytics.                                                                                       |
 | **XSS-safe by default**       | Every user-controlled string (commit subject, author, tag, file path, repo name) MUST pass through `escapeHtml()` before embedding. |
-| **Graceful degradation**      | Empty repos, missing authors, binary-only commits, weird filenames — must never throw.                                              |
+| **Graceful degradation**      | Empty/unborn repos, missing authors, binary-only commits, weird filenames — must never throw.                                       |
 | **Fast on big repos**         | Target: < 5s for 50k commits on modern hardware.                                                                                    |
 
 ---
@@ -55,7 +55,7 @@ utils.js, lang-icons.js (shared helpers)
 
 ### Data flow
 
-1. `git log --pretty=... --raw --numstat` → raw string
+1. `git log --pretty=... --raw --numstat` → raw string (returns `''` gracefully on unborn `HEAD` with zero commits)
 2. `parseRawLog()` splits by `COMMIT_SEP` (`\x1e===COMMIT===\x1e`) → commit objects
 3. `groupCommitsByDate()` → `{ 'YYYY-MM-DD': { commits, totalInsertions, ... } }`
 4. Pure aggregation functions in `stats.js` compute KPIs, streaks, releases, and distributions
@@ -72,7 +72,7 @@ utils.js, lang-icons.js (shared helpers)
 | `stats.js`             | Pure aggregation functions (no I/O)                        |
 | `render-html.js`       | HTML dashboard renderer                                    |
 | `render-md.js`         | Markdown renderer                                          |
-| `repo-stats-client.js` | Browser-side JS (theme, search, tabs, tooltips)            |
+| `repo-stats-client.js` | Browser-side JS (theme, search, tabs, dropdown, tooltips)  |
 | `repo-stats.css`       | All dashboard styles (light/dark/print)                    |
 | `utils.js`             | Shared helpers (formatting, dates, path normalization)     |
 | `lang-icons.js`        | Inline SVG icons for 21 languages (+ 31 extension aliases) |
@@ -91,7 +91,7 @@ These are **non-negotiable**. Violating any of them breaks the project's value p
 5. **Escape everything.** Use `escapeHtml()` for HTML context, `escapePipe()` + `wrapInlineCode()` for Markdown. Test with payloads like `<script>alert(1)</script>` in commit subjects.
 6. **No `eval`, no `Function()`, no dynamic code execution.**
 7. **Preserve `--no-merges` semantics.** Merge commits are intentionally excluded from all stats.
-8. **Keep the "ignored files" contract.** Lock files (`package-lock.json`, `yarn.lock`, etc.), `dist/`, `build/`, `*.min.js` are excluded from statistics but MUST remain visible in commit tables (marked with `*` in MD, `(ignored)` in HTML).
+8. **Keep the "ignored files" contract.** Lock files (`package-lock.json`, `yarn.lock`, etc.), `dist/`, `build/`, `*.min.js`, and generated reports (`repo-stats.html`, `repo-stats.md`, `repo-stats-changelog.md`) are excluded from statistics but MUST remain visible in commit tables (marked with `*` in MD, `(ignored)` in HTML).
 9. **Respect `TODO.md` boundaries.** `TODO.md` is the author's backlog — do not implement upcoming features from it unless explicitly asked.
 
 ---
@@ -139,12 +139,12 @@ Options:
 - **Test runner:** Node's built-in `node:test` (no Jest, no Mocha). Run with `npm test`.
 - **Coverage target:** every exported function in `utils.js`, `stats.js`, `git-client.js` has at least one test.
 - **Edge cases are first-class citizens:**
-  - Empty repos, empty commits (`--allow-empty`)
+  - Empty/unborn repos (`git init` with zero commits), empty commits (`--allow-empty`)
   - Missing authors → `'Unknown'`
   - XSS payloads in subjects/authors/tags
   - Git rename syntax: `old => new`, `src/{old => new}.js`, `{a => b}/c.js`
   - Binary files (`-\t-\tfile.png`)
-  - Very long file paths, CRLF line endings, Unicode / emoji in subjects
+  - Very long file paths & KPI commit subjects, CRLF line endings, Unicode / emoji in subjects
 - **When adding a feature, add 3+ tests:** happy path, edge case, empty/null input.
 
 ---
@@ -158,6 +158,7 @@ Options:
 - Use UTC dates internally (`Date.UTC`, `getUTCFullYear`) to avoid DST bugs.
 - Keep `render-html.js` functions pure (input → HTML string, no side effects).
 - Use the `--release` CSS variable for release/tag pills, badges, timeline markers, and tagged commit highlights instead of hardcoding `--accent`.
+- Keep `min-width: 0` on `.card` and `.kpi-sub-subject` / `.kpi-sub-date` structure in KPI cards so long commit subjects truncate cleanly with ellipsis without stretching grid columns or hiding the date.
 - Test with `makeCommit()` helper from `test/stats.test.js` when adding stat tests.
 - Pass `{ cause: err }` when re-throwing wrapped errors inside `catch (err)` blocks.
 
@@ -166,8 +167,8 @@ Options:
 - Don't add a dependency "just for convenience" (no `chalk`, no `commander`, no `dayjs`, no `lodash`).
 - Don't use `innerHTML` on the client side without `escapeHtml()` — even for "trusted" data.
 - Don't hardcode file counts (use `TOP_FILES_COUNT = 5`, `MAX_FILES_PER_COMMIT = 10`).
-- Don't break the `data-*` attribute contract — client JS relies on `data-date`, `data-time`, `data-row-id`, `data-files` (newline-separated normalized file paths on `.commit-row` so search matches renamed files like `src/{old => new}.js` by their normalized path), `data-filter-file` (used for files, extensions, lifecycle statuses, and `Author: <name>`), `data-release-id`, `data-tab`, `data-panel`, `data-heatmap-view`.
-- Don't hijack native browser keyboard shortcuts (like `Ctrl+K` / `Cmd+K` or `Ctrl+F`) — only handle `Escape` inside `.search-input`.
+- Don't break the `data-*` attribute contract — client JS relies on `data-date`, `data-time`, `data-row-id`, `data-files` (newline-separated normalized file paths on `.commit-row` so search matches renamed files like `src/{old => new}.js` by their normalized path), `data-filter-file` (used for files, extensions, lifecycle statuses, and `Author: <name>`), `data-release-id`, `data-tab`, `data-panel`, `data-heatmap-view`, and `data-value` (on `.heatmap-option`).
+- Don't hijack native browser keyboard shortcuts (like `Ctrl+K` / `Cmd+K` or `Ctrl+F`) — only handle `Escape` inside `.search-input` and `.heatmap-dropdown`.
 - Don't remove the `content-visibility: auto` optimization on `.changelog-day` — it's critical for rendering large dashboards.
 - Don't change `COMMIT_SEP` / `FIELD_SEP` without updating the parser AND tests.
 
@@ -218,9 +219,9 @@ When refactoring, **do not regress** these user-visible features:
 
 - 🌓 3-state theme toggle (System → Dark → Light), persisted in `localStorage['repo-stats-theme']`
 - 🔍 Debounced search (150ms) with clear button, `Esc` to reset, result counter
-- 🗓️ GitHub-style contribution heatmap with year selector
-- 📉 SVG churn timeline with Linear/Log toggle and hover tooltips
-- 🏷️ One-click "Copy release notes" button (with `navigator.clipboard` + `execCommand` fallback)
+- 🗓️ GitHub-style contribution heatmap with custom rounded period dropdown (`.heatmap-dropdown`)
+- 📉 SVG churn timeline with Linear/Log toggle, flush peak bars, and hover tooltips
+- 🏷️ One-click "Copy release notes" button matching `repo-stats-changelog.md` formatting (with `navigator.clipboard` + `execCommand` fallback)
 - 🖨️ Print styles that auto-expand all `<details>` before printing
 - ⌨️ Sticky TOC with active-section highlighting
 - 🎯 Clickable KPI cards that jump to the record day/commit
@@ -231,7 +232,7 @@ When refactoring, **do not regress** these user-visible features:
 
 - **Section titles (`.section-title`):** emoji on the **left**, must match 1:1 with the corresponding Sticky TOC link.
 - **Cards without header controls (KPI cards, histograms, Contributors):** large emoji (`1.7rem`) on the **right** via `.card-icon`; `.card-title` contains plain text only.
-- **Cards with header controls (tabs, `<select>`, chart legend):** inline emoji on the **left** inside `.card-title` (may echo its parent section's emoji, must not duplicate a neighboring card's emoji in the same row).
+- **Cards with header controls (tabs, `.heatmap-dropdown`, chart legend):** inline emoji on the **left** inside `.card-title` (may echo its parent section's emoji, must not duplicate a neighboring card's emoji in the same row).
 - **HTML ↔ Markdown parity:** keep section and metric icons synchronized between `render-html.js` and `render-md.js`.
 - **Search-sensitive labels:** NEVER add emojis inside `.delta-breakdown` (`Added:`, `Modified:`, `Renamed:`, `Deleted:`) or `.commit-author` (`Author:`), because click-to-filter navigation matches against `row.textContent`.
 

@@ -2,91 +2,94 @@
 
 ## 📊 Overview
 
-* 🎂 **Repo age:** **7 days** (since 2026-11-16)
-* 📆 **Period (Full history):** 2026-11-16 — 2026-11-23 (active days: **8** out of 8 — 100%)
-* 📦 **Total commits:** 91 (avg **11.4** commits per active day)
-* 📏 **Volume of changes:** +11,992 / -2,698 lines (net change: **+9,294** lines)
-* 🗂️ **Unique files:** **27** tracked files
-* 📐 **Average per commit:** +131.8 / -29.6 lines | **3.2** files
-* ⚡ **Average per active day:** +1,499 / -337 lines
-* 🥇 **Record by commits:** 2026-11-18 (**21 commits**)
-* 💥 **Record by code churn:** 2026-11-21 (**+2,190 / -532** lines)
-* 🔥 **Streaks:** Max: **8 days** (2026-11-16 — 2026-11-23) | Current: **8 days**
-* 💪 **Largest commit:** 2026-11-16 — `Add a tool to gather git stats` (**+1,025 / -0** lines)
-* 🚚 **Widest commit:** 2026-11-23 — `Increase top files for legacy files from 5 to 25 by default` (**8 files**)
+* 🎂 **Repo age:** **10 days** (since 2026-11-16)
+* 📆 **Period (Full history):** 2026-11-16 — 2026-11-26 (active days: **9** out of 11 — 82%)
+* 📦 **Total commits:** 106 (avg **11.8** commits per active day)
+* 📏 **Volume of changes:** +17,203 / -7,243 lines (net change: **+9,960** lines)
+* 🗂️ **Unique files:** **34** tracked files
+* 📐 **Average per commit:** +162.3 / -68.3 lines | **3.3** files
+* ⚡ **Average per active day:** +1,911 / -805 lines
+* 🥇 **Record by commits:** 2026-11-23 (**24 commits**)
+* 💥 **Record by code churn:** 2026-11-26 (**+4,894 / -4,494** lines)
+* 🔥 **Streaks:** Max: **8 days** (2026-11-16 — 2026-11-23) | Current: **1 day**
+* 😴 **Longest gap:** **2 days** (2026-11-23 — 2026-11-26)
+* 💪 **Largest commit:** 2026-11-26 — `style: reformat code` (**+4,809 / -4,478** lines)
+* 🚚 **Widest commit:** 2026-11-26 — `style: reformat code` (**17 files**)
 * 🕐 **Activity by time of day (peak hour: 01:00–01:59 — 16):**
-  - 🌙 Night (00:00–05:59): `████████████████████████░` 35% (32)
+  - 🌙 Night (00:00–05:59): `██████████████████████░░░` 30% (32)
   - 🌅 Morning (06:00–11:59): `██░░░░░░░░░░░░░░░░░░░░░░░` 3% (3)
-  - **☀️ Day (12:00–17:59): `█████████████████████████` 37% (34)**
-  - 🌆 Evening (18:00–23:59): `████████████████░░░░░░░░░` 24% (22)
+  - **☀️ Day (12:00–17:59): `█████████████████████████` 34% (36)**
+  - 🌆 Evening (18:00–23:59): `████████████████████████░` 33% (35)
 * 📊 **Activity by day of week:**
-  - **Mon**: `███████████████████████░░` 21% (19)
-  - **Tue**: `███████░░░░░░░░░░░░░░░░░░` 7% (6)
-  - **Wed: `█████████████████████████` 23% (21)**
-  - **Thu**: `███████████████████████░░` 21% (19)
-  - **Fri**: `███████████░░░░░░░░░░░░░░` 10% (9)
-  - **Sat**: `██████████░░░░░░░░░░░░░░░` 9% (8)
-  - **Sun**: `███████████░░░░░░░░░░░░░░` 10% (9)
+  - **Mon: `█████████████████████████` 27% (29)**
+  - **Tue**: `█████░░░░░░░░░░░░░░░░░░░░` 6% (6)
+  - **Wed**: `██████████████████░░░░░░░` 20% (21)
+  - **Thu**: `█████████████████████░░░░` 23% (24)
+  - **Fri**: `████████░░░░░░░░░░░░░░░░░` 8% (9)
+  - **Sat**: `███████░░░░░░░░░░░░░░░░░░` 8% (8)
+  - **Sun**: `████████░░░░░░░░░░░░░░░░░` 8% (9)
 * 🗓️ **Activity by month:**
-  - 2026-Nov: `█████████████████████████` 91
+  - 2026-Nov: `█████████████████████████` 106
 * 📂 **Most frequent changed files:**
-  - `render-html.js` (changed in **57 commits**)
-  - `repo-stats.css` (changed in **43 commits**)
+  - `render-html.js` (changed in **66 commits**)
+  - `repo-stats.css` (changed in **48 commits**)
+  - `stats.js` (changed in **28 commits**)
   - `git-history.js` (changed in **26 commits**)
-  - `stats.js` (changed in **25 commits**)
-  - `utils.js` (changed in **24 commits**)
+  - `utils.js` (changed in **25 commits**)
 * ⚡ **Churn hotspots (by lines changed):**
-  - `repo-stats.css` (**3,418 lines**)
-  - `render-html.js` (**3,116 lines**)
-  - `stats.js` (**1,020 lines**)
-  - `git-history.js` (**836 lines**)
-  - `repo-stats-client.js` (**764 lines**)
-* 🕰️ **Legacy files (longest untouched):**
-  - `lang-icons.js` (**3 days** ago, last: 2026-11-20)
-  - `.prettierrc` (**3 days** ago, last: 2026-11-20)
-  - `LICENSE` (**3 days** ago, last: 2026-11-20)
-  - `test/lang-icons.test.js` (**3 days** ago, last: 2026-11-20)
-  - `render-html.js` (**0 days** ago, last: 2026-11-23)
-  - `render-md.js` (**0 days** ago, last: 2026-11-23)
-  - `stats.js` (**0 days** ago, last: 2026-11-23)
-  - `utils.js` (**0 days** ago, last: 2026-11-23)
-  - `repo-stats.css` (**0 days** ago, last: 2026-11-23)
-  - `package.json` (**0 days** ago, last: 2026-11-23)
-  - `git-client.js` (**0 days** ago, last: 2026-11-23)
-  - `repo-stats-client.js` (**0 days** ago, last: 2026-11-23)
-  - `.gitignore` (**0 days** ago, last: 2026-11-23)
-  - `README.md` (**0 days** ago, last: 2026-11-23)
-  - `eslint.config.js` (**0 days** ago, last: 2026-11-23)
-  - `test/utils.test.js` (**0 days** ago, last: 2026-11-23)
-  - `test/git-client.test.js` (**0 days** ago, last: 2026-11-23)
-  - `git-repo-stats.js` (**0 days** ago, last: 2026-11-23)
-  - `test/git-repo-stats.test.js` (**0 days** ago, last: 2026-11-23)
-  - `test/stats.test.js` (**0 days** ago, last: 2026-11-23)
-  - `test/render-html.test.js` (**0 days** ago, last: 2026-11-23)
-  - `test/render-md.test.js` (**0 days** ago, last: 2026-11-23)
-  - `AGENTS.md` (**0 days** ago, last: 2026-11-23)
-  - `config.js` (**0 days** ago, last: 2026-11-23)
+  - `render-html.js` (**4,906 lines**)
+  - `repo-stats.css` (**3,523 lines**)
+  - `stats.js` (**2,291 lines**)
+  - `repo-stats-client.js` (**2,118 lines**)
+  - `test/stats.test.js` (**1,436 lines**)
+* 🕰️ **Legacy files (untouched for at least 1 day):**
+  - `.prettierrc` (**6 days** ago, last: 2026-11-20)
+  - `LICENSE` (**6 days** ago, last: 2026-11-20)
+  - `eslint.config.js` (**3 days** ago, last: 2026-11-23)
+  - `AGENTS.md` (**3 days** ago, last: 2026-11-23)
+  - `.nojekyll` (**3 days** ago, last: 2026-11-23)
 * 🧰 **Tech stack (by file touches):**
-  - `.js` — **76.6%** (226 file touches)
-  - `.css` — **14.6%** (43 file touches)
-  - `.md` — **5.4%** (16 file touches)
-  - `<no-ext>` — **1.7%** (5 file touches)
-  - `.json` — **1.7%** (5 file touches)
+  - `.js` — **75.7%** (268 file touches)
+  - `.css` — **13.6%** (48 file touches)
+  - `.md` — **5.6%** (20 file touches)
+  - `<no-ext>` — **2.0%** (7 file touches)
+  - `.json` — **1.7%** (6 file touches)
 * 📏 **Tech stack (by lines changed):**
-  - `.js` — **67.5%** (9,912 lines)
-  - `.css` — **23.3%** (3,418 lines)
-  - `<no-ext>` — **4.7%** (689 lines)
-  - `.md` — **4.0%** (593 lines)
-  - `.json` — **0.5%** (78 lines)
-* ♻️ **File lifecycle (295 operations):**
-  - ➕ **Added:** 25 (8% — 25 txt)
-  - ✏️ **Modified:** 267 (91% — 267 txt)
+  - `.js` — **79.7%** (19,475 lines)
+  - `.css` — **14.4%** (3,523 lines)
+  - `<no-ext>` — **2.8%** (695 lines)
+  - `.md` — **2.8%** (673 lines)
+  - `.json` — **0.3%** (80 lines)
+* ♻️ **File lifecycle (354 operations):**
+  - ➕ **Added:** 32 (9% — 27 txt, 5 bin)
+  - ✏️ **Modified:** 319 (90% — 319 txt)
   - ↪️ **Renamed:** 2 (1% — 2 txt)
   - 🗑️ **Deleted:** 1 (0% — 1 txt)
 * 👫 **Contributors:**
-  - **DB** — **100.0%** (91 commits, +11,992 / -2,698)
+  - **DB** — **100.0%** (106 commits, +17,203 / -7,243)
 
 ## 🏷️ Releases & Tags
+
+<details>
+<summary><strong>🏷️ v1.0.1</strong> (2026-11-23 — 2026-11-26) — 15 commits | +5,211 / -4,545 | 27 unique files</summary>
+
+- Release v1.0.1
+- style: move header a bit up
+- style: reformat code
+- fix(kpi): wrap long commit subjects in KPI cards
+- fix(git): process zero-commits repos
+- feat: Open file links in new tab and add divider in delta breakdown
+- fix: Format copied release notes with blank lines and TBD for unreleased
+- fix: Scale peak commit bar flush to max boundary in churn timeline
+- feat: Show full commit count and share in time-of-day tooltips
+- feat: Replace native select with custom rounded heatmap period dropdown
+- feat: Make contributors card scrollable when list grows tall
+- fix: Exclude files modified today from legacy files ranking
+- fix: Strip trailing .0 from whole average metrics
+- bug: Number of unique files is duplicated in Changelog details
+- Add v1.0.0 docs
+
+</details>
 
 <details>
 <summary><strong>🏷️ v1.0.0</strong> (2026-11-16 — 2026-11-23) — 91 commits | +11,992 / -2,698 | 27 unique files</summary>
@@ -190,10 +193,33 @@
 > \* — file is excluded from statistics (lock files, dist, minified, etc.)
 
 <details>
-<summary><strong>2026-11-23</strong> — 14 commits | +640 / -312 | 20 unique files</summary>
+<summary><strong>2026-11-26</strong> — 5 commits | +4,894 / -4,494 | 21 unique files</summary>
 
 | Commit | Changed Files | Delta |
 | :--- | :--- | :---: |
+| Release v1.0.1 (🏷️ v1.0.1) | [CHANGELOG.md](CHANGELOG.md) (+24/-0)<br>[README.md](README.md) (+3/-3)<br>[package.json](package.json) (+1/-1) | +28 / -4<br><br>3 text files |
+| style: move header a bit up | [repo-stats.css](repo-stats.css) (+5/-4) | +5 / -4<br><br>1 text file |
+| style: reformat code | [.gitignore](.gitignore) (+3/-3)<br>[config.js](config.js) (+60/-60)<br>[git-client.js](git-client.js) (+32/-20)<br>[git-repo-stats.js](git-repo-stats.js) (+371/-321)<br>[lang-icons.js](lang-icons.js) (+61/-61)<br>[package-lock.json](package-lock.json) (+1,022/-0) _(added)_*<br>[render-html.js](render-html.js) (+898/-834)<br>[render-md.js](render-md.js) (+327/-316)<br>[repo-stats-client.js](repo-stats-client.js) (+655/-631)<br>[stats.js](stats.js) (+624/-624)<br><details><summary><i>Show 8 more files</i></summary><br><br>[test/git-client.test.js](test/git-client.test.js) (+301/-301)<br>[test/git-repo-stats.test.js](test/git-repo-stats.test.js) (+225/-200)<br>[test/lang-icons.test.js](test/lang-icons.test.js) (+55/-50)<br>[test/render-html.test.js](test/render-html.test.js) (+378/-316)<br>[test/render-md.test.js](test/render-md.test.js) (+120/-105)<br>[test/stats.test.js](test/stats.test.js) (+496/-453)<br>[test/utils.test.js](test/utils.test.js) (+176/-173)<br>[utils.js](utils.js) (+27/-10)</details> | +4,809 / -4,478<br><br>17 text files |
+| fix(kpi): wrap long commit subjects in KPI cards | [render-html.js](render-html.js) (+14/-6)<br>[repo-stats.css](repo-stats.css) (+12/-0)<br>[test/render-html.test.js](test/render-html.test.js) (+10/-0) | +36 / -6<br><br>3 text files |
+| fix(git): process zero-commits repos | [git-client.js](git-client.js) (+6/-2)<br>[test/git-client.test.js](test/git-client.test.js) (+10/-0) | +16 / -2<br><br>2 text files |
+
+</details>
+
+<details>
+<summary><strong>2026-11-23</strong> — 24 commits | +957 / -363 | 27 unique files</summary>
+
+| Commit | Changed Files | Delta |
+| :--- | :--- | :---: |
+| feat: Open file links in new tab and add divider in delta breakdown | [render-html.js](render-html.js) (+4/-3)<br>[repo-stats.css](repo-stats.css) (+2/-0)<br>[test/render-html.test.js](test/render-html.test.js) (+5/-5) | +11 / -8<br><br>3 text files |
+| fix: Format copied release notes with blank lines and TBD for unreleased | [repo-stats-client.js](repo-stats-client.js) (+8/-4) | +8 / -4<br><br>1 text file |
+| fix: Scale peak commit bar flush to max boundary in churn timeline | [render-html.js](render-html.js) (+2/-2)<br>[test/render-html.test.js](test/render-html.test.js) (+8/-0) | +10 / -2<br><br>2 text files |
+| feat: Show full commit count and share in time-of-day tooltips | [render-html.js](render-html.js) (+2/-1)<br>[test/render-html.test.js](test/render-html.test.js) (+6/-0) | +8 / -1<br><br>2 text files |
+| feat: Replace native select with custom rounded heatmap period dropdown | [render-html.js](render-html.js) (+12/-6)<br>[repo-stats-client.js](repo-stats-client.js) (+46/-10)<br>[repo-stats.css](repo-stats.css) (+69/-3)<br>[test/render-html.test.js](test/render-html.test.js) (+1/-1) | +128 / -20<br><br>4 text files |
+| feat: Make contributors card scrollable when list grows tall | [render-html.js](render-html.js) (+1/-1)<br>[repo-stats.css](repo-stats.css) (+8/-2)<br>[test/render-html.test.js](test/render-html.test.js) (+6/-0) | +15 / -3<br><br>3 text files |
+| fix: Exclude files modified today from legacy files ranking | [render-html.js](render-html.js) (+1/-1)<br>[render-md.js](render-md.js) (+1/-1)<br>[stats.js](stats.js) (+3/-2)<br>[test/stats.test.js](test/stats.test.js) (+16/-0) | +21 / -4<br><br>4 text files |
+| fix: Strip trailing .0 from whole average metrics | [stats.js](stats.js) (+10/-8)<br>[test/stats.test.js](test/stats.test.js) (+4/-0) | +14 / -8<br><br>2 text files |
+| bug: Number of unique files is duplicated in Changelog details | [config.js](config.js) (+3/-0)<br>[render-html.js](render-html.js) (+1/-1)<br>[repo-stats.html](repo-stats.html) (+231/-150)*<br>[test/render-html.test.js](test/render-html.test.js) (+43/-0)<br>[test/utils.test.js](test/utils.test.js) (+5/-0) | +52 / -1<br><br>4 text files |
+| Add v1.0.0 docs | [.nojekyll](.nojekyll) (+0/-0) _(added)_<br>[CHANGELOG.md](CHANGELOG.md) (+32/-0) _(added)_<br>[README.md](README.md) (+18/-0)<br>[misc/git-repo-stats_01.png](misc/git-repo-stats_01.png) _(binary)_ _(added)_<br>[misc/git-repo-stats_02.png](misc/git-repo-stats_02.png) _(binary)_ _(added)_<br>[misc/git-repo-stats_03.png](misc/git-repo-stats_03.png) _(binary)_ _(added)_<br>[misc/git-repo-stats_04.png](misc/git-repo-stats_04.png) _(binary)_ _(added)_<br>[misc/git-repo-stats_05.png](misc/git-repo-stats_05.png) _(binary)_ _(added)_<br>[repo-stats.html](repo-stats.html) (+5,772/-0) _(added)_*<br>[repo-stats.md](repo-stats.md) (+349/-0) _(added)_* | +50 / -0<br><br>3 text files<br>5 binary files |
 | Prepare v1.0.0 release (🏷️ v1.0.0) | [.gitignore](.gitignore) (+3/-0)<br>[AGENTS.md](AGENTS.md) (+2/-1)<br>[README.md](README.md) (+1/-1)<br>[eslint.config.js](eslint.config.js) (+1/-1) | +7 / -3<br><br>4 text files |
 | Introduce configs.js as a common configuration point | [AGENTS.md](AGENTS.md) (+2/-0)<br>[README.md](README.md) (+3/-0)<br>[config.js](config.js) (+83/-0) _(added)_<br>[git-repo-stats.js](git-repo-stats.js) (+25/-21)<br>[package.json](package.json) (+1/-0)<br>[test/git-repo-stats.test.js](test/git-repo-stats.test.js) (+15/-10)<br>[utils.js](utils.js) (+9/-17) | +138 / -48<br><br>7 text files |
 | Refactor renderOverviewHTML | [git-repo-stats.js](git-repo-stats.js) (+22/-7)<br>[render-html.js](render-html.js) (+18/-1)<br>[test/render-html.test.js](test/render-html.test.js) (+58/-60) | +98 / -68<br><br>3 text files |
@@ -346,4 +372,4 @@
 
 ---
 
-_Generated 2026-11-23 16:29:35 (UTC+3) by [Git Repository Statistics v1.0.0](https://github.com/dmibbb/git-repo-stats)_
+_Generated 2026-11-26 19:22:11 (UTC+3) by [Git Repository Statistics v1.0.1](https://github.com/dmibbb/git-repo-stats)_
