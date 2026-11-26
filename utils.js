@@ -7,7 +7,8 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const MAX_FILES_PER_COMMIT = limits.maxFilesPerCommit;
 const RAW_MAX = parseInt(process.env.REPO_STATS_MAX_BUFFER, 10);
 const DEFAULT_MAX_BUFFER_MB = limits.defaultMaxBufferMb;
-const MAX_BUFFER = Number.isFinite(RAW_MAX) && RAW_MAX > 0 ? RAW_MAX : 1024 * 1024 * DEFAULT_MAX_BUFFER_MB;
+const MAX_BUFFER =
+  Number.isFinite(RAW_MAX) && RAW_MAX > 0 ? RAW_MAX : 1024 * 1024 * DEFAULT_MAX_BUFFER_MB;
 const TOP_FILES_COUNT = limits.topFilesCount;
 const TOP_EXTENSIONS_COUNT = limits.topExtensionsCount;
 const LEGACY_FILES_COUNT = limits.legacyFilesCount;
@@ -15,7 +16,20 @@ const HISTOGRAM_WIDTH = limits.histogramWidth;
 const OPEN_DAYS_COUNT = limits.openDaysCount;
 const IGNORED_PATTERNS = ignoredPatterns;
 const WEEKDAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 
 /**
  * Gets the repository name from the root folder path.
@@ -25,13 +39,15 @@ function getRepoName(repoPath) {
     const topLevel = execFileSync('git', ['rev-parse', '--show-toplevel'], {
       encoding: 'utf-8',
       cwd: repoPath,
-      stdio: 'pipe'
+      stdio: 'pipe',
     }).trim();
     return path.basename(topLevel);
   } catch (e) {
     // Fallback to original repo
     const originalRepo = path.basename(path.resolve(repoPath));
-    console.warn(`⚠️  Could not resolve repo root via git (${e.code || 'error'}); falling back to folder name "${originalRepo}".`);
+    console.warn(
+      `⚠️  Could not resolve repo root via git (${e.code || 'error'}); falling back to folder name "${originalRepo}".`,
+    );
     return originalRepo;
   }
 }
@@ -112,7 +128,7 @@ function diffDays(dateA, dateB) {
  * Checks if a file matches any of the IGNORED_PATTERNS.
  */
 function isIgnoredFile(filename) {
-  return IGNORED_PATTERNS.some(pattern => pattern.test(filename));
+  return IGNORED_PATTERNS.some((pattern) => pattern.test(filename));
 }
 
 /**
@@ -241,9 +257,8 @@ function formatGeneratedAt(date = new Date()) {
   const absMin = Math.abs(offsetMin);
   const hours = Math.floor(absMin / 60);
   const mins = absMin % 60;
-  const tzStr = mins === 0
-    ? `UTC${sign}${hours}`
-    : `UTC${sign}${hours}:${String(mins).padStart(2, '0')}`;
+  const tzStr =
+    mins === 0 ? `UTC${sign}${hours}` : `UTC${sign}${hours}:${String(mins).padStart(2, '0')}`;
 
   return `${localStr} (${tzStr})`;
 }
@@ -311,7 +326,9 @@ function makeCommitRowId(date, index) {
  * Builds a deterministic DOM anchor ID for a release card.
  */
 function makeReleaseId(tag, date) {
-  const safeTag = String(tag || 'unreleased').trim().replace(/[^a-zA-Z0-9_-]/g, '-');
+  const safeTag = String(tag || 'unreleased')
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]/g, '-');
   return `release-${safeTag}-${date || 'nodate'}`;
 }
 
@@ -347,5 +364,5 @@ module.exports = {
   startStep,
   endStep,
   makeCommitRowId,
-  makeReleaseId
+  makeReleaseId,
 };

@@ -61,7 +61,7 @@ function parseCommitEntry(entry) {
 
   const tags = [];
   if (refsRaw) {
-    refsRaw.split(', ').forEach(ref => {
+    refsRaw.split(', ').forEach((ref) => {
       const trimmed = ref.trim();
       if (trimmed.startsWith('tag: ')) {
         tags.push(trimmed.slice(5).trim());
@@ -69,7 +69,7 @@ function parseCommitEntry(entry) {
     });
   }
 
-  const files = [];  // keeps the raw git path (with rename arrows/braces) for display
+  const files = []; // keeps the raw git path (with rename arrows/braces) for display
   const fileDeltas = new Map();
   const fileStatuses = new Map(); // normalizedPath -> 'A' | 'M' | 'D' | 'R'
   const trackedFiles = []; // keeps the normalized path for statistics
@@ -131,13 +131,14 @@ function parseCommitEntry(entry) {
       trackedFiles.push(normalizedFile);
 
       const isBinary = ins === '-' && del === '-';
-      const bucket = status === 'A'
-        ? fileStats.added
-        : status === 'D'
-          ? fileStats.deleted
-          : status === 'R'
-            ? fileStats.renamed
-            : fileStats.modified;
+      const bucket =
+        status === 'A'
+          ? fileStats.added
+          : status === 'D'
+            ? fileStats.deleted
+            : status === 'R'
+              ? fileStats.renamed
+              : fileStats.modified;
 
       if (isBinary) {
         binaryCount++;
@@ -183,7 +184,7 @@ function parseCommitEntry(entry) {
 function parseRawLog(rawLog) {
   return rawLog
     .split(COMMIT_SEP)
-    .map(entry => entry.trim())
+    .map((entry) => entry.trim())
     .filter(Boolean)
     .map(parseCommitEntry)
     .filter(Boolean);
@@ -199,25 +200,36 @@ function fetchRepoDateBounds(repoPath) {
   try {
     const rootsOut = execFileSync(
       'git',
-      ['log', '--no-merges', '--no-decorate', '--max-parents=0', '--date=short', '--pretty=format:%ad'],
-      execOpts
+      [
+        'log',
+        '--no-merges',
+        '--no-decorate',
+        '--max-parents=0',
+        '--date=short',
+        '--pretty=format:%ad',
+      ],
+      execOpts,
     ).trim();
 
     if (!rootsOut) return null;
 
     const latestOut = execFileSync(
       'git',
-      ['log', '--no-merges', '--no-decorate', '--max-count=5', '--date=short', '--pretty=format:%ad'],
-      execOpts
+      [
+        'log',
+        '--no-merges',
+        '--no-decorate',
+        '--max-count=5',
+        '--date=short',
+        '--pretty=format:%ad',
+      ],
+      execOpts,
     ).trim();
 
     if (!latestOut) return null;
 
-    const dates = [
-      ...rootsOut.split('\n'),
-      ...latestOut.split('\n'),
-    ]
-      .map(d => d.trim())
+    const dates = [...rootsOut.split('\n'), ...latestOut.split('\n')]
+      .map((d) => d.trim())
       .filter(Boolean)
       .sort();
 
@@ -255,5 +267,5 @@ module.exports = {
   parseCommitEntry,
   parseRawLog,
   fetchRepoDateBounds,
-  isGitRepository
+  isGitRepository,
 };
