@@ -310,4 +310,14 @@ describe('fetchRawGitLog', () => {
             fs.rmSync(tmpDir, { recursive: true, force: true });
         }
     });
+
+    test('returns empty string for an initialized repository with no commits yet', () => {
+        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-unborn-'));
+        try {
+            execFileSync('git', ['init'], { cwd: tmpDir, stdio: 'pipe' });
+            assert.equal(fetchRawGitLog(tmpDir), '');
+        } finally {
+            fs.rmSync(tmpDir, { recursive: true, force: true });
+        }
+    });
 });

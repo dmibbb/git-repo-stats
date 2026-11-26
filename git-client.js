@@ -35,9 +35,13 @@ function fetchRawGitLog(repoPath, since, until) {
       const currentMb = Math.round(MAX_BUFFER / (1024 * 1024));
       throw new Error(
         `Git log output exceeded buffer limit (${currentMb} MB). ` +
-        `Try filtering with --since=YYYY-MM-DD or increase REPO_STATS_MAX_BUFFER (in bytes), e.g. REPO_STATS_MAX_BUFFER=524288000`,
-        { cause: err }
+          `Try filtering with --since=YYYY-MM-DD or increase REPO_STATS_MAX_BUFFER (in bytes), e.g. REPO_STATS_MAX_BUFFER=524288000`,
+        { cause: err },
       );
+    }
+    const stderr = String(err.stderr || err.message || '');
+    if (stderr.includes('does not have any commits yet')) {
+      return '';
     }
     throw err;
   }
